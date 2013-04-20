@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@android:color/background_light"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/textViewNoResult"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/light_light_gray"
+        android:gravity="center"
+        android:text="Couldn't find any place nearby your location"
+        android:textColor="@color/orange_logo"
+        android:textSize="15sp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/progressBarSearch"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/light_light_gray"
+        android:gravity="center"
+        android:text="Looking for places nearby, this may take a while."
+        android:textColor="@color/dark_gray"
+        android:textSize="15sp"
+        android:visibility="gone" />
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:descendantFocusability="blocksDescendants"
+        android:divider="@color/gray"
+        android:dividerHeight="0.1dp"
+        android:footerDividersEnabled="true" >
+    </ListView>
+
+</LinearLayout>

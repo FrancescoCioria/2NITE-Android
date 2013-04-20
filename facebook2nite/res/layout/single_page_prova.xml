@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/lib/com.google.ads"
+    android:id="@+id/relativeSinglePage"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/light_light_gray"
+    android:gravity="center_horizontal"
+    android:stretchColumns="1" >
+
+    <LinearLayout
+        android:id="@+id/progressBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:visibility="gone" >
+
+        <ProgressBar
+            android:id="@+id/progressBarSinglePage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/adView35"
+        android:layout_alignParentTop="true"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/textViewNameSinglePagem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/background_light"
+                android:gravity="center"
+                android:paddingBottom="1dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:paddingTop="3dp"
+                android:text="Event Name"
+                android:textColor="@android:color/background_dark"
+                android:textStyle="bold|italic"
+                android:visibility="gone" />
+
+            <RelativeLayout
+                android:id="@+id/relativeCover"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:background="@color/gray"
+                android:orientation="vertical" >
+
+                <ImageView
+                    android:id="@+id/imageViewEventCover"
+                    android:layout_width="fill_parent"
+                    android:layout_height="100dp"
+                    android:layout_centerHorizontal="true"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="@android:drawable/alert_light_frame"
+                    android:src="@drawable/standard_image"
+                    android:scaleType="centerCrop"
+                     />
+
+                <TextView
+                    android:id="@+id/textViewAttendingCountOLD"
+                    android:layout_width="fill_parent"
+                    android:layout_height="25dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignRight="@+id/imageViewEvent"
+                    android:background="@drawable/black_50_transparent"
+                    android:gravity="center"
+                    android:text="Going: 132"
+                    android:textColor="@android:color/background_light"
+                    android:textSize="13sp"
+                    android:textStyle="bold|italic"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/textViewAttendingCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentLeft="true"
+                    android:background="@android:color/background_dark"
+                    android:gravity="center"
+                    android:paddingBottom="1.5dp"
+                    android:paddingLeft="3dp"
+                    android:paddingRight="3dp"
+                    android:paddingTop="1.5dp"
+                    android:text="Going: 132"
+                    android:textColor="@android:color/background_light"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/textViewNameSinglePage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/background_light"
+                android:gravity="center"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:paddingTop="3dp"
+                android:text="Event Name"
+                android:textColor="@color/dark_gray"
+                android:textSize="12sp"
+                android:textStyle="italic|bold"
+                android:typeface="serif" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/background_light"
+                android:orientation="horizontal"
+                android:paddingBottom="10dp"
+                android:paddingTop="3dp" >
+
+                <RelativeLayout
+                    android:id="@+id/relativeImage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="3dp"
+                    android:background="@color/gray"
+                    android:orientation="vertical"
+                    android:padding="0.1dp"
+                    android:visibility="gone" >
+
+                    <ImageView
+                        android:id="@+id/imageViewEvent"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:adjustViewBounds="true"
+                        android:contentDescription="@android:drawable/alert_light_frame"
+                        android:src="@drawable/standard_image" />
+
+                    <TextView
+                        android:id="@+id/textViewAttendingCount"
+                        android:layout_width="fill_parent"
+                        android:layout_height="25dp"
+                        android:layout_alignParentBottom="true"
+                        android:layout_alignRight="@+id/imageViewEvent"
+                        android:background="@drawable/black_50_transparent"
+                        android:gravity="center"
+                        android:text="Going: 132"
+                        android:textColor="@android:color/background_light"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </RelativeLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top"
+                    android:layout_marginLeft="7dp"
+                    android:layout_marginRight="7dp"
+                    android:paddingRight="3dp"
+                    android:orientation="vertical" >
+
+                    <TextView
+                        android:id="@+id/textViewS"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="3dp"
+                        android:text="START:"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/textViewS"
+                        android:layout_width="match_parent"
+                        android:layout_height="0.1dp"
+                        android:layout_marginLeft="3dp"
+                        android:background="@color/light_gray"
+                        android:textColor="@color/facebook_dark_blue"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/textViewStartSinglePage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="3dp"
+                        android:text="Start:"
+                        android:textColor="@color/dark_gray" />
+
+                    <TextView
+                        android:id="@+id/textViewE"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="3dp"
+                        android:layout_marginTop="7dp"
+                        android:text="END:"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/textViewS"
+                        android:layout_width="match_parent"
+                        android:layout_height="0.1dp"
+                        android:layout_marginLeft="3dp"
+                        android:background="@color/light_gray"
+                        android:textColor="@color/facebook_dark_blue"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/textViewEndSinglePage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="3dp"
+                        android:text="End:"
+                        android:textColor="@color/dark_gray" />
+
+                    <TextView
+                        android:id="@+id/textViewL"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="3dp"
+                        android:layout_marginTop="7dp"
+                        android:text="LOCATION:"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/textViewS"
+                        android:layout_width="match_parent"
+                        android:layout_height="0.1dp"
+                        android:layout_marginLeft="3dp"
+                        android:background="@color/light_gray"
+                        android:textColor="@color/facebook_dark_blue"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/textViewLocationNamePage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="End:"
+                        android:textColor="@color/dark_gray"
+                        android:visibility="gone" />
+
+                    <Button
+                        android:id="@+id/buttonPlace"
+                        android:layout_width="fill_parent"
+                        android:layout_height="33dp"
+                        android:text="( i ) Arci Acropolis"
+                        android:textColor="@android:color/background_dark"
+                        android:textSize="12dp" />
+
+                    <Button
+                        android:id="@+id/buttonNavigate"
+                        android:layout_width="fill_parent"
+                        android:layout_height="33dp"
+                        android:text="Get directions"
+                        android:textColor="@android:color/background_dark"
+                        android:textSize="12dp" />
+
+                    <TextView
+                        android:id="@+id/textViewLocationSinglePage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="End:"
+                        android:textColor="@color/blue"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewS"
+                android:layout_width="match_parent"
+                android:layout_height="0.1dp"
+                android:background="@color/android_gray"
+                android:textColor="@color/facebook_dark_blue"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/textViewS"
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:background="@color/light_light_gray"
+                android:textColor="@color/facebook_dark_blue"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="@color/android_gray"
+                android:orientation="vertical" >
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/light_light_gray"
+                    android:orientation="vertical" >
+
+                    <TextView
+                        android:id="@+id/textViewDescYEY"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center_horizontal"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="3dp"
+                        android:text="DESCRIPTION:"
+                        android:textSize="17sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/textViewDescription"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:autoLink="web"
+                        android:gravity="center_horizontal"
+                        android:paddingBottom="5dp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
+                        android:text="Ingresso GRATUITO con tessera arci
+Inizio alle 22:30
+Birra Media a 3 euro
+Deum (live) + Matt Confusion (live) 
+
+
+DEUM: I Deum suonano insieme dal 2009, inizialmente come duo e successivamente in tre dopo l&apos;ingresso nella band di un batterista. Passo dopo passo, palchetto dopo palchetto, si è generata una crescita artistica e umana"
+                        android:textColor="@color/dark_gray"
+                        android:textColorLink="@color/blue"
+                        android:textStyle="italic"
+                        android:typeface="sans" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewS"
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:background="@color/light_light_gray"
+                android:textColor="@color/facebook_dark_blue"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/layoutTOPsinglePage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewPageEmpty"
+        android:background="@color/light_gray"
+        android:orientation="horizontal"
+        android:visibility="gone" >
+
+        <Button
+            android:id="@+id/buttonSeeOnFacebook"
+            android:layout_width="fill_parent"
+            android:layout_height="40dp"
+            android:layout_weight="4.3"
+            android:background="@layout/gray_button"
+            android:text="See on facebook"
+            android:textColor="@color/dark_gray"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/textViewS"
+            android:layout_width="0.1dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:background="@color/android_gray"
+            android:textColor="@color/facebook_dark_blue"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/buttonShare"
+            android:layout_width="fill_parent"
+            android:layout_height="40dp"
+            android:layout_weight="5.1"
+            android:background="@layout/gray_button"
+            android:maxLines="1"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="Share"
+            android:textColor="@color/dark_gray"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/textViewS"
+            android:layout_width="0.1dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:background="@color/android_gray"
+            android:textColor="@color/facebook_dark_blue"
+            android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/buttonStatus"
+            android:layout_width="fill_parent"
+            android:layout_height="40dp"
+            android:layout_weight="4.3"
+            android:background="@layout/gray_button"
+            android:maxLines="1"
+            android:text="Going"
+            android:textColor="@color/dark_gray"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <com.google.ads.AdView
+        android:id="@+id/adView35"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        ads:adSize="SMART_BANNER"
+        ads:adUnitId="a14fd5038b6b630"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/textViewPageEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/progressBarLayout"
+        android:background="@color/light_light_gray"
+        android:gravity="center"
+        android:text="Select an event"
+        android:textColor="@color/dark_gray"
+        android:textSize="15sp"
+        android:visibility="gone" />
+
+</RelativeLayout>

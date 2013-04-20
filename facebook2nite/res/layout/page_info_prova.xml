@@ -1,0 +1,625 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/relativeSinglePage"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/light_light_gray"
+    android:gravity="center_horizontal"
+    android:stretchColumns="1" >
+
+    <LinearLayout
+        android:id="@+id/progressBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:visibility="gone" >
+
+        <ProgressBar
+            android:id="@+id/progressBarSinglePage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textViewPageEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/progressBarLayout"
+        android:background="@android:color/background_light"
+        android:gravity="center"
+        android:text="Select an event"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="17sp"
+        android:visibility="gone" />
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewGray"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="160dp"
+                android:layout_weight="1"
+                android:background="@android:color/background_light"
+                 >
+
+                <ImageView
+                    android:id="@+id/imageViewPageInfoCover"
+                    android:layout_width="fill_parent"
+                    android:layout_height="100dp"
+                    android:contentDescription="@android:drawable/alert_light_frame"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/tonite_promo_facebook" />
+
+                <ImageView
+                    android:id="@+id/imageViewPageInfo"
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentLeft="true"
+                    android:layout_marginLeft="10dp"
+                    android:background="@color/light_gray"
+                    android:contentDescription="@android:drawable/alert_light_frame"
+                    android:maxWidth="100dp"
+                    android:padding="2dp"
+                    android:src="@drawable/icon_other_events" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:layout_below="@+id/imageViewPageInfoCover"
+                    android:layout_toRightOf="@+id/imageViewPageInfo"
+                    android:background="@android:color/background_light"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical" >
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/imageViewPageInfoCover"
+                        android:layout_toRightOf="@+id/imageViewPageInfo"
+                        android:background="@android:color/background_light"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal" >
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/background_light"
+                            android:orientation="vertical" >
+
+                            <TextView
+                                android:id="@+id/textViewCategoryTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:gravity="center_vertical"
+                                android:paddingLeft="3dp"
+                                android:text="CATEG."
+                                android:textColor="@android:color/darker_gray"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/textViewPhoneTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:gravity="center_vertical"
+                                android:paddingLeft="3dp"
+                                android:text="PHONE"
+                                android:textColor="@android:color/darker_gray"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/textViewEmailTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:gravity="center_vertical"
+                                android:paddingLeft="3dp"
+                                android:text="EMAIL"
+                                android:textColor="@android:color/darker_gray"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+
+                            <TextView
+                                android:id="@+id/textViewWebsiteTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:paddingLeft="3dp"
+                                android:text="WEB"
+                                android:textColor="@android:color/darker_gray"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/background_light"
+                            android:orientation="vertical"
+                            android:paddingLeft="3dp"
+                            android:paddingRight="3dp" >
+
+                            <TextView
+                                android:id="@+id/textViewCategory"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:text="Club"
+                                android:textColor="@android:color/background_dark"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/textViewPhone"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:autoLink="phone"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:text="98392189"
+                                android:textColor="@android:color/background_dark"
+                                android:textColorLink="@color/blue"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/textViewEmail"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:autoLink="email"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:text="info@arciacropolis.it"
+                                android:textColor="@android:color/background_dark"
+                                android:textColorLink="@color/blue"
+                                android:textSize="12sp"
+                                android:visibility="gone" />
+
+                            <TextView
+                                android:id="@+id/textViewWebsite"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:autoLink="web"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:text="www.arciacropolis.it"
+                                android:textColor="@android:color/background_dark"
+                                android:textColorLink="@color/blue"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <RelativeLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@+id/imageViewPageInfoCover"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginLeft="20dp"
+                    android:layout_toRightOf="@+id/imageViewPageInfo" >
+
+                    <TextView
+                        android:id="@+id/textViewTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignBottom="@+id/imageViewPageInfoCover"
+                        android:layout_alignParentRight="true"
+                        android:alpha="110"
+                        android:background="@android:color/background_dark"
+                        android:gravity="center"
+                        android:minWidth="7dp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
+                        android:maxLines="1"
+                        android:text="Leoncavallo Spazio Pubblico Autogestito"
+                        android:textColor="@color/abs__background_holo_light"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </RelativeLayout>
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/background_light"
+                android:orientation="horizontal"
+                android:paddingBottom="2dp"
+                android:paddingLeft="2dp"
+                android:paddingTop="3dp" >
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginRight="3dp"
+                    android:background="@color/gray"
+                    android:orientation="vertical"
+                    android:padding="0.1dp" >
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layoutButtons"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical"
+                    android:paddingBottom="5dp"
+                    android:paddingRight="5dp"
+                    android:paddingTop="2dp" >
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/background_light"
+                        android:orientation="horizontal"
+                        android:visibility="gone" >
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/background_light"
+                            android:orientation="vertical" >
+
+                            <TextView
+                                android:id="@+id/textViewCategoryTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:gravity="center_vertical"
+                                android:paddingLeft="3dp"
+                                android:text="CATEG."
+                                android:textColor="@android:color/darker_gray"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/textViewPhoneTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:gravity="center_vertical"
+                                android:paddingLeft="3dp"
+                                android:text="PHONE"
+                                android:textColor="@android:color/darker_gray"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/textViewEmailTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:gravity="center_vertical"
+                                android:paddingLeft="3dp"
+                                android:text="EMAIL"
+                                android:textColor="@android:color/darker_gray"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+
+                            <TextView
+                                android:id="@+id/textViewWebsiteTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:paddingLeft="3dp"
+                                android:text="WEB"
+                                android:textColor="@android:color/darker_gray"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/background_light"
+                            android:orientation="vertical"
+                            android:paddingLeft="3dp"
+                            android:paddingRight="3dp" >
+
+                            <TextView
+                                android:id="@+id/textViewCategory"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:text="Club"
+                                android:textColor="@android:color/background_dark"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/textViewPhone"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:autoLink="phone"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:text="98392189"
+                                android:textColor="@android:color/background_dark"
+                                android:textColorLink="@color/blue"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:id="@+id/textViewEmail"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="3dp"
+                                android:autoLink="email"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:text="info@arciacropolis.it"
+                                android:textColor="@android:color/background_dark"
+                                android:textColorLink="@color/blue"
+                                android:textSize="12sp"
+                                android:visibility="gone" />
+
+                            <TextView
+                                android:id="@+id/textViewWebsite"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:autoLink="web"
+                                android:gravity="center_vertical"
+                                android:maxLines="1"
+                                android:text="www.arciacropolis.it"
+                                android:textColor="@android:color/background_dark"
+                                android:textColorLink="@color/blue"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/textViewCategoryLine"
+                        android:layout_width="match_parent"
+                        android:layout_height="0.1dp"
+                        android:background="@color/light_gray"
+                        android:textColor="@color/facebook_dark_blue"
+                        android:textSize="14sp"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/background_light"
+                        android:orientation="horizontal" >
+
+                        <LinearLayout
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@android:color/background_light"
+                            android:orientation="vertical" >
+
+                            <Button
+                                android:id="@+id/buttonNavigate"
+                                android:layout_width="match_parent"
+                                android:layout_height="33dp"
+                                android:layout_weight="1"
+                                android:text="Directions"
+                                android:textColor="@android:color/background_dark"
+                                android:textSize="12dp"
+                                
+                                 />
+
+                            <Button
+                                android:id="@+id/buttonSeeOnFacebookInfo"
+                                android:layout_width="match_parent"
+                                android:layout_height="33dp"
+                                android:layout_weight="1"
+                                android:text="Facebook"
+                                android:textColor="@android:color/background_dark"
+                                android:textSize="12dp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewTitle"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:background="@android:color/background_light"
+                android:gravity="center"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="5dp"
+                android:text="Arci Acropolis"
+                android:textColor="@color/dark_dark_gray"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/background_light"
+                android:orientation="horizontal" >
+
+                <RelativeLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="50dp"
+                    android:layout_weight="1" >
+
+                    <ProgressBar
+                        android:id="@+id/progressBar1"
+                        style="?android:attr/progressBarStyleSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true" />
+
+                    <ImageView
+                        android:id="@+id/imageViewPageInfoSmall1"
+                        android:layout_width="fill_parent"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:scaleType="centerCrop" />
+
+                    <TextView
+                        android:id="@+id/textViewPhoto1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:text="No Photo"
+                        android:textColor="@color/dark_gray"
+                        android:textSize="10sp"
+                        android:typeface="monospace"
+                        android:visibility="gone" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="50dp"
+                    android:layout_marginLeft="0.1dp"
+                    android:layout_marginRight="0.1dp"
+                    android:layout_weight="1" >
+
+                    <ProgressBar
+                        android:id="@+id/progressBar2"
+                        style="?android:attr/progressBarStyleSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true" />
+
+                    <ImageView
+                        android:id="@+id/imageViewPageInfoSmall2"
+                        android:layout_width="fill_parent"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:scaleType="centerCrop" />
+
+                    <TextView
+                        android:id="@+id/textViewPhoto2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:text="No Photo"
+                        android:textColor="@color/dark_gray"
+                        android:textSize="10sp"
+                        android:typeface="monospace"
+                        android:visibility="gone" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="50dp"
+                    android:layout_weight="1" >
+
+                    <ProgressBar
+                        android:id="@+id/progressBar3"
+                        style="?android:attr/progressBarStyleSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true" />
+
+                    <ImageView
+                        android:id="@+id/imageViewPageInfoSmall3"
+                        android:layout_width="fill_parent"
+                        android:layout_height="50dp"
+                        android:layout_weight="1"
+                        android:scaleType="centerCrop" />
+
+                    <TextView
+                        android:id="@+id/textViewPhoto3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:text="No Photo"
+                        android:textColor="@color/dark_gray"
+                        android:textSize="10sp"
+                        android:typeface="monospace"
+                        android:visibility="gone" />
+                </RelativeLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewS"
+                android:layout_width="match_parent"
+                android:layout_height="0.1dp"
+                android:background="@color/android_gray"
+                android:textColor="@color/facebook_dark_blue"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/textViewDescriptionBlue1"
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:background="@color/light_light_gray"
+                android:textColor="@color/facebook_dark_blue"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:background="@color/android_gray"
+                android:orientation="vertical" >
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/light_light_gray"
+                    android:orientation="vertical" >
+
+                    <TextView
+                        android:id="@+id/textViewDescriptionInfoTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center_horizontal"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="3dp"
+                        android:text="DESCRIPTION:"
+                        android:textColor="@color/dark_gray"
+                        android:textSize="17sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/textViewDescriptionInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:autoLink="web"
+                        android:gravity="center_horizontal"
+                        android:paddingBottom="5dp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
+                        android:text="DESCRIPTION:"
+                        android:textColor="@color/dark_gray"
+                        android:textColorLink="@color/blue"
+                        android:textStyle="italic"
+                        android:typeface="sans" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewDescriptionBlue2"
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:background="@color/light_light_gray"
+                android:textColor="@color/facebook_dark_blue"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </ScrollView>
+
+</RelativeLayout>

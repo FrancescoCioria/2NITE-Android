@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/menu_sortPages"
+        android:showAsAction="never"
+        android:title="Filter pages"/>
+    <item
+        android:id="@+id/menu_sortEvents"
+        android:showAsAction="never"
+        android:title="Filter events"/>
+    <item
+        android:id="@+id/menu_places"
+        android:icon="@drawable/ic_action_location"
+        android:showAsAction="always"
+        android:title="Discover events and places around you"/>
+    <item
+        android:id="@+id/menu_search"
+        android:icon="@drawable/ic_menu_search_holo_dark"
+        android:showAsAction="always"
+        android:title="Search new pages"/>
+    <item
+        android:id="@+id/menu_viewall"
+        android:showAsAction="always|withText"
+        android:title="(click to view all)"/>
+    <item
+        android:id="@+id/menu_rsvp"
+        android:showAsAction="ifRoom|withText"
+        android:title="RSVP"/>
+    <item
+        android:id="@+id/menu_share"
+        android:icon="@drawable/ic_menu_share"
+        android:showAsAction="always"
+        android:title="Share with friends"/>
+    <!-- android:actionProviderClass="com_actionbarsherlock.widget.ShareActionProvider" -->
+
+    <item
+        android:id="@+id/menu_refresh"
+        android:icon="@drawable/ic_menu_refresh"
+        android:showAsAction="always"
+        android:title="Refresh"/>
+    <item
+        android:id="@+id/menu_calendar"
+        android:showAsAction="never"
+        android:title="Add to Google Calendar"/>
+    <item
+        android:id="@+id/menu_facebook"
+        android:showAsAction="never"
+        android:title="See this event on facebook"/>
+    <item
+        android:id="@+id/menu_info"
+        android:showAsAction="never"
+        android:title="About current page"/>
+    <item
+        android:id="@+id/menu_like"
+        android:showAsAction="never"
+        android:title="Suggested pages"/>
+    <item
+        android:id="@+id/menu_reset"
+        android:showAsAction="never"
+        android:title="Redownload everything"/>
+    <item
+        android:id="@+id/menu_info_2nite"
+        android:showAsAction="never"
+        android:title="About 2NITE"/>
+    <item
+        android:id="@+id/menu_sort"
+        android:showAsAction="never"
+        android:title="Sort by.."/>
+    <item
+        android:id="@+id/menu_distance"
+        android:showAsAction="never"
+        android:title="Set distance parameter"/>
+
+</menu>

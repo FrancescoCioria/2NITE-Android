@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/relativeDistance"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/textViewAboutUs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:paddingBottom="13dp"
+        android:paddingTop="13dp"
+        android:text="@string/version"
+        android:textColor="@android:color/background_light"
+        android:textSize="23sp" />
+
+    <TextView
+        android:id="@+id/textViewMosquito"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textViewAboutUs"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:paddingBottom="7dp"
+        android:text=" ©2012 Mosquito Labs"
+        android:textColor="@android:color/background_light"
+        android:textSize="14sp" />
+
+    
+
+</RelativeLayout>

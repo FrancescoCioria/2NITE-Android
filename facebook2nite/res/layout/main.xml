@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:ads="http://schemas.android.com/apk/lib/com.google.ads"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    
+    >
+
+    <com.mosquitolabs.tonight.TitlePageIndicator
+        android:id="@+id/indicator"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/actionBar"
+        android:background="@color/orange_title" />
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewpager"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/indicator"
+        android:layout_weight="1" />
+   
+
+    <TextView
+        android:layout_below="@+id/indicator"
+        android:id="@+id/logoFade"
+        android:layout_width="fill_parent"
+        android:layout_height="0.1dp"
+        android:background="@color/orange_shit" 
+        android:visibility="gone"
+        />
+
+    
+    
+</RelativeLayout>

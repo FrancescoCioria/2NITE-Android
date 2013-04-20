@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/relativeDistance"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+    <ImageView
+        android:id="@+id/imageView1"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:scaleType="fitXY"
+        android:src="@android:drawable/editbox_background_normal" />
+
+    <ImageView
+        android:id="@+id/imageViewTriangleSpinner1"
+        android:layout_width="15dp"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="135dp"
+        android:src="@drawable/triangle_spinner" />
+    <ImageView
+        android:id="@+id/imageViewTriangleSpinner1"
+        android:layout_width="15dp"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="292dp"
+        android:src="@drawable/triangle_spinner" />
+
+    <TextView
+        android:id="@+id/textViewGrayLine"
+        android:layout_width="1dp"
+        android:layout_height="33dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="3dp"
+        android:background="@android:color/darker_gray" />
+
+    <TextView
+            android:id="@+id/spinnerPages"
+            android:layout_width="125dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="7dp"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="All Pages"
+            android:textColor="@color/dark_dark_gray" />
+
+        <TextView
+            android:id="@+id/spinnerFilter"
+            android:layout_width="125dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="164dp"
+            android:gravity="center"
+                        android:maxLines="1"
+            
+            android:text="All Events"
+            android:textColor="@color/dark_dark_gray" />
+
+</RelativeLayout>

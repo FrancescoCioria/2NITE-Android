@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/relativeSearch"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@android:color/background_light"
+    android:orientation="vertical" >
+
+    <LinearLayout
+        android:id="@+id/layoutYellow"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_weight="0.74"
+        android:background="@drawable/darkstripes_action"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/buttonBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/icon_back_layout" />
+
+        <LinearLayout
+            android:id="@+id/layoutYell"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_weight="1"
+            android:background="@color/orange_dark"
+            android:orientation="horizontal"
+            android:padding="1dp" >
+
+            <EditText
+                android:id="@+id/editTextSearch"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/white"
+                android:ems="10"
+                android:hint="Search pages.."
+                android:imeOptions="actionSearch"
+                android:padding="5dp"
+                android:cursorVisible="true"
+                android:singleLine="true"
+                android:textCursorDrawable="@null"
+                android:textColor="@android:color/background_dark"
+                android:textSize="16sp" >
+            </EditText>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/buttonSearch"
+            android:layout_width="56dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center_vertical"
+            android:background="@layout/icon_search"
+            android:paddingTop="2.5dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutGray"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/layoutYellow"
+        android:orientation="vertical" >
+
+        <TextView
+            android:id="@+id/textViewLineGray"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="@color/dark_dark_gray"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/textViewLineGray"
+            android:layout_width="match_parent"
+            android:layout_height="0.1dp"
+            android:background="@color/android_gray"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/listSearch"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/layoutGray"
+        android:background="@android:color/background_light"
+        android:descendantFocusability="blocksDescendants"
+        android:divider="@color/gray"
+        android:dividerHeight="0.1dp"
+        android:footerDividersEnabled="true" >
+    </ListView>
+
+    <TextView
+        android:id="@+id/textViewNoResult"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/layoutGray"
+        android:gravity="center"
+        android:text="No results matching your search were found"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="17sp"
+        android:padding="5dp"
+        android:visibility="gone" />
+
+    <ProgressBar
+        android:id="@+id/progressBarSearch"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/layoutGray"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:visibility="gone" />
+
+</RelativeLayout>
