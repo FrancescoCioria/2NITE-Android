@@ -98,7 +98,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private JSONArray jarrayAround;
 
 	private ListView listViewMain;
-	private ListView listViewPagesILike;
+	// private ListView listViewPagesILike;
 	private ListView listViewPage;
 
 	private int z;
@@ -107,6 +107,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private int placesInt = 0;
 	private int tabSelected = 1;
 	private int selectedPage = 0;
+
+	private final static int ATTENDING = 0;
+	private final static int ATTENDING_UNSURE = 1;
+	private final static int ALL = 2;
 
 	private myCustomAdapter eventArrayAdapter;
 	private myCustomAdapterPage pageArrayAdapter;
@@ -187,8 +191,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private boolean newDownloads = false;
 	private boolean isReloading = false;
 	private boolean isFirstTimeAround = true;
-	private boolean likesSorted = false;
-	private boolean aroundSorted = false;
+
 	private boolean eventHasAnEnd = true;
 	private boolean isBirthdayWeek = false;
 	private boolean isActionbarAvailable = false;
@@ -203,9 +206,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private ProgressThread progressThread;
 
 	private ViewPager pagerMain;
+	private ViewPager pagerUserLikes;
+
 	private Bitmap mIcon1;
 	private ProgressBar progressLogin;
-	private LinearLayout progressLoginPagesILike;
 	private ArrayList<String> items = new ArrayList<String>();
 	private JSONArray jArrayPhotoStream = new JSONArray();
 
@@ -219,6 +223,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private AdRequest adRequest = new AdRequest();
 
 	private Session session;
+
+	private UserLikesPagerAdapter userLikesPagerAdapter;
 
 	// private MainFragment mainFragment;
 	private static final String TAG = "MainFragment";
@@ -328,16 +334,16 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		SharedPreferences.Editor editor = mPrefs.edit();
 
 		switch (checked) {
-		case 0:
+		case ATTENDING:
 			myEventsSettings = "and rsvp_status=\"attending\"";
 
 			break;
 
-		case 1:
+		case ATTENDING_UNSURE:
 			myEventsSettings = "and (rsvp_status=\"attending\" or rsvp_status=\"unsure\")";
 			break;
 
-		case 2:
+		case ALL:
 			myEventsSettings = "";
 			break;
 		}
@@ -971,33 +977,18 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 			@Override
 			protected void onPostExecute(Bitmap result) {
-				if (tabSelected == 1) {
-					long cStop = Calendar.getInstance().getTimeInMillis();
-					MyTracker.sendTiming("Timing", cStop - counterStart,
-							"Suggested Pages", "");
-					if (!likesSorted) {
-						pageCollection.sortSearchByName();
-						likesSorted = true;
-					}
-					listViewPagesILike.setVisibility(View.VISIBLE);
-					progressLoginPagesILikeVisible(false);
-					refreshPagesILikeAdapter();
-					if (pageCollection.getPageSearchList().isEmpty()) {
-						noPagesLike
-								.setText("Sorry, couldn't find any place to suggest you based on your likes.");
-						noPagesLikeVisible(true);
-					} else {
-						noPagesLikeVisible(false);
+				long cStop = Calendar.getInstance().getTimeInMillis();
+				MyTracker.sendTiming("Timing", cStop - counterStart,
+						"Suggested Pages", "");
 
-					}
+				userLikesPagerAdapter.initializeUserLikes();
+				startService();
 
-					startService();
-
-					int i = 0;
-					if (jarrayLikes.length() > 0) {
-						getUserLikesImages(i);
-					}
+				// int i = 0;
+				if (jarrayLikes.length() > 0) {
+					userLikesPagerAdapter.getUserLikesImages(0);
 				}
+
 			}
 
 		};
@@ -1174,169 +1165,20 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 			@Override
 			protected void onPostExecute(Bitmap result) {
-				if (tabSelected == 2) {
-					if (!aroundSorted) {
-						pageCollection.sortSearchByLikesAroundMeActivity();
-						aroundSorted = true;
-					}
-					refreshPagesILikeAdapter();
-					listViewPagesILike.setVisibility(View.VISIBLE);
-					progressLoginPagesILikeVisible(false);
-					if (pageCollection.getPageAroundMe().isEmpty()) {
-						noPagesLike
-								.setText("Sorry, couldn't find any place nearby your location.");
-						noPagesLikeVisible(true);
-					} else {
-						noPagesLikeVisible(false);
 
-					}
+				userLikesPagerAdapter.initializePlaces();
 
-					startService();
+				startService();
 
-					int i = 0;
-					if (jarrayAround.length() > 0) {
-						getPlacesImages(i);
+				int i = 0;
+				if (jarrayAround.length() > 0) {
+					userLikesPagerAdapter.getPlacesImages(i);
 
-					}
 				}
 			}
 
 		};
 
-		task.execute();
-	}
-
-	private synchronized void getUserLikesImages(final int i) {
-		AsyncTask<Void, Integer, Integer> task = new AsyncTask<Void, Integer, Integer>() {
-
-			@Override
-			public Integer doInBackground(Void... params) {
-				if (tabSelected == 1
-						&& i < pageCollection.getPageSearchList().size()) {
-					try {
-						int z = 0;
-						String index_ID = pageCollection.getPageSearchList()
-								.get(i)._ID;
-						boolean b = true;
-						while (z < jarrayLikes.length() && b) {
-							json = jarrayLikes.getJSONObject(z);
-							if (index_ID.equals(json.getString("page_id"))) {
-								b = false;
-							} else {
-								z++;
-							}
-
-						}
-						if (!b) {
-							if (readImageFromDisk(json.getString("page_id")) == null) {
-
-								URL img_value = new URL(json.getString("pic"));
-								saveImageToDisk(json.getString("page_id"),
-										BitmapFactory.decodeStream(img_value
-												.openConnection()
-												.getInputStream()));
-							}
-						}
-
-					} catch (Exception e) {
-						Log.e("image_userlike", e.toString());
-					}
-				}
-				userLikesInt++;
-				return i;
-			}
-
-			@Override
-			public void onPostExecute(Integer i) {
-				if (tabSelected == 1
-						&& i < pageCollection.getPageSearchList().size()) {
-					{
-						if (listViewPagesILike.getFirstVisiblePosition() <= i
-								&& i <= listViewPagesILike
-										.getLastVisiblePosition()) {
-							View v = listViewPagesILike.getChildAt(i
-									- listViewPagesILike
-											.getFirstVisiblePosition());
-							ImageView image = (ImageView) v
-									.findViewById(R.id.imageViewPage);
-							image.setImageBitmap(readImageFromDisk(pageCollection
-									.getPageSearchList().get(i)._ID));
-						}
-					}
-					if (i < pageCollection.getPageSearchList().size()) {
-						getUserLikesImages(userLikesInt);
-					}
-				}
-			}
-		};
-		task.execute();
-	}
-
-	private synchronized void getPlacesImages(final int i) {
-		AsyncTask<Void, Integer, Integer> task = new AsyncTask<Void, Integer, Integer>() {
-
-			@Override
-			public Integer doInBackground(Void... params) {
-				if (tabSelected == 2) {
-					try {
-						Log.i("around_picture", Integer.toString(placesInt));
-						int z = 0;
-						String index_ID = pageCollection.getPageAroundMe().get(
-								i)._ID;
-						boolean b = true;
-						while (z < jarrayAround.length() && b) {
-							json = jarrayAround.getJSONObject(z);
-							if (index_ID.equals(json.getString("page_id"))) {
-								b = false;
-							} else {
-								z++;
-							}
-
-						}
-						if (!b) {
-							if (readImageFromDisk(json.getString("page_id")) == null) {
-								Log.i("around_picture", "download");
-
-								URL img_value = new URL(json.getString("pic"));
-								saveImageToDisk(json.getString("page_id"),
-										BitmapFactory.decodeStream(img_value
-												.openConnection()
-												.getInputStream()));
-							}
-						}
-
-					} catch (Exception e) {
-						Log.e("image_userlike", e.toString());
-					}
-				}
-				placesInt++;
-				return i;
-			}
-
-			@Override
-			public void onPostExecute(Integer i) {
-				if (tabSelected == 2) {
-					{
-						if (listViewPagesILike.getFirstVisiblePosition() <= i
-								&& i <= listViewPagesILike
-										.getLastVisiblePosition()) {
-							View v = listViewPagesILike.getChildAt(i
-									- listViewPagesILike
-											.getFirstVisiblePosition());
-							ImageView image = (ImageView) v
-									.findViewById(R.id.imageViewPage);
-							if (pageCollection.getPageAroundMe().size() > i) {
-								image.setImageBitmap(readImageFromDisk(pageCollection
-										.getPageAroundMe().get(i)._ID));
-							}
-						}
-					}
-					if (i < pageCollection.getPageAroundMe().size()) {
-						getPlacesImages(placesInt);
-					}
-				}
-			}
-		};
 		task.execute();
 	}
 
@@ -3918,7 +3760,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		task.execute();
 	}
 
-	private void infoPage(final PageData paramPageData) {
+	public void infoPage(final PageData paramPageData) {
 		final Dialog layout = new Dialog(FacebookeventsActivity.this);
 		layout.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		layout.setContentView(R.layout.page_info_prova);
@@ -5118,34 +4960,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		});
 	}
 
-	private void listViewPagesILikeVisible(final boolean b) {
-		FacebookeventsActivity.this.runOnUiThread(new Runnable() {
-			public void run() {
-
-				if (b) {
-					listViewPagesILike.setVisibility(View.VISIBLE);
-				} else {
-					listViewPagesILike.setVisibility(View.GONE);
-				}
-
-			}
-		});
-	}
-
-	private void progressLoginPagesILikeVisible(final boolean b) {
-		FacebookeventsActivity.this.runOnUiThread(new Runnable() {
-			public void run() {
-
-				if (b) {
-					progressLoginPagesILike.setVisibility(View.VISIBLE);
-				} else {
-					progressLoginPagesILike.setVisibility(View.GONE);
-				}
-
-			}
-		});
-	}
-
 	private void noPagesLikeVisible(final boolean b) {
 		FacebookeventsActivity.this.runOnUiThread(new Runnable() {
 			public void run() {
@@ -5964,8 +5778,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private void dialogUserLikes() {
 		counterStart = Calendar.getInstance().getTimeInMillis();
 		isFirstTimeAround = true;
-		likesSorted = false;
-		aroundSorted = false;
 		pageCollection.getPageSearchList().clear();
 		pageCollection.getPageSearchListRelevant().clear();
 		pageCollection.getPageAroundMe().clear();
@@ -5977,13 +5789,17 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		isReading = true;
 		final Dialog layout = new Dialog(FacebookeventsActivity.this);
 		layout.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		layout.setContentView(R.layout.pages_i_like);
+		layout.setContentView(R.layout.user_likes);
 		layout.setCancelable(false);
+
+		pagerUserLikes = (CustomViewPager) layout.findViewById(R.id.viewpager);
+		userLikesPagerAdapter = new UserLikesPagerAdapter(this);
+		pagerUserLikes.setAdapter(userLikesPagerAdapter);
 
 		LinearLayout saveLike = (LinearLayout) layout
 				.findViewById(R.id.linearLayoutPagesILike);
 		TextView start = (TextView) layout.findViewById(R.id.buttonPagesILike);
-		noPagesLike = (TextView) layout.findViewById(R.id.textViewNoPagesLike);
+		//
 
 		saveLike.setOnClickListener(new OnClickListener() {
 
@@ -6012,71 +5828,24 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		});
 		final TextView tab1 = (TextView) layout.findViewById(R.id.tab1);
 		final TextView tab2 = (TextView) layout.findViewById(R.id.tab2);
-		progressLoginPagesILike = (LinearLayout) layout
-				.findViewById(R.id.linearLayoutPagesILikeProgress);
-
-		listViewPagesILike = (ListView) layout
-				.findViewById(R.id.listViewPagesILike);
-		listViewPagesILike.setAdapter(pagesILikeArrayAdapter);
-
-		listViewPagesILike
-				.setOnItemClickListener(new ListView.OnItemClickListener() {
-					@Override
-					public void onItemClick(AdapterView<?> a, View v, int i,
-							long l) {
-						if (tabSelected == 1) {
-							pageCollection.addModifiedPage(pageCollection
-									.getPageSearchList().get(i));
-							if (pageCollection
-									.addPageToFavourites(pageCollection
-											.getPageSearchList().get(i))) {
-								preferences.setModifiedPages(true);
-
-							} else {
-								pageCollection
-										.removePageFromFavourites(pageCollection
-												.getPageSearchList().get(i));
-								preferences.setModifiedPages(true);
-								preferences.setModifiedSinglePage(true);
-							}
-						} else {
-							pageCollection.addModifiedPage(pageCollection
-									.getPageAroundMe().get(i));
-							if (pageCollection
-									.addPageToFavourites(pageCollection
-											.getPageAroundMe().get(i))) {
-								preferences.setModifiedPages(true);
-
-							} else {
-								pageCollection
-										.removePageFromFavourites(pageCollection
-												.getPageAroundMe().get(i));
-								preferences.setModifiedPages(true);
-								preferences.setModifiedSinglePage(true);
-							}
-						}
-						refreshPagesILikeAdapter();
-					}
-				});
 
 		tab1.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
-				if (tabSelected == 2) {
-					tabSelected = 1;
-					userLikesInt = 0;
-					if (pageCollection.getPageSearchListRelevant().isEmpty()) {
-						progressLoginPagesILikeVisible(true);
-						noPagesLikeVisible(false);
-					}
-					getUserLikes(true);
-					tab2.setBackgroundResource(R.color.gray);
-					tab2.setTextColor(getResources().getColor(
-							R.color.android_gray));
-					tab1.setBackgroundResource(R.color.orange_title);
-					tab1.setTextColor(Color.WHITE);
+
+				userLikesInt = 0;
+				if (pageCollection.getPageSearchListRelevant().isEmpty()) {
+					userLikesPagerAdapter.setProgressUserLikesVisible(true);
+					noPagesLikeVisible(false);
 				}
+				getUserLikes(true);
+				tab2.setBackgroundResource(R.color.gray);
+				tab2.setTextColor(getResources().getColor(R.color.android_gray));
+				tab1.setBackgroundResource(R.color.orange_title);
+				tab1.setTextColor(Color.WHITE);
+				pagerUserLikes.setCurrentItem(0);
+
 			}
 		});
 
@@ -6084,26 +5853,25 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 			@Override
 			public void onClick(View v) {
-				if (tabSelected == 1) {
-					tabSelected = 2;
-					placesInt = 0;
-					if (isFirstTimeAround) {
-						progressLoginPagesILikeVisible(true);
-						noPagesLikeVisible(false);
-						LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-						LocationListener ll = new mylocationlistener();
 
-						lm.requestLocationUpdates(
-								LocationManager.NETWORK_PROVIDER, 0, 0, ll);
-					} else {
-						getPlacesAroundMe();
-					}
-					tab1.setBackgroundResource(R.color.gray);
-					tab1.setTextColor(getResources().getColor(
-							R.color.android_gray));
-					tab2.setBackgroundResource(R.color.orange_title);
-					tab2.setTextColor(Color.WHITE);
+				placesInt = 0;
+				if (isFirstTimeAround) {
+					userLikesPagerAdapter.setProgressPlacesVisible(true);
+					noPagesLikeVisible(false);
+					LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+					LocationListener ll = new mylocationlistener();
+
+					lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+							0, 0, ll);
+				} else {
+					getPlacesAroundMe();
 				}
+				tab1.setBackgroundResource(R.color.gray);
+				tab1.setTextColor(getResources().getColor(R.color.android_gray));
+				tab2.setBackgroundResource(R.color.orange_title);
+				tab2.setTextColor(Color.WHITE);
+				pagerUserLikes.setCurrentItem(1);
+
 			}
 		});
 
@@ -6521,7 +6289,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		return isActionbarAvailable;
 	}
 
-	private void saveImageToDisk(String ID, Bitmap image) {
+	public void saveImageToDisk(String ID, Bitmap image) {
 		try {
 			String path = new String(ID);
 			java.io.FileOutputStream out = this.openFileOutput(path,
@@ -6532,7 +6300,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		}
 	}
 
-	private Bitmap readImageFromDisk(String ID) {
+	public Bitmap readImageFromDisk(String ID) {
 		try {
 			java.io.FileInputStream in = this.openFileInput(ID);
 			Bitmap image = BitmapFactory.decodeStream(in);
@@ -6778,6 +6546,14 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			}
 
 		}
+	}
+
+	public JSONArray getJArrayUserLikes() {
+		return jarrayLikes;
+	}
+
+	public JSONArray getJArrayPlaces() {
+		return jarrayAround;
 	}
 
 	private void getUserID() {

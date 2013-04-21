@@ -7,7 +7,7 @@
     android:orientation="vertical" >
 
     <ListView
-        android:id="@+id/listViewPagesILike"
+        android:id="@+id/listViewPlacesUserLikes"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/tabs"
@@ -21,7 +21,9 @@
     <LinearLayout
         android:id="@+id/linearLayoutPagesILikeProgress"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="250dp"
+        android:layout_alignBottom="@+id/listViewPagesILike"
+        android:layout_below="@+id/linearLayoutPagesILike"
         android:background="@color/light_light_gray"
         android:gravity="center"
         android:orientation="horizontal" >
@@ -44,9 +46,11 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/textViewNoPagesUserLikes"
+        android:id="@+id/textViewNoPagesPlaces"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="250dp"
+        android:layout_alignBottom="@+id/listViewPagesILike"
+        android:layout_below="@+id/linearLayoutPagesILike"
         android:background="@color/light_light_gray"
         android:gravity="center"
         android:paddingLeft="5dp"
