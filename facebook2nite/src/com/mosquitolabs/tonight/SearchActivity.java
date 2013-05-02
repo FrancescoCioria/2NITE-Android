@@ -1,9 +1,6 @@
 package com.mosquitolabs.tonight;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Calendar;
 
@@ -20,16 +17,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -60,9 +53,6 @@ import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
-import com.facebook.android.FacebookError;
-import com.google.ads.AdRequest;
-import com.google.ads.AdView;
 import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.Tracker;
 
@@ -90,20 +80,15 @@ public class SearchActivity extends SherlockActivity {
 	private Preferences preferences = Preferences.getInstance();
 	private ProgressBar progressSearch;
 	private boolean isFirstTime = false;
-	private boolean isBirthdayWeek = false;
 	private boolean isInsidePreview = false;
 	private TextView textNoResult;
 	private com.actionbarsherlock.app.ActionBar actionbar;
-	private ViewPager viewPager;
 	private Button tab1;
 	private Button tab2;
 	private Button buttonBack;
-	//private ViewPagerAdapter adapter;
 	private int numberPicture;
-	
-	private String gender;
+
 	private int searchSortChecked;
-	
 
 	private Tracker MyTracker;
 	private long counterStart;
@@ -120,17 +105,6 @@ public class SearchActivity extends SherlockActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.search_prova);
 		initialize();
-		//adapter = new ViewPagerAdapter(SearchActivity.this);
-		//viewPager = (ViewPager) findViewById(R.id.viewpager);
-		//viewPager.setAdapter(adapter);
-
-		// MOMENTANEAMENTE OSCURO LE TABS. IN FUTURO CANCELLARE IL CODICE
-		// MORTO//
-
-		//LinearLayout tabs = (LinearLayout) findViewById(R.id.tabs);
-		//tabs.setVisibility(View.GONE);
-
-		// !!!!!!//
 
 		EasyTracker.getTracker().sendView();
 
@@ -177,7 +151,6 @@ public class SearchActivity extends SherlockActivity {
 			isFirstTime = true;
 		}
 
-		
 	}
 
 	@Override
@@ -1016,8 +989,6 @@ public class SearchActivity extends SherlockActivity {
 		});
 	}
 
-	
-
 	private void initialize() {
 		progressSearch = (ProgressBar) findViewById(R.id.progressBarSearch);
 		textNoResult = (TextView) findViewById(R.id.textViewNoResult);
@@ -1198,8 +1169,6 @@ public class SearchActivity extends SherlockActivity {
 		}
 	}
 
-	
-
 	private class SessionStatusCallback implements Session.StatusCallback {
 		@Override
 		public void call(Session session, SessionState state,
@@ -1207,19 +1176,5 @@ public class SearchActivity extends SherlockActivity {
 
 		}
 	}
-
-	/*
-	 * private void facebook_auth() { if (isOnline()) {
-	 * mFacebook.authorize(SearchActivity.this, new String[] { "rsvp_event",
-	 * "user_likes", "user_events", "user_birthday" }, new DialogListener() {
-	 * 
-	 * @Override public void onComplete(Bundle values) {
-	 * SharedPreferences.Editor editor = mPrefs.edit();
-	 * editor.putBoolean("session_valid", true); String token =
-	 * values.getString("access_token"); long expires =
-	 * mFacebook.getAccessExpires(); editor.putString("access_token", token);
-	 * editor.putLong("access_expires", expires); editor.commit(); mAsyncRunner
-	 * = new AsyncFacebookRunner(mFacebook); }
-	 */
 
 }

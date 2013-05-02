@@ -65,9 +65,8 @@
                     android:layout_centerHorizontal="true"
                     android:adjustViewBounds="true"
                     android:contentDescription="@android:drawable/alert_light_frame"
-                    android:src="@drawable/standard_image"
                     android:scaleType="centerCrop"
-                     />
+                    android:src="@drawable/standard_image" />
 
                 <TextView
                     android:id="@+id/textViewAttendingCountOLD"
@@ -164,8 +163,8 @@
                     android:layout_gravity="top"
                     android:layout_marginLeft="7dp"
                     android:layout_marginRight="7dp"
-                    android:paddingRight="3dp"
-                    android:orientation="vertical" >
+                    android:orientation="vertical"
+                    android:paddingRight="3dp" >
 
                     <TextView
                         android:id="@+id/textViewS"
@@ -432,7 +431,7 @@ DEUM: I Deum suonano insieme dal 2009, inizialmente come duo e successivamente i
         android:background="@color/light_light_gray"
         android:gravity="center"
         android:text="Select an event"
-        android:textColor="@color/dark_gray"
+        android:textColor="@color/android_gray"
         android:textSize="15sp"
         android:visibility="gone" />
 

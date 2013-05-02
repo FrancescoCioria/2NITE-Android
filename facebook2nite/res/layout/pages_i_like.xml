@@ -9,7 +9,7 @@
     <ListView
         android:id="@+id/listViewPagesILike"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="fill_parent"
         android:layout_above="@+id/tabs"
         android:layout_below="@+id/textViewlineILike"
         android:background="@color/sfondo"
@@ -40,7 +40,7 @@
             android:layout_height="wrap_content"
             android:paddingLeft="5dp"
             android:text="Loading, it&apos;ll be ready in seconds!"
-            android:textColor="@color/dark_gray" />
+            android:textColor="@color/android_gray" />
     </LinearLayout>
 
     <TextView
@@ -51,7 +51,7 @@
         android:gravity="center"
         android:paddingLeft="5dp"
         android:text="Sorry, couldn&apos;t find any page to suggest you based on your facebook likes."
-        android:textColor="@color/dark_gray"
+            android:textColor="@color/android_gray" 
         android:visibility="gone" />
 
 </RelativeLayout>

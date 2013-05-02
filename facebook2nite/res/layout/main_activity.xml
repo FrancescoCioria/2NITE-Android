@@ -2,17 +2,13 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-            android:background="@color/sfondo"
-    
-     >
-    
-    
+    android:background="@color/sfondo" >
+
     <ImageView
         android:id="@+id/imageSfondo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        
         android:src="@drawable/sfondo_2nite"
         android:visibility="visible" />
 
@@ -22,13 +18,11 @@
         android:layout_below="@+id/buttonMainList"
         android:orientation="vertical" >
 
-        
-
         <RelativeLayout
             android:id="@+id/LayoutFilter"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-    android:background="@color/light_light_gray"
+            android:background="@color/light_light_gray"
             android:orientation="vertical"
             android:visibility="gone" >
 
@@ -153,7 +147,7 @@
             android:background="@color/light_light_gray"
             android:gravity="center"
             android:text="No incoming events"
-            android:textColor="@color/dark_gray"
+            android:textColor="@color/android_gray"
             android:textSize="15sp"
             android:visibility="gone" />
 

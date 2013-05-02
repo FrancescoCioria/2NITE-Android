@@ -6,9 +6,13 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.support.v4.view.PagerAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,51 +20,51 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.facebook.Session;
-
-public class UserLikesPagerAdapter extends PagerAdapter {
-	private static final int USER_LIKES = 0;
+public class AroundMePagerAdapter extends PagerAdapter {
+	private static final int EVENTS = 0;
 	private static final int PLACES = 1;
 
-	private Session session;
-
-	private Button buttonLogin;
-	private Button buttonContinue;
-
-	private ListView listUserLike;
 	private ListView listPlaces;
 
 	private int userLikesInt = 0;
 	private int placesInt = 0;
 
-	private final FacebookeventsActivity context;
+	private final AroundMeActivity context;
 	private View v;
-
-	private boolean likesSorted = false;
-	private boolean aroundSorted = false;
 
 	private PageCollection pageCollection = PageCollection.getInstance();
 	private Preferences preferences = Preferences.getInstance();
 
 	private myCustomAdapterPlaces customAdapterPlaces;
-	private myCustomAdapterUserLikes customAdapterUserLikes;
 
 	private LinearLayout progressLoginUserLikes;
 	private LinearLayout progressLoginPlaces;
 
-	private TextView noPagesUserLikes;
 	private TextView noPagesPlaces;
+	private TextView textEventEmpty;
 
-	public UserLikesPagerAdapter(FacebookeventsActivity context) {
+	final String APP_ID = "219909391458551";
+	private EventCollection eventCollection = EventCollection.getInstance();
+
+	private ListView listViewAroundMe;
+
+	private MyCustomAdapterEventsAroundMe eventArrayAdapter;
+
+	private SharedPreferences mPrefs;
+
+	// private String result_events;
+
+	private int aroundMePictures;
+
+	public AroundMePagerAdapter(AroundMeActivity context) {
 		this.context = context;
-		// session = Session.getActiveSession();
+		mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
 	}
 
 	@Override
@@ -77,43 +81,35 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 
 		switch (position) {
 
-		case USER_LIKES:
-			v = inflater.inflate(R.layout.pages_i_like, null);
-			noPagesUserLikes = (TextView) v
-					.findViewById(R.id.textViewNoPagesUserLikes);
-			progressLoginUserLikes = (LinearLayout) v
-					.findViewById(R.id.linearLayoutPagesILikeProgress);
-			listUserLike = (ListView) v.findViewById(R.id.listViewPagesILike);
-			customAdapterUserLikes = new myCustomAdapterUserLikes(context);
-			listUserLike.setAdapter(customAdapterUserLikes);
-			listUserLike
-					.setOnItemClickListener(new ListView.OnItemClickListener() {
-						@Override
-						public void onItemClick(AdapterView<?> a, View v,
-								int i, long l) {
+		case EVENTS:
+			v = inflater.inflate(R.layout.main_activity, null);
+			listViewAroundMe = (ListView) v.findViewById(R.id.listViewMain);
+			eventArrayAdapter = new MyCustomAdapterEventsAroundMe(context);
+			listViewAroundMe.setAdapter(eventArrayAdapter);
+			textEventEmpty = (TextView) v.findViewById(R.id.textViewEventEmpty);
 
-							pageCollection.addModifiedPage(pageCollection
-									.getPageSearchList().get(i));
-							if (pageCollection
-									.addPageToFavourites(pageCollection
-											.getPageSearchList().get(i))) {
-								preferences.setModifiedPages(true);
-								toast(pageCollection
-										.getPageSearchList().get(i).name + " has been added to your pages.");
+			textEventEmpty.setVisibility(View.VISIBLE);
+			textEventEmpty
+					.setText("Please wait..\nLooking for events nearby \nwithin three days.\nThis may take a while.");
 
-							} else {
-								pageCollection
-										.removePageFromFavourites(pageCollection
-												.getPageSearchList().get(i));
-								preferences.setModifiedPages(true);
-								preferences.setModifiedSinglePage(true);
-								toast(pageCollection
-										.getPageSearchList().get(i).name + " has been removed from your pages.");
-							}
-							refreshUserLikesAdapter();
-							refreshPlacesAdapter();
+			listViewAroundMe
+					.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+						public void onItemClick(
+								AdapterView<?> paramAdapterView,
+								View paramView, int paramInt, long paramLong) {
+							Intent localIntent = new Intent(context,
+									DescriptionEventActivity.class);
+							localIntent.putExtra(
+									"currentPageID",
+									eventCollection.getAroundMeEventList().get(
+											paramInt).event_ID);
+
+							context.startActivity(localIntent);
+
 						}
 					});
+
+			context.getLocation();
 
 			break;
 
@@ -138,8 +134,8 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 									.addPageToFavourites(pageCollection
 											.getPageAroundMe().get(i))) {
 								preferences.setModifiedPages(true);
-								toast(pageCollection
-											.getPageAroundMe().get(i).name + " has been added to your pages.");
+								toast(pageCollection.getPageAroundMe().get(i).name
+										+ " has been added to your pages.");
 
 							} else {
 								pageCollection
@@ -147,11 +143,10 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 												.getPageAroundMe().get(i));
 								preferences.setModifiedPages(true);
 								preferences.setModifiedSinglePage(true);
-								toast(pageCollection
-										.getPageAroundMe().get(i).name + " has been removed from your pages.");
+								toast(pageCollection.getPageAroundMe().get(i).name
+										+ " has been removed from your pages.");
 							}
-							refreshPlacesAdapter();
-							refreshUserLikesAdapter();
+							refreshPageAdapter();
 						}
 					});
 
@@ -160,74 +155,6 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 		}
 		((CustomViewPager) pager).addView(v, 0);
 		return v;
-	}
-
-	public synchronized void getUserLikesImages(final int i) {
-		AsyncTask<Void, Integer, Integer> task = new AsyncTask<Void, Integer, Integer>() {
-
-			@Override
-			public Integer doInBackground(Void... params) {
-				if (i < pageCollection.getPageSearchList().size()) {
-					try {
-						int z = 0;
-						String index_ID = pageCollection.getPageSearchList()
-								.get(i)._ID;
-						JSONObject json = new JSONObject();
-						JSONArray jarrayLikes = context.getJArrayUserLikes();
-
-						boolean b = true;
-						while (z < jarrayLikes.length() && b) {
-							json = jarrayLikes.getJSONObject(z);
-							if (index_ID.equals(json.getString("page_id"))) {
-								b = false;
-							} else {
-								z++;
-							}
-
-						}
-						if (!b) {
-							if (context.readImageFromDisk(json
-									.getString("page_id")) == null) {
-
-								URL img_value = new URL(json.getString("pic"));
-								context.saveImageToDisk(json
-										.getString("page_id"), BitmapFactory
-										.decodeStream(img_value
-												.openConnection()
-												.getInputStream()));
-							}
-						}
-
-					} catch (Exception e) {
-						Log.e("image_userlike", e.toString());
-					}
-				}
-				userLikesInt++;
-				return i;
-			}
-
-			@Override
-			public void onPostExecute(Integer i) {
-				if (i < pageCollection.getPageSearchList().size()) {
-					{
-						if (listUserLike.getFirstVisiblePosition() <= i
-								&& i <= listUserLike.getLastVisiblePosition()) {
-							View v = listUserLike.getChildAt(i
-									- listUserLike.getFirstVisiblePosition());
-							ImageView image = (ImageView) v
-									.findViewById(R.id.imageViewPage);
-							image.setImageBitmap(context
-									.readImageFromDisk(pageCollection
-											.getPageSearchList().get(i)._ID));
-						}
-					}
-					if (i < pageCollection.getPageSearchList().size()) {
-						getUserLikesImages(userLikesInt);
-					}
-				}
-			}
-		};
-		task.execute();
 	}
 
 	public synchronized void getPlacesImages(final int i) {
@@ -292,6 +219,68 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 				if (i < pageCollection.getPageAroundMe().size()) {
 					getPlacesImages(placesInt);
 				}
+			}
+
+		};
+		task.execute();
+	}
+
+	public synchronized void aroundMePicture() {
+		AsyncTask<Void, Void, Bitmap> task = new AsyncTask<Void, Void, Bitmap>() {
+
+			@Override
+			public Bitmap doInBackground(Void... params) {
+
+				Bitmap picture = null;
+				try {
+					JSONObject jsonAround = new JSONObject();
+					JSONArray jarrayAround = context.getJArrayAround();
+					int z = 0;
+					boolean b = true;
+					String index_ID = eventCollection.getAroundMeEventList()
+							.get(aroundMePictures).event_ID;
+					while (z < jarrayAround.length() && b) {
+						jsonAround = jarrayAround.getJSONObject(z);
+						if (index_ID.equals(jsonAround.getString("eid"))) {
+							b = false;
+						} else {
+							z++;
+						}
+					}
+					URL img_value = new URL(jsonAround.getString("pic_big"));
+					picture = BitmapFactory.decodeStream(img_value
+							.openConnection().getInputStream());
+					context.saveImageToDisk(jsonAround.getString("eid"),
+							picture);
+				} catch (Exception e) {
+					Log.e("aroundMePicture", e.toString());
+				}
+				final Bitmap pic = picture;
+
+				return pic;
+			}
+
+			@Override
+			public void onPostExecute(Bitmap pic) {
+
+				if (listViewAroundMe.getFirstVisiblePosition() <= aroundMePictures
+						&& aroundMePictures <= listViewAroundMe
+								.getLastVisiblePosition()) {
+					View v = listViewAroundMe.getChildAt(aroundMePictures
+							- listViewAroundMe.getFirstVisiblePosition());
+					ImageView image = (ImageView) v
+							.findViewById(R.id.imageViewList);
+					if (pic != null) {
+						image.setImageBitmap(pic);
+					}
+				}
+
+				aroundMePictures++;
+				if (aroundMePictures < eventCollection.getAroundMeEventList()
+						.size()) {
+					aroundMePicture();
+				}
+
 			}
 
 		};
@@ -477,38 +466,11 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 		TextView text_fan;
 	}
 
-	public void refreshUserLikesAdapter() {
-		customAdapterUserLikes.notifyDataSetChanged();
-	}
-
-	public void refreshPlacesAdapter() {
-		customAdapterPlaces.notifyDataSetChanged();
-	}
-
-	public void initializeUserLikes() {
-		if (!likesSorted) {
-			pageCollection.sortSearchByName();
-			likesSorted = true;
-		}
-		listUserLike.setVisibility(View.VISIBLE);
-		progressLoginUserLikes.setVisibility(View.GONE);
-		refreshUserLikesAdapter();
-		if (pageCollection.getPageSearchList().isEmpty()) {
-			noPagesUserLikes
-					.setText("Sorry, couldn't find any place to suggest you based on your likes.");
-			noPagesUserLikes.setVisibility(View.VISIBLE);
-		} else {
-			noPagesUserLikes.setVisibility(View.GONE);
-
-		}
-	}
-
 	public void initializePlaces() {
-		if (!aroundSorted) {
-			pageCollection.sortSearchByLikesAroundMeActivity();
-			aroundSorted = true;
-		}
-		refreshPlacesAdapter();
+
+		pageCollection.sortSearchByLikesAroundMeActivity();
+
+		refreshPageAdapter();
 		listPlaces.setVisibility(View.VISIBLE);
 		progressLoginPlaces.setVisibility(View.GONE);
 		if (pageCollection.getPageAroundMe().isEmpty()) {
@@ -517,9 +479,23 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 			noPagesPlaces.setVisibility(View.VISIBLE);
 		} else {
 			noPagesPlaces.setVisibility(View.GONE);
-
 		}
 
+	}
+
+	public void initializeEvents() {
+		if (mPrefs.getBoolean("sort_by_date", true)) {
+			eventCollection.aroundMeSortByDate();
+		} else {
+			eventCollection.aroundMeSortByAttendingCount();
+		}
+		refreshEventsAround();
+		textEventEmpty.setText("Sorry, can't find any event nearby");
+		if (eventCollection.getAroundMeEventList().isEmpty()) {
+			textEventEmpty.setVisibility(View.VISIBLE);
+		} else {
+			textEventEmpty.setVisibility(View.GONE);
+		}
 	}
 
 	public void setProgressPlacesVisible(boolean b) {
@@ -538,6 +514,18 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 			progressLoginUserLikes.setVisibility(View.GONE);
 
 		}
+	}
+
+	public void refreshPageAdapter() {
+
+		customAdapterPlaces.notifyDataSetChanged();
+
+	}
+
+	public void refreshEventsAround() {
+
+		eventArrayAdapter.notifyDataSetChanged();
+
 	}
 
 	private void toast(final String paramString) {

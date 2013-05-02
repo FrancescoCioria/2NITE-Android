@@ -17,6 +17,7 @@ import org.json.JSONObject;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -51,6 +52,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.KeyEvent;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
@@ -69,6 +71,7 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.actionbarsherlock.view.SubMenu;
 import com.facebook.AccessToken;
 import com.facebook.HttpMethod;
 import com.facebook.LoggingBehavior;
@@ -103,8 +106,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 	private int z;
 	private int entrate = 0;
-	private int userLikesInt;
-	private int placesInt = 0;
+	// private int userLikesInt;
+	// private int placesInt = 0;
 	private int tabSelected = 1;
 	private int selectedPage = 0;
 
@@ -114,7 +117,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 	private myCustomAdapter eventArrayAdapter;
 	private myCustomAdapterPage pageArrayAdapter;
-	private myCustomAdapterPagesILike pagesILikeArrayAdapter;
 
 	private String userID = "";
 	private String gender;
@@ -179,8 +181,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private String monthNameEnd = "";
 	private String attendingCount;
 	private String loc;
-	private String title2 = "events";
-	private String title3 = "description";
+
 	private boolean isReading = false;
 	private boolean isDoownloading = false;
 	private boolean isComingFromUserLikes = false;
@@ -197,16 +198,14 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private boolean isActionbarAvailable = false;
 	private boolean isAdViewVisible;
 	private boolean isFromFilter = false;
-	private boolean hasCover = false;
 	private boolean isContentMain = false;
 	private boolean myEventsSettingsDownload = false;
-	private boolean permissionAsked = false;
 
 	private ProgressDialog progressDialog;
 	private ProgressThread progressThread;
 
 	private ViewPager pagerMain;
-	private ViewPager pagerUserLikes;
+	private CustomViewPager pagerUserLikes;
 
 	private Bitmap mIcon1;
 	private ProgressBar progressLogin;
@@ -215,7 +214,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 	private AdView adView;
 
-	private TextView noPagesLike;
+	private TextView noPagsLike;
 	private String myEventsSettings = "";
 	public String filter = "all";
 	private Tracker MyTracker;
@@ -226,17 +225,18 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 	private UserLikesPagerAdapter userLikesPagerAdapter;
 
-	// private MainFragment mainFragment;
-	private static final String TAG = "MainFragment";
-	private UiLifecycleHelper uiHelper;
-	private boolean isResumed = false;
-	private Fragment[] fragments = new Fragment[3];
-
 	private Session.StatusCallback statusCallback = new SessionStatusCallback();
 	private static final List<String> READ_PERMISSIONS = Arrays.asList(
 			"user_likes", "user_events", "user_birthday");
 	private static final List<String> PUBLISH_PERMISSIONS = Arrays
 			.asList("rsvp_event");
+
+	private static final String[] TITLES = { "my pages", "events",
+			"description" };
+
+	private static final int PAGES = 0;
+	private static final int EVENTS = 1;
+	private static final int DESCRIPTION = 2;
 
 	// private Facebook mFacebook;
 
@@ -415,7 +415,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	@Override
 	public void onPause() {
 		super.onPause();
-		isResumed = false;
 	}
 
 	@Override
@@ -423,9 +422,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		eventCollection.readFromDisk(this);
 		pageCollection.readFromDisk(this);
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-
 		if ((preferences.getModifiedPages() || isEventsJustOpened)
 				&& !isReading && isContentMain) {
+			// pageCollection.restorePreviousPage();
 			read();
 
 		} else {
@@ -446,10 +445,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			listViewMain.setAdapter(eventArrayAdapter);
 			refreshEventsAdapter();
 		}
+
 		viewAll();
 		Log.i("onResume", "onResume");
 		super.onResume();
-		isResumed = true;
 
 	}
 
@@ -497,9 +496,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 					isContentMain = true;
 					actionbar.show();
-					BitmapDrawable background = new BitmapDrawable(
-							BitmapFactory.decodeResource(getResources(),
-									R.drawable.darkstripes_action));
+					Drawable background = getResources().getDrawable(
+							R.drawable.darkstripes_action);
 
 					actionbar.setBackgroundDrawable(background);
 					pageArrayAdapter = new myCustomAdapterPage(
@@ -532,12 +530,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						setPageOne();
 
 					} else {
-
 						pagerMain.setCurrentItem(1);
 					}
-
-					pagesILikeArrayAdapter = new myCustomAdapterPagesILike(
-							FacebookeventsActivity.this);
 
 					items.add("Not Answered");
 					items.add("Going");
@@ -599,12 +593,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		setContentView(R.layout.main);
 
 		isContentMain = true;
-		actionbar.show();
-		BitmapDrawable background = new BitmapDrawable(
-				BitmapFactory.decodeResource(getResources(),
-						R.drawable.darkstripes_action));
+		Drawable background = getResources().getDrawable(
+				R.drawable.darkstripes_action);
 
 		actionbar.setBackgroundDrawable(background);
+		actionbar.show();
 
 		pageArrayAdapter = new myCustomAdapterPage(FacebookeventsActivity.this);
 		eventArrayAdapter = new myCustomAdapter(FacebookeventsActivity.this,
@@ -627,6 +620,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 		eventCollection.readFromDisk(FacebookeventsActivity.this);
 		pageCollection.readFromDisk(FacebookeventsActivity.this);
+
 		if (pageCollection.getPageList().isEmpty()
 				|| eventCollection.getCompleteEventList().isEmpty()) {
 
@@ -636,11 +630,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		} else {
 			pagerMain.setCurrentItem(1);
 		}
-		pagesILikeArrayAdapter = new myCustomAdapterPagesILike(
-				FacebookeventsActivity.this);
 
 		if (pageCollection.getPageList().isEmpty()) {
-
 			dialogUserLikes();
 		}
 
@@ -652,24 +643,26 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			@Override
 			public Bitmap doInBackground(Void... params) {
 				Bundle bundle = new Bundle();
-				Request.Callback callback = new Request.Callback() {
-					public void onCompleted(Response response) {
-						json = response.getGraphObject().getInnerJSONObject();
-						try {
-							jDataArray = json.getJSONArray("data");
-							json = jDataArray.getJSONObject(0);
-							SharedPreferences.Editor editor = mPrefs.edit();
-							boolean b = json.isNull("rsvp_event");
-							editor.putBoolean("rsvp", !b);
-							editor.commit();
-						} catch (JSONException e) {
-							Log.i(TAG, "JSON error " + e.getMessage());
-						}
-					}
-				};
-				Request request = new Request(session, "me/permissions",
-						bundle, HttpMethod.GET, callback);
-				request.executeAndWait();
+
+				new Request(session, "me/permissions", bundle, HttpMethod.GET,
+						new Request.Callback() {
+							public void onCompleted(Response response) {
+								json = response.getGraphObject()
+										.getInnerJSONObject();
+								try {
+									jDataArray = json.getJSONArray("data");
+									json = jDataArray.getJSONObject(0);
+									SharedPreferences.Editor editor = mPrefs
+											.edit();
+									boolean b = json.isNull("rsvp_event");
+									editor.putBoolean("rsvp", !b);
+									editor.commit();
+								} catch (JSONException e) {
+									Log.i("permissions()",
+											"JSON error " + e.getMessage());
+								}
+							}
+						}).executeAndWait();
 
 				return null;
 			}
@@ -677,7 +670,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		task.execute();
 	}
 
-	private synchronized void getUserLikes(final boolean likes) {
+	private synchronized void getUserLikes() {
 		AsyncTask<Void, Integer, Bitmap> task = new AsyncTask<Void, Integer, Bitmap>() {
 
 			@Override
@@ -731,7 +724,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 										adRequest
 												.setGender(AdRequest.Gender.FEMALE);
 								} catch (Exception e) {
-									// TODO: handle exception
+									//
 								}
 							}
 						};
@@ -751,225 +744,220 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							HttpMethod.GET, callback);
 					request.executeAndWait();
 
-					if (tabSelected == 1) {
+					try {
+						bundle.clear();
+
 						try {
-							bundle.clear();
 
-							try {
+							if (!json.isNull("likes")) {
+								json = json.getJSONObject("likes");
 
-								if (!json.isNull("likes")) {
-									json = json.getJSONObject("likes");
+								jDataArray = json.getJSONArray("data");
+								String a = "SELECT pic_square,pic,pic_large,pic_cover,type,checkins,location,phone,fan_count,categories,description,name,page_id FROM page WHERE (page_id=";
 
-									jDataArray = json.getJSONArray("data");
-									String a = "SELECT pic_square,pic,pic_large,pic_cover,type,checkins,location,phone,fan_count,categories,description,name,page_id FROM page WHERE (page_id=";
+								for (int i = 0; i < jDataArray.length(); i++) {
+									json = jDataArray.getJSONObject(i);
+									a += json.getString("id");
+									if (i != jDataArray.length() - 1)
+										a += " or page_id=";
+								}
+								a += ")";
 
-									for (int i = 0; i < jDataArray.length(); i++) {
-										json = jDataArray.getJSONObject(i);
-										a += json.getString("id");
-										if (i != jDataArray.length() - 1)
-											a += " or page_id=";
+								bundle.clear();
+								bundle.putString("q", a);
+							}
+						} catch (Exception e) {
+							//
+						}
+
+						Request.Callback callbackbig = new Request.Callback() {
+							public void onCompleted(Response response) {
+								json = response.getGraphObject()
+										.getInnerJSONObject();
+								try {
+									jarrayLikes = json.getJSONArray("data");
+									String a = "";
+									a += "{";
+									int l = jarrayLikes.length();
+									for (int i = 0; i < jarrayLikes.length(); i++) {
+										json = jarrayLikes.getJSONObject(i);
+										PageData currentpage = new PageData();
+										currentpage._ID = json
+												.getString("page_id");
+										String my = Integer.toString(i);
+										a += "\""
+												+ my
+												+ "\""
+												+ ":\"SELECT eid,name,creator,start_time,end_time,description,location,pic_big,update_time FROM event WHERE eid IN (SELECT eid from event_member WHERE uid = "
+												+ currentpage._ID + ")"
+
+												+ "\"";
+										if (i != l - 1) {
+											a += ",";
+										}
 									}
-									a += ")";
+									a += "}";
 
 									bundle.clear();
 									bundle.putString("q", a);
+
+								} catch (Exception e) {
+									//
 								}
-							} catch (Exception e) {
-								// TODO: handle exception
-							}
 
-							Request.Callback callbackbig = new Request.Callback() {
-								public void onCompleted(Response response) {
-									json = response.getGraphObject()
-											.getInnerJSONObject();
-									try {
-										jarrayLikes = json.getJSONArray("data");
-										String a = "";
-										a += "{";
-										int l = jarrayLikes.length();
-										for (int i = 0; i < jarrayLikes
-												.length(); i++) {
-											json = jarrayLikes.getJSONObject(i);
-											PageData currentpage = new PageData();
-											currentpage._ID = json
-													.getString("page_id");
-											String my = Integer.toString(i);
-											a += "\""
-													+ my
-													+ "\""
-													+ ":\"SELECT eid,name,creator,start_time,end_time,description,location,pic_big,update_time FROM event WHERE eid IN (SELECT eid from event_member WHERE uid = "
-													+ currentpage._ID + ")"
+								Request.Callback callback2 = new Request.Callback() {
+									public void onCompleted(Response response) {
+										json = response.getGraphObject()
+												.getInnerJSONObject();
+										try {
+											jDataArray = json
+													.getJSONArray("data");
+											ArrayList<String> s = new ArrayList<String>();
+											int q = 0;
+											while (q < jDataArray.length()) {
 
-													+ "\"";
-											if (i != l - 1) {
-												a += ",";
-											}
-										}
-										a += "}";
-
-										bundle.clear();
-										bundle.putString("q", a);
-
-									} catch (Exception e) {
-										// TODO: handle exception
-									}
-
-									Request.Callback callback2 = new Request.Callback() {
-										public void onCompleted(
-												Response response) {
-											json = response.getGraphObject()
-													.getInnerJSONObject();
-											try {
-												jDataArray = json
-														.getJSONArray("data");
-												ArrayList<String> s = new ArrayList<String>();
-												int q = 0;
-												while (q < jDataArray.length()) {
-
-													jsonObject = jDataArray
-															.getJSONObject(q);
-													JSONArray jArray = jsonObject
-															.getJSONArray("fql_result_set");
-													if (!jArray.isNull(0)) {
-														json = jArray
-																.getJSONObject(0);
-														s.add(json
-																.getString("creator"));
-													}
-
-													q++;
+												jsonObject = jDataArray
+														.getJSONObject(q);
+												JSONArray jArray = jsonObject
+														.getJSONArray("fql_result_set");
+												if (!jArray.isNull(0)) {
+													json = jArray
+															.getJSONObject(0);
+													s.add(json
+															.getString("creator"));
 												}
 
-												for (int i = 0; i < jarrayLikes
-														.length(); i++) {
-													json = jarrayLikes
-															.getJSONObject(i);
-													boolean add = false;
+												q++;
+											}
 
-													for (String r : s) {
-														if (pageCollection
-																.getPageByID(json
-																		.getString("page_id")) != null)
-															break;
+											for (int i = 0; i < jarrayLikes
+													.length(); i++) {
+												json = jarrayLikes
+														.getJSONObject(i);
+												boolean add = false;
 
-														String type = json
-																.getString("type");
-														if (r.equals(json
-																.getString("page_id"))
-																|| (type.equals("CONCERT VENUE")
-																		|| type.equals("ARTS/ENTERTAINMENT/NIGHTLIFE")
-																		|| type.equals("CLUB")
-																		|| type.equals("BAR")
-																		|| type.equals("ATTRACTIONS/THINGS TO DO")
-																		|| type.equals("MOVIE THEATER")
-																		|| type.equals("BOOK STORE")
-																		|| type.equals("EVENT PLANNING/EVENT SERVICES")
-																		|| type.equals("RESTAURANT/CAFE") || type
-																			.equals("UNIVERSITY"))) {
-															add = true;
-															break;
-														}
+												for (String r : s) {
+													if (pageCollection
+															.getPageByID(json
+																	.getString("page_id")) != null)
+														break;
+
+													String type = json
+															.getString("type");
+													if (r.equals(json
+															.getString("page_id"))
+															|| (type.equals("CONCERT VENUE")
+																	|| type.equals("ARTS/ENTERTAINMENT/NIGHTLIFE")
+																	|| type.equals("CLUB")
+																	|| type.equals("BAR")
+																	|| type.equals("ATTRACTIONS/THINGS TO DO")
+																	|| type.equals("MOVIE THEATER")
+																	|| type.equals("BOOK STORE")
+																	|| type.equals("EVENT PLANNING/EVENT SERVICES")
+																	|| type.equals("RESTAURANT/CAFE") || type
+																		.equals("UNIVERSITY"))) {
+														add = true;
+														break;
+													}
+												}
+
+												if (add && tabSelected == 1) {
+													PageData page = new PageData();
+													jsonObject = json
+															.getJSONObject("location");
+													page._ID = json
+															.getString("page_id");
+													page.name = json
+															.getString("name");
+													page.number_of_likes = json
+															.getInt("fan_count");
+													page.checkins = json
+															.getInt("checkins");
+													page.phone = json
+															.getString("phone");
+													page.desc = json
+															.getString("description");
+													page.picURL = new URL(
+															json.getString("pic_large"));
+													if (!json
+															.isNull("pic_cover")) {
+														JSONObject js = json
+																.getJSONObject("pic_cover");
+														page.coverURL = new URL(
+																js.getString("source"));
 													}
 
-													if (add && tabSelected == 1) {
-														PageData page = new PageData();
-														jsonObject = json
-																.getJSONObject("location");
-														page._ID = json
-																.getString("page_id");
-														page.name = json
-																.getString("name");
-														page.number_of_likes = json
-																.getInt("fan_count");
-														page.checkins = json
-																.getInt("checkins");
-														page.phone = json
-																.getString("phone");
-														page.desc = json
-																.getString("description");
-														page.picURL = new URL(
-																json.getString("pic_large"));
-														if (!json
-																.isNull("pic_cover")) {
-															JSONObject js = json
-																	.getJSONObject("pic_cover");
-															page.coverURL = new URL(
-																	js.getString("source"));
-														}
+													String a = "";
+													JSONArray jj = json
+															.optJSONArray("categories");
+													for (int j = 0; j < jj
+															.length(); j++) {
+														json = jj
+																.getJSONObject(j);
+														if (a.length() == 0)
+															a += json
+																	.getString("name");
+														else
+															a += ", "
+																	+ json.getString("name");
+													}
 
-														String a = "";
-														JSONArray jj = json
-																.optJSONArray("categories");
-														for (int j = 0; j < jj
-																.length(); j++) {
-															json = jj
-																	.getJSONObject(j);
-															if (a.length() == 0)
-																a += json
-																		.getString("name");
-															else
-																a += ", "
-																		+ json.getString("name");
-														}
+													page.category = a;
 
-														page.category = a;
-
-														a = "";
+													a = "";
+													a += jsonObject
+															.getString("street");
+													if (a.length() > 0)
+														a += ", ";
+													if (jsonObject.has("city")) {
 														a += jsonObject
-																.getString("street");
-														if (a.length() > 0)
+																.getString("city");
+														if (a.length() > 0) {
 															a += ", ";
-														if (jsonObject
-																.has("city")) {
-															a += jsonObject
-																	.getString("city");
-															if (a.length() > 0) {
-																a += ", ";
-															}
 														}
-														if (jsonObject
-																.has("country"))
-															a += jsonObject
-																	.getString("country");
-
-														page.address = a;
-														pageCollection
-																.getPageSearchListRelevant()
-																.add(page);
-
 													}
+													if (jsonObject
+															.has("country"))
+														a += jsonObject
+																.getString("country");
+
+													page.address = a;
+													pageCollection
+															.getPageSearchListRelevant()
+															.add(page);
+
 												}
-
-											} catch (Exception e) {
-												// TODO: handle exception
 											}
+
+										} catch (Exception e) {
+											//
 										}
-									};
+									}
+								};
 
-									Request request2 = new Request(session,
-											"fql", bundle, HttpMethod.GET,
-											callback2);
-									request2.executeAndWait();
+								Request request2 = new Request(session, "fql",
+										bundle, HttpMethod.GET, callback2);
+								request2.executeAndWait();
 
-								}
-							};
-
-							Request requestbig = new Request(session, "fql",
-									bundle, HttpMethod.GET, callbackbig);
-							requestbig.executeAndWait();
-
-						} catch (Exception e) {
-							Log.e("facebook_me", e.toString());
-							if (!isOnline()) {
-								toast("Internet connection lost. Try again later from the \"Suggest Pages\" menu",
-										true);
-
-							} else {
-								toast("Well that's embarassing..\nAn error occurred. Try again later from the \"Suggested Pages\" menu",
-										true);
 							}
+						};
+
+						Request requestbig = new Request(session, "fql",
+								bundle, HttpMethod.GET, callbackbig);
+						requestbig.executeAndWait();
+
+					} catch (Exception e) {
+						Log.e("facebook_me", e.toString());
+						if (!isOnline()) {
+							toast("Internet connection lost. Try again later from the \"Suggested Pages\" menu",
+									true);
+
+						} else {
+							toast("Well that's embarassing..\nAn error occurred. Try again later from the \"Suggested Pages\" menu",
+									true);
 						}
 					}
+
 				}
 
 				return null;
@@ -1061,105 +1049,99 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					if (mPrefs.getString("user_id", null) == null) {
 						getUserID();
 					}
-					if (tabSelected == 2) {
 
-						final String az = "Select page_id,name,location,fan_count,checkins,phone,description,pic,pic_square,pic_large,pic_cover,categories from page where page_id in (select page_id from place where distance(latitude, longitude,"
-								+ "\""
-								+ Double.toString(latitude)
-								+ "\""
-								+ ","
-								+ "\""
-								+ Double.toString(longitude)
-								+ "\""
-								+ ")<"
-								+ 50000
-								+ " and checkin_count>0"
+					final String az = "Select page_id,name,location,fan_count,checkins,phone,description,pic,pic_square,pic_large,pic_cover,categories from page where page_id in (select page_id from place where distance(latitude, longitude,"
+							+ "\""
+							+ Double.toString(latitude)
+							+ "\""
+							+ ","
+							+ "\""
+							+ Double.toString(longitude)
+							+ "\""
+							+ ")<"
+							+ 50000
+							+ " and checkin_count>0"
 
-								+ " limit "
-								+ 500
-								+ ")"
+							+ " limit "
+							+ 500
+							+ ")"
 
-								+ "AND (type=\"CONCERT VENUE\" or type=\"ARTS/ENTERTAINMENT/NIGHTLIFE\"  or type=\"CLUB\" or type = \"ATTRACTIONS/THINGS TO DO\" or type =\"BAR\" or type=\"MOVIE THEATER\" or type=\"BOOK STORE\" or type = \"EVENT PLANNING/EVENT SERVICES\" or type=\"RESTAURANT/CAFE\" or type = \"UNIVERSITY\")";
+							+ "AND (type=\"CONCERT VENUE\" or type=\"ARTS/ENTERTAINMENT/NIGHTLIFE\"  or type=\"CLUB\" or type = \"ATTRACTIONS/THINGS TO DO\" or type =\"BAR\" or type=\"MOVIE THEATER\" or type=\"BOOK STORE\" or type = \"EVENT PLANNING/EVENT SERVICES\" or type=\"RESTAURANT/CAFE\" or type = \"UNIVERSITY\")";
 
-						bundle = new Bundle();
-						bundle.putString("q", az);
+					bundle = new Bundle();
+					bundle.putString("q", az);
 
-						Request.Callback callback = new Request.Callback() {
-							public void onCompleted(Response response) {
-								try {
-									json = response.getGraphObject()
-											.getInnerJSONObject();
-									jarrayAround = json.getJSONArray("data");
-									int i = 0;
-									while (i < jarrayAround.length()) {
-										json = jarrayAround.getJSONObject(i);
+					Request.Callback callback = new Request.Callback() {
+						public void onCompleted(Response response) {
+							try {
+								json = response.getGraphObject()
+										.getInnerJSONObject();
+								jarrayAround = json.getJSONArray("data");
+								int i = 0;
+								while (i < jarrayAround.length()) {
+									json = jarrayAround.getJSONObject(i);
 
-										PageData page = new PageData();
-										jsonObject = json
-												.getJSONObject("location");
-										page._ID = json.getString("page_id");
-										page.name = json.getString("name");
-										page.number_of_likes = json
-												.getInt("fan_count");
-										page.checkins = json.getInt("checkins");
-										page.phone = json.getString("phone");
-										page.desc = json
-												.getString("description");
-										page.picURL = new URL(
-												json.getString("pic_large"));
-										if (!json.isNull("pic_cover")) {
-											JSONObject js = json
-													.getJSONObject("pic_cover");
-											page.coverURL = new URL(
-													js.getString("source"));
-										}
-
-										String az = "";
-										JSONArray jj = json
-												.optJSONArray("categories");
-										for (int j = 0; j < jj.length(); j++) {
-											json = jj.getJSONObject(j);
-											if (az.length() == 0)
-												az += json.getString("name");
-											else
-												az += ", "
-														+ json.getString("name");
-										}
-
-										page.category = az;
-
-										az = "";
-										az += jsonObject.getString("street");
-										if (az.length() > 0)
-											az += ", ";
-										if (jsonObject.has("city")) {
-											az += jsonObject.getString("city");
-											if (az.length() > 0) {
-												az += ", ";
-											}
-										}
-										if (jsonObject.has("country"))
-											az += jsonObject
-													.getString("country");
-
-										page.address = az;
-										pageCollection.getPageAroundMe().add(
-												page);
-										i++;
-
+									PageData page = new PageData();
+									jsonObject = json.getJSONObject("location");
+									page._ID = json.getString("page_id");
+									page.name = json.getString("name");
+									page.number_of_likes = json
+											.getInt("fan_count");
+									page.checkins = json.getInt("checkins");
+									page.phone = json.getString("phone");
+									page.desc = json.getString("description");
+									page.picURL = new URL(
+											json.getString("pic_large"));
+									if (!json.isNull("pic_cover")) {
+										JSONObject js = json
+												.getJSONObject("pic_cover");
+										page.coverURL = new URL(
+												js.getString("source"));
 									}
 
-								} catch (Exception e) {
-									Log.e("around_me", e.toString());
-								}
-							}
-						};
-						Request request = new Request(session, "fql", bundle,
-								HttpMethod.GET, callback);
-						request.executeAndWait();
+									String az = "";
+									JSONArray jj = json
+											.optJSONArray("categories");
+									for (int j = 0; j < jj.length(); j++) {
+										json = jj.getJSONObject(j);
+										if (az.length() == 0)
+											az += json.getString("name");
+										else
+											az += ", " + json.getString("name");
+									}
 
-					}
+									page.category = az;
+
+									az = "";
+									az += jsonObject.getString("street");
+									if (az.length() > 0)
+										az += ", ";
+									if (jsonObject.has("city")) {
+										az += jsonObject.getString("city");
+										if (az.length() > 0) {
+											az += ", ";
+										}
+									}
+									if (jsonObject.has("country"))
+										az += jsonObject.getString("country");
+
+									page.address = az;
+									pageCollection.getPageAroundMe().add(page);
+									i++;
+
+								}
+
+							} catch (Exception e) {
+								Log.e("around_me", e.toString());
+							}
+						}
+					};
+					Request request = new Request(session, "fql", bundle,
+							HttpMethod.GET, callback);
+					request.executeAndWait();
+
 				}
+
 				return null;
 			}
 
@@ -1327,22 +1309,25 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							}
 							if (!pageCollection.getModifiedPageList().isEmpty()
 									&& isOnline()) {
-								listViewMain.setVisibility(View.GONE);
-
-								progressDialog = new ProgressDialog(
-										FacebookeventsActivity.this);
-								progressDialog
-										.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-								progressDialog
-										.setMessage("Downloading: \"My Events..\"");
-
-								progressDialog.setCancelable(false);
-								progressDialog.show();
-								progressThread = new ProgressThread(handler);
-
 								preferences.setIsSelectedPage(false);
 
-								progressThread.start();
+								listViewMain.setVisibility(View.GONE);
+
+								/*
+								 * progressDialog = new ProgressDialog(
+								 * FacebookeventsActivity.this); progressDialog
+								 * .
+								 * setProgressStyle(ProgressDialog.STYLE_SPINNER
+								 * ); progressDialog
+								 * .setMessage("Downloading: \"My Events..\"");
+								 * 
+								 * progressDialog.setCancelable(false);
+								 * progressDialog.show();
+								 */
+								// progressThread = new ProgressThread(handler);
+
+								newDownloadEventsComplete();
+								// progressThread.start();
 							} else {
 								if (!isOnline()) {
 									toast("No internet connection", true);
@@ -1394,14 +1379,15 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		}
 		Bundle bundle = new Bundle();
 		Calendar cal = Calendar.getInstance();
-		Calendar cal2 = Calendar.getInstance(TimeZone
-				.getTimeZone("America/Los_Angeles"));
-		long mi = cal.get(Calendar.ZONE_OFFSET);
-		long mu = cal2.get(Calendar.ZONE_OFFSET);
-		long def = mi - mu;
-		if (def < 0)
-			def = def * (-1);
-		String current_time = Long.toString(cal.getTimeInMillis() + def);
+		/*
+		 * Calendar cal2 = Calendar.getInstance(TimeZone
+		 * .getTimeZone("America/Los_Angeles")); long mi =
+		 * cal.get(Calendar.ZONE_OFFSET); long mu =
+		 * cal2.get(Calendar.ZONE_OFFSET); long def = mi - mu; if (def < 0) def
+		 * = def * (-1); String current_time =
+		 * Long.toString(cal.getTimeInMillis() + def);
+		 */
+		String current_time = Long.toString(cal.getTimeInMillis());
 		current_time = current_time.substring(0, 10);
 
 		PageData page = new PageData();
@@ -1588,7 +1574,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 													event.status_attending = rsvp;
 												}
 											} catch (Exception e) {
-												// TODO: handle exception
+												//
 											}
 										}
 									};
@@ -1656,8 +1642,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					updateCompleteEventList();
 
 				else {
-					if (!eventCollection.getEventList().isEmpty())
+					if (!eventCollection.getEventList().isEmpty()) {
 						textEventEmpty.setVisibility(View.GONE);
+					}
 
 					listViewMain.setVisibility(View.VISIBLE);
 					FacebookeventsActivity.this.runOnUiThread(new Runnable() {
@@ -1692,7 +1679,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			dayStart = my.dayStart;
 			timeStart = my.timeStart;
 			eventHasAnEnd = my.hasAnEnd;
-			hasCover = my.hasCover;
 
 			Bitmap image = readImageFromDisk(my.event_ID);
 			mIcon1 = image;
@@ -2056,17 +2042,14 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private class ViewPagerAdapter extends PagerAdapter implements
 			TitleProvider {
 
-		private String[] titles = new String[] { "my pages", title2, title3 };
-		private final Context context;
 		private View v;
 
 		public ViewPagerAdapter(Context context) {
-			this.context = context;
 		}
 
 		@Override
 		public String getTitle(int position) {
-			return titles[position];
+			return TITLES[position];
 		}
 
 		@Override
@@ -2087,10 +2070,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 			v = null;
+			loc = "null";
 
 			switch (position) {
 
-			case 0:
+			case PAGES:
 				v = inflater.inflate(R.layout.pages, null);
 				ImageView plus = (ImageView) v.findViewById(R.id.imageViewPlus);
 				listViewPage = (ListView) v.findViewById(R.id.listViewPages);
@@ -2102,7 +2086,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 									int i, long l) {
 								if (preferences.getIsSelectedPage()
 										&& i == selectedPage) {
-
+									// selectedPage=-1;
 								} else {
 									preferences
 											.setisModifiedPageListToClear(false);
@@ -2165,7 +2149,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 				break;
 
-			case 1:
+			case EVENTS:
 				if (isEventsJustOpened) {
 					eventCollection.restoreEventList();
 				}
@@ -2179,18 +2163,17 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							@Override
 							public void onItemClick(AdapterView<?> a, View v,
 									int i, long l) {
-								if (isOnline()
-										|| readImageFromDisk(eventCollection
-												.getEventList().get(i).event_ID) != null) {
+								if (readImageFromDisk(eventCollection
+										.getEventList().get(i).event_ID) != null) {
 									preferences.setModifiedSinglePage(true);
 
 									currentPageID = eventCollection
 											.getEventList().get(i).event_ID;
 									singlePage(i);
 									textPageEmpty.setVisibility(View.GONE);
-									pagerMain.setCurrentItem(2);
+									pagerMain.setCurrentItem(DESCRIPTION);
 								} else {
-									toast("You can't load events that haven't been cached in offline mode!",
+									toast("The event appears to no longer exist..",
 											true);
 								}
 
@@ -2223,6 +2206,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					@Override
 					public void onClick(View v) {
 						spinnerEvent();
+
+						// textPageEmpty.setVisibility(View.VISIBLE);
+
 					}
 				});
 				filterPages.setOnClickListener(new OnClickListener() {
@@ -2230,14 +2216,14 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					@Override
 					public void onClick(View v) {
 						spinnerPage();
+
 					}
 				});
 
 				break;
 
-			case 2:
+			case DESCRIPTION:
 				v = inflater.inflate(R.layout.single_page_prova, null);
-
 				textDesc = (TextView) v.findViewById(R.id.textViewDescription);
 				textDescYEY = (TextView) v.findViewById(R.id.textViewDescYEY);
 				textEnd = (TextView) v.findViewById(R.id.textViewEndSinglePage);
@@ -2265,69 +2251,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 					@Override
 					public void onClick(View v) {
-						LayoutInflater inflater = getLayoutInflater();
-						View dialoglayout = inflater.inflate(
-								R.layout.dialog_image, null);
 
-						try {
-							java.io.FileInputStream in = FacebookeventsActivity.this.openFileInput(eventCollection
-									.getCompleteEventByID(currentPageID).event_ID);
-							final Bitmap image = BitmapFactory.decodeStream(in);
-							int width = image.getWidth();
-							int height = image.getHeight();
-							DisplayMetrics displaymetrics = new DisplayMetrics();
-							getWindowManager().getDefaultDisplay().getMetrics(
-									displaymetrics);
-							int wwidth = displaymetrics.widthPixels;
-							int hheight = displaymetrics.heightPixels;
-							if (width > wwidth || height > hheight) {
-								final ImageView imageView = (ImageView) dialoglayout
-										.findViewById(R.id.imageView);
-								final RelativeLayout rel = (RelativeLayout) dialoglayout
-										.findViewById(R.id.rel);
-								imageView.setImageBitmap(image);
-								AlertDialog.Builder builder = new AlertDialog.Builder(
-										FacebookeventsActivity.this);
-								builder.setView(dialoglayout);
-								builder.show();
-							} else {
-
-								final Dialog help = new Dialog(
-										FacebookeventsActivity.this);
-								help.requestWindowFeature(Window.FEATURE_NO_TITLE);
-
-								WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-								lp.copyFrom(help.getWindow().getAttributes());
-								help.setContentView(R.layout.dialog_image);
-								final ImageView imageView = (ImageView) help
-										.findViewById(R.id.imageView);
-
-								imageView.setImageBitmap(image);
-								lp.width = (int) (image.getWidth());
-								lp.height = (int) (image.getHeight());
-								lp.alpha = 10;
-								help.getWindow().setAttributes(lp);
-								help.show();
-
-							}
-
-						} catch (Exception e) {
-							toast("Can't open the image, an error occurred.",
-									false);
-						}
+						openEventDescriptionPicture();
 
 					}
 				});
-
-				if (currentPageID != null
-						&& !eventCollection.getEventList().isEmpty()
-						&& eventCollection.getCompleteEventByID(currentPageID) != null) {
-					status = eventCollection
-							.getCompleteEventByID(currentPageID).status_attending;
-					if (eventCollection.getCompleteEventByID(currentPageID).hasCover) {
-
-					}
-				}
 
 				buttonNavigate.setOnClickListener(new OnClickListener() {
 
@@ -2487,6 +2415,20 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					isAdViewVisible = false;
 				}
 
+				if (currentPageID != null
+						&& !eventCollection.getEventList().isEmpty()
+						&& eventCollection.getCompleteEventByID(currentPageID) != null) {
+					status = eventCollection
+							.getCompleteEventByID(currentPageID).status_attending;
+					singlePageQuickLoading();
+
+					if (eventCollection.getCompleteEventByID(currentPageID).hasCover) {
+
+					}
+				} else {
+					textPageEmpty.setVisibility(View.VISIBLE);
+				}
+
 				break;
 
 			}
@@ -2506,6 +2448,38 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 		@Override
 		public void finishUpdate(ViewGroup container) {
+			/*
+			 * 
+			 * if (preferences.getModifiedPages() && !isReading) { read(); }
+			 * refreshPageAdapter(); if
+			 * ((eventCollection.getEventList().isEmpty()) && isPageAvailable) {
+			 * textPageEmpty.setVisibility(View.VISIBLE); } if
+			 * (!eventCollection.getEventList().isEmpty() && isPageAvailable) {
+			 * 
+			 * if (preferences.getModifiedSinglePage()) {
+			 * textPageEmpty.setVisibility(View.VISIBLE); } else { if
+			 * (currentPageID != null && eventCollection
+			 * .getCompleteEventByID(currentPageID) != null) { //
+			 * singlePageQuickLoading(); textPageEmpty.setVisibility(View.GONE);
+			 * } else { textPageEmpty.setVisibility(View.VISIBLE); } } }
+			 */
+
+			if (isComingFromUserLikes) {
+				listViewMain.setVisibility(View.VISIBLE);
+				listViewPage.setVisibility(View.VISIBLE);
+				isComingFromUserLikes = false;
+			}
+			if ((eventCollection.getEventList().isEmpty() && !preferences
+					.getIsSelectedPage())) {
+				textEventEmpty.setText("No incoming events");
+				textEventEmptyVisible(true);
+			}
+
+			if (!eventCollection.getEventList().isEmpty()) {
+				relativeFilterVisible(false);
+				textEventEmptyVisible(false);
+			}
+
 			if (isEventsJustOpened) {
 				refreshPageAdapter();
 				read();
@@ -2519,40 +2493,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 			}
 			criticalUpdate();
-
-			if (preferences.getModifiedPages() && !isReading) {
-				read();
-			}
-			refreshPageAdapter();
-			if ((eventCollection.getEventList().isEmpty()) && isPageAvailable) {
-				textPageEmpty.setVisibility(View.VISIBLE);
-			}
-			if (!eventCollection.getEventList().isEmpty() && isPageAvailable) {
-
-				if (preferences.getModifiedSinglePage()) {
-					textPageEmpty.setVisibility(View.VISIBLE);
-				} else {
-					if (currentPageID != null
-							&& eventCollection
-									.getCompleteEventByID(currentPageID) != null) {
-						singlePageQuickLoading();
-						textPageEmpty.setVisibility(View.GONE);
-					} else {
-						textPageEmpty.setVisibility(View.VISIBLE);
-					}
-				}
-			}
-
-			if (isComingFromUserLikes) {
-				listViewMain.setVisibility(View.VISIBLE);
-				listViewPage.setVisibility(View.VISIBLE);
-				isComingFromUserLikes = false;
-			}
-			if ((eventCollection.getEventList().isEmpty() && !preferences
-					.getIsSelectedPage())) {
-				textEventEmpty.setText("No incoming events");
-				textEventEmpty.setVisibility(View.VISIBLE);
-			}
 
 		}
 
@@ -2639,7 +2579,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					alertDialog.show();
 				}
 			} catch (Exception e) {
-				// TODO: handle exception
+				//
 			}
 
 		}
@@ -2729,6 +2669,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+		menu.clear();
 		MenuInflater inflater = getSupportMenuInflater();
 		inflater.inflate(R.menu.menu_actionbar, menu);
 		info_menu = menu.findItem(R.id.menu_info);
@@ -2750,31 +2691,21 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		sort.setVisible(false);
 		distance.setVisible(false);
 
-		Intent shareIntent = new Intent(Intent.ACTION_SEND);
-		shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-		shareIntent.setType("text/plain");
-		String shareBody = "www.facebook.com/" + currentPageID
-				+ "\n\nSent using 2nite.";
-		if (currentPageID != null)
-			shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
-					eventCollection.getCompleteEventByID(currentPageID).name);
-
-		shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
-		if (!isActionbarAvailable) {
-			setSearch(false);
-			setLike(false);
-			setRSVP(false);
-			setViewAll(false);
-			setShare(false);
-			setSortEvents(false);
-			setSortPages(false);
-			setRefresh(false);
-			setFacebook(false);
-			setReset(false);
-			setInfo2NITE(false);
-			setInfo(false);
-			setCalendar(false);
-		}
+		// if (!isActionbarAvailable) {
+		setSearch(false);
+		setLike(false);
+		setRSVP(false);
+		setViewAll(false);
+		setShare(false);
+		setSortEvents(false);
+		setSortPages(false);
+		setRefresh(false);
+		setFacebook(false);
+		setReset(false);
+		setInfo2NITE(false);
+		setInfo(false);
+		setCalendar(false);
+		// }
 		isActionbarAvailable = true;
 
 		return true;
@@ -2782,7 +2713,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
-		// TODO Auto-generated method stub
+
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -3039,6 +2970,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		if (!preferences.getIsSelectedPage()) {
 			if (filter.equals("all")) {
 				eventCollection.restoreEventList();
+
 				/*
 				 * for (EventData event :
 				 * eventCollection.getCompleteEventList()) { if
@@ -3126,7 +3058,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		if (!filter.equals("all")) {
 			setViewAll(true);
 		} else {
-			if (filterPages.getText().toString().equals("All Pages")) {
+			if (!preferences.getIsSelectedPage()
+					|| filterPages.getText().toString().equals("All Pages")) {
 				setViewAll(false);
 			}
 		}
@@ -4046,7 +3979,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 								saveImageToDisk("cover" + page_ID, image);
 							}
 						} catch (Exception e) {
-							// TODO: handle exception
+							//
 						}
 					}
 				};
@@ -4054,8 +3987,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						HttpMethod.GET, callback);
 				request.executeAndWait();
 
-				pageCollection.getPageByID(page_ID).coverChecked = true;
-
+				if (pageCollection.getPageByID(page_ID) != null) {
+					pageCollection.getPageByID(page_ID).coverChecked = true;
+				}
 				return null;
 			}
 		};
@@ -4227,11 +4161,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			localViewHolder = new ViewHolderStar();
 			localViewHolder.text = (TextView) paramView
 					.findViewById(R.id.textViewListPages);
-			localViewHolder.selected = (TextView) paramView
+			localViewHolder.selected = (RelativeLayout) paramView
 					.findViewById(R.id.imageViewSelected);
 			localViewHolder.image = (ImageView) paramView
 					.findViewById(R.id.imageViewPage);
-			localViewHolder.image.setOnClickListener(new OnClickListener() {
+			localViewHolder.selected.setOnClickListener(new OnClickListener() {
 
 				@Override
 				public void onClick(View v) {
@@ -4298,26 +4232,27 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	}
 
 	static class ViewHolderStar {
-		TextView selected;
+		RelativeLayout selected;
 		ImageView image;
 		TextView text;
 		boolean selection = false;
 	}
 
-	private synchronized void newDownloadEvents() {
+	private void newDownloadEvents() {
 		if (!isDoownloading) {
 			isDoownloading = true;
 			Bundle bundle = new Bundle();
 			Calendar cal = Calendar.getInstance();
-			Calendar cal2 = Calendar.getInstance(TimeZone
-					.getTimeZone("America/Los_Angeles"));
-			long mi = cal.get(Calendar.ZONE_OFFSET);
-			long mu = cal2.get(Calendar.ZONE_OFFSET);
-			long def = mi - mu;
-			if (def < 0)
-				def = def * (-1);
-			String current_time = Long.toString(cal.getTimeInMillis() + def);
-			current_time = current_time.substring(0, 10);
+			/*
+			 * Calendar cal2 = Calendar.getInstance(TimeZone
+			 * .getTimeZone("America/Los_Angeles")); long mi =
+			 * cal.get(Calendar.ZONE_OFFSET); long mu =
+			 * cal2.get(Calendar.ZONE_OFFSET); long def = mi - mu; if (def < 0)
+			 * def = def * (-1); String current_time =
+			 * Long.toString(cal.getTimeInMillis() + def);
+			 */
+			String temp = Long.toString(cal.getTimeInMillis());
+			final String current_time = temp.substring(0, 10);
 			String a = "";
 			String s = mPrefs.getString("user_id", null);
 			if (s == null) {
@@ -4483,7 +4418,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 														.getString("rsvp_status");
 											}
 										} catch (Exception e) {
-											// TODO: handle exception
+											//
 										}
 									}
 								};
@@ -4528,6 +4463,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							}
 
 						}
+
 					} catch (Exception e) {
 						Log.e("get my events", e.toString());
 					}
@@ -4688,7 +4624,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 										}
 									}
 								} catch (Exception e) {
-									// TODO: handle exception
+									//
 								}
 								event.venue = b;
 
@@ -4711,7 +4647,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 														.getString("rsvp_status");
 											}
 										} catch (Exception e) {
-											// TODO: handle exception
+											//
 										}
 									}
 								};
@@ -4800,6 +4736,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			Request request2 = new Request(session, "fql", bundle,
 					HttpMethod.GET, callback2);
 			request2.executeAndWait();
+
 			// fine secondo
 
 		}
@@ -4807,13 +4744,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	}
 
 	final Handler handler = new Handler() {
-		public void handleMessage(Message msg) {
-			progressDialog.setProgress(z);
 
-		}
 	};
 
-	/** Nested class that performs progress calculations (counting) */
 	private class ProgressThread extends Thread {
 		Handler mHandler;
 		final static int STATE_DONE = 0;
@@ -4823,6 +4756,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 		ProgressThread(Handler h) {
 			mHandler = h;
+		}
+
+		public void setState(int state) {
+			mState = state;
 		}
 
 		public void run() {
@@ -4898,9 +4835,25 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			}
 		}
 
-		public void setState(int state) {
-			mState = state;
-		}
+	}
+
+	private void newDownloadEventsComplete() {
+		progressThread = new ProgressThread(handler);
+		handler.post(new Runnable() {
+
+			@Override
+			public void run() {
+
+				progressDialog = new ProgressDialog(FacebookeventsActivity.this);
+				progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+				progressDialog.setMessage("Downloading: \"My Events..\"");
+
+				progressDialog.setCancelable(false);
+				progressDialog.show();
+
+			}
+		});
+		progressThread.start();
 
 	}
 
@@ -4954,20 +4907,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					listViewPage.setVisibility(View.VISIBLE);
 				} else {
 					listViewPage.setVisibility(View.GONE);
-				}
-
-			}
-		});
-	}
-
-	private void noPagesLikeVisible(final boolean b) {
-		FacebookeventsActivity.this.runOnUiThread(new Runnable() {
-			public void run() {
-
-				if (b) {
-					noPagesLike.setVisibility(View.VISIBLE);
-				} else {
-					noPagesLike.setVisibility(View.GONE);
 				}
 
 			}
@@ -5197,7 +5136,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 								}
 							}
 						} catch (Exception e) {
-							// TODO: handle exception
+							//
 						}
 						event.venue = b;
 						n++;
@@ -5233,15 +5172,15 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				if (pageCollection.getPageList().size() > 1) {
 					bundle = new Bundle();
 					Calendar cal = Calendar.getInstance();
-					Calendar cal2 = Calendar.getInstance(TimeZone
-							.getTimeZone("America/Los_Angeles"));
-					long mi = cal.get(Calendar.ZONE_OFFSET);
-					long mu = cal2.get(Calendar.ZONE_OFFSET);
-					long def = mi - mu;
-					if (def < 0)
-						def = def * (-1);
-					String current_time = Long.toString(cal.getTimeInMillis()
-							+ def);
+					/*
+					 * Calendar cal2 = Calendar.getInstance(TimeZone
+					 * .getTimeZone("America/Los_Angeles")); long mi =
+					 * cal.get(Calendar.ZONE_OFFSET); long mu =
+					 * cal2.get(Calendar.ZONE_OFFSET); long def = mi - mu; if
+					 * (def < 0) def = def * (-1); String current_time =
+					 * Long.toString(cal.getTimeInMillis() + def);
+					 */
+					String current_time = Long.toString(cal.getTimeInMillis());
 					current_time = current_time.substring(0, 10);
 
 					String az = "";
@@ -5404,7 +5343,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 													}
 												}
 											} catch (Exception e) {
-												// TODO: handle exception
+												//
 											}
 											event.venue = b;
 
@@ -5428,7 +5367,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 																	.getString("rsvp_status");
 														}
 													} catch (Exception e) {
-														// TODO: handle
+														//
 														// exception
 													}
 												}
@@ -5795,6 +5734,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		pagerUserLikes = (CustomViewPager) layout.findViewById(R.id.viewpager);
 		userLikesPagerAdapter = new UserLikesPagerAdapter(this);
 		pagerUserLikes.setAdapter(userLikesPagerAdapter);
+		pagerUserLikes.setPagingEnabled(false);
 
 		LinearLayout saveLike = (LinearLayout) layout
 				.findViewById(R.id.linearLayoutPagesILike);
@@ -5805,24 +5745,26 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 			@Override
 			public void onClick(View v) {
-				layout.dismiss();
 				isReading = false;
+				layout.dismiss();
 				if (pageCollection.getModifiedPageList().size() > 0) {
 					pageCollection.restoreSelectedPageList();
 					pageCollection.saveToDisk(FacebookeventsActivity.this);
 					isComingFromUserLikes = true;
 					read();
-					layout.dismiss();
+					// layout.dismiss();
 
 				} else {
 					if (pageCollection.getPageList().isEmpty()) {
 						isComingFromUserLikes = true;
 						read();
-						layout.dismiss();
+						// layout.dismiss();
 					}
 				}
+
 				pageCollection.getPageAroundMe().clear();
 				pageCollection.getPageSearchListRelevant().clear();
+				pageCollection.getPageSearchList().clear();
 
 			}
 		});
@@ -5834,12 +5776,12 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			@Override
 			public void onClick(View v) {
 
-				userLikesInt = 0;
-				if (pageCollection.getPageSearchListRelevant().isEmpty()) {
+				// userLikesInt = 0;
+				if (pageCollection.getPageSearchList().isEmpty()) {
 					userLikesPagerAdapter.setProgressUserLikesVisible(true);
-					noPagesLikeVisible(false);
+					getUserLikes();
+
 				}
-				getUserLikes(true);
 				tab2.setBackgroundResource(R.color.gray);
 				tab2.setTextColor(getResources().getColor(R.color.android_gray));
 				tab1.setBackgroundResource(R.color.orange_title);
@@ -5854,17 +5796,17 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			@Override
 			public void onClick(View v) {
 
-				placesInt = 0;
+				// placesInt = 0;
 				if (isFirstTimeAround) {
 					userLikesPagerAdapter.setProgressPlacesVisible(true);
-					noPagesLikeVisible(false);
 					LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 					LocationListener ll = new mylocationlistener();
-
 					lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
 							0, 0, ll);
 				} else {
-					getPlacesAroundMe();
+					if (pageCollection.getPageAroundMe().isEmpty()) {
+						getPlacesAroundMe();
+					}
 				}
 				tab1.setBackgroundResource(R.color.gray);
 				tab1.setTextColor(getResources().getColor(R.color.android_gray));
@@ -5896,106 +5838,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		} else {
 			start.setText("Save");
 		}
-		getUserLikes(true);
-	}
-
-	public class myCustomAdapterPagesILike extends BaseAdapter {
-		private LayoutInflater mInflater;
-
-		public myCustomAdapterPagesILike(Context paramContext) {
-			this.mInflater = LayoutInflater.from(paramContext);
-		}
-
-		public int getCount() {
-			if (tabSelected == 1) {
-				return pageCollection.getPageSearchList().size();
-			} else {
-				return pageCollection.getPageAroundMe().size();
-			}
-		}
-
-		public Object getItem(int paramInt) {
-			return Integer.valueOf(paramInt);
-		}
-
-		public long getItemId(int paramInt) {
-			return paramInt;
-		}
-
-		public View getView(final int paramInt, View paramView,
-				ViewGroup paramViewGroup) {
-			ViewHolderStar2 localViewHolder;
-			PageData temp = new PageData();
-			if (tabSelected == 1) {
-				temp = (pageCollection.getPageSearchList().get(paramInt));
-			}
-			if (tabSelected == 2) {
-				temp = (pageCollection.getPageAroundMe().get(paramInt));
-			}
-
-			final PageData page = temp;
-			paramView = mInflater.inflate(R.layout.list_pages, null);
-			localViewHolder = new ViewHolderStar2();
-			localViewHolder.text = (TextView) paramView
-					.findViewById(R.id.textViewListPages);
-			localViewHolder.text_fan = (TextView) paramView
-					.findViewById(R.id.textViewListPagesFanCount);
-			localViewHolder.star = (ImageView) paramView
-					.findViewById(R.id.imageViewStar);
-			localViewHolder.image = (ImageView) paramView
-					.findViewById(R.id.imageViewPage);
-			localViewHolder.text.setText(page.name);
-			int counter = 0;
-			if (tabSelected == 1) {
-				counter = userLikesInt;
-			} else {
-				counter = placesInt;
-			}
-			if (paramInt <= counter && readImageFromDisk(page._ID) != null) {
-				localViewHolder.image
-						.setImageBitmap(readImageFromDisk(page._ID));
-			}
-
-			localViewHolder.star
-					.setBackgroundResource(android.R.drawable.btn_star_big_off);
-			for (PageData currentPage : pageCollection.getPageList()) {
-				if (currentPage._ID.equals(page._ID)) {
-					localViewHolder.star
-							.setBackgroundResource(android.R.drawable.btn_star_big_on);
-					break;
-				}
-			}
-			localViewHolder.image
-					.setOnClickListener(new View.OnClickListener() {
-
-						@Override
-						public void onClick(View v) {
-							infoPage(page);
-						}
-					});
-
-			localViewHolder.text_fan.setText(Integer
-					.toString(page.number_of_likes) + " likes");
-			paramView.setTag(localViewHolder);
-			/*
-			 * if (tabSelected == 1 && userLikesInt < jarrayLikes.length() &&
-			 * isOneAdapter) { getUserLikesImages(userLikesInt); isOneAdapter =
-			 * false; }
-			 * 
-			 * if (tabSelected == 2 && placesInt < jarrayAround.length() &&
-			 * isOneAdapterPlaces) { isOneAdapterPlaces = false;
-			 * getPlacesImages(placesInt); }
-			 */
-
-			return paramView;
-		}
-	}
-
-	static class ViewHolderStar2 {
-		ImageView star;
-		ImageView image;
-		TextView text;
-		TextView text_fan;
+		getUserLikes();
 	}
 
 	public String getLoc() {
@@ -6212,10 +6055,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	public void spinnerPage() {
 
 		final ArrayList<String> pagesName = new ArrayList<String>();
-		AlertDialog.Builder builder2 = new AlertDialog.Builder(
+		AlertDialog.Builder builder = new AlertDialog.Builder(
 				FacebookeventsActivity.this);
 
-		builder2.setTitle("Filter Pages:");
+		builder.setTitle("Filter Pages:");
 		int i = 1;
 		int checked = 0;
 		pagesName.add("All");
@@ -6231,7 +6074,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		final CharSequence[] items = pagesName
 				.toArray(new CharSequence[pagesName.size()]);
 
-		builder2.setSingleChoiceItems(items, checked,
+		builder.setSingleChoiceItems(items, checked,
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int item) {
 
@@ -6281,7 +6124,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 					}
 				});
-		AlertDialog alert = builder2.create();
+		AlertDialog alert = builder.create();
 		alert.show();
 	}
 
@@ -6289,7 +6132,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		return isActionbarAvailable;
 	}
 
-	public void saveImageToDisk(String ID, Bitmap image) {
+	public synchronized void saveImageToDisk(String ID, Bitmap image) {
 		try {
 			String path = new String(ID);
 			java.io.FileOutputStream out = this.openFileOutput(path,
@@ -6300,7 +6143,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		}
 	}
 
-	public Bitmap readImageFromDisk(String ID) {
+	public synchronized Bitmap readImageFromDisk(String ID) {
 		try {
 			java.io.FileInputStream in = this.openFileInput(ID);
 			Bitmap image = BitmapFactory.decodeStream(in);
@@ -6354,14 +6197,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				textEventEmpty.setVisibility(View.VISIBLE);
 			}
 		}
-	}
-
-	private void refreshPagesILikeAdapter() {
-		FacebookeventsActivity.this.runOnUiThread(new Runnable() {
-			public void run() {
-				pagesILikeArrayAdapter.notifyDataSetChanged();
-			}
-		});
 	}
 
 	private void refreshPageAdapter() {
@@ -6507,7 +6342,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			return false;
 	}
 
-	public SharedPreferences mSharedPreferences;
+	// public SharedPreferences mSharedPreferences;
 
 	// Listener defined by anonymous inner class.
 	public OnSharedPreferenceChangeListener mListener = new OnSharedPreferenceChangeListener() {
@@ -6520,27 +6355,20 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				filter();
 				// refreshEventsAdapter();
 			}
+			
 			Log.d("debug", "\"" + key + "\"" + " preference has been changed");
 		}
 	};
-
-	private void onSessionStateChange(Session session, SessionState state,
-			Exception exception) {
-		if (session.isClosed()) {
-			session.getActiveSession();
-		}
-
-	}
 
 	private class SessionStatusCallback implements Session.StatusCallback {
 		@Override
 		public void call(Session session, SessionState state,
 				Exception exception) {
-			if (session.isOpened() && permissionAsked && false) {
+			// if (session.isOpened() && permissionAsked && false) {
 
-				facebook_auth_complete();
+			// facebook_auth_complete();
 
-			}
+			// }
 			if (session.isClosed()) {
 				session = session.getActiveSession();
 			}
@@ -6598,6 +6426,142 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			event.unix = true;
 			return Long.toString(millis).substring(0, 10);
 		}
+	}
+
+	private void openEventDescriptionPicture() {
+		LayoutInflater inflater = getLayoutInflater();
+		View dialoglayout = inflater.inflate(R.layout.dialog_image, null);
+
+		try {
+			java.io.FileInputStream in = FacebookeventsActivity.this
+					.openFileInput(eventCollection
+							.getCompleteEventByID(currentPageID).event_ID);
+			final Bitmap image = BitmapFactory.decodeStream(in);
+			int width = image.getWidth();
+			int height = image.getHeight();
+			DisplayMetrics displaymetrics = new DisplayMetrics();
+			getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+			int wwidth = displaymetrics.widthPixels;
+			int hheight = displaymetrics.heightPixels;
+			if (width > wwidth || height > hheight) {
+				final ImageView imageView = (ImageView) dialoglayout
+						.findViewById(R.id.imageView);
+				final RelativeLayout rel = (RelativeLayout) dialoglayout
+						.findViewById(R.id.rel);
+				imageView.setImageBitmap(image);
+				AlertDialog.Builder builder = new AlertDialog.Builder(
+						FacebookeventsActivity.this);
+				builder.setView(dialoglayout);
+				builder.show();
+			} else {
+
+				final Dialog help = new Dialog(FacebookeventsActivity.this);
+				help.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+				WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+				lp.copyFrom(help.getWindow().getAttributes());
+				help.setContentView(R.layout.dialog_image);
+				final ImageView imageView = (ImageView) help
+						.findViewById(R.id.imageView);
+
+				imageView.setImageBitmap(image);
+				lp.width = (int) (image.getWidth());
+				lp.height = (int) (image.getHeight());
+				lp.alpha = 10;
+				help.getWindow().setAttributes(lp);
+				help.show();
+
+			}
+
+		} catch (Exception e) {
+			toast("Can't open the image, an error occurred.", false);
+		}
+
+	}
+
+	private void createEventFromJSON(JSONObject json, boolean isMyEvent) {
+		try {
+			final EventData event = new EventData();
+			if (isMyEvent) {
+				event.parentPage_ID = "1";
+				event.parentPageName = "My Events..";
+			}
+
+			event.event_ID = json.getString("eid");
+			event.name = json.getString("name");
+			event.desc = json.getString("description");
+			event.loc = json.getString("location");
+			event.startMillis = getMillis(json.getString("start_time"), event);
+			event.endMillis = getMillis(json.getString("end_time"), event);
+			event.last_update = getMillis(json.getString("update_time"), event);
+			event.attending_count = json.getInt("attending_count");
+			dayOfWeek(event.startMillis, event.endMillis, event.unix);
+			event.dateStart = monthNameStart;
+			event.dayStart = dayOfWeekStart;
+			event.timeStart = timeStart;
+			event.dateEnd = monthNameEnd;
+			event.dayEnd = dayOfWeekEnd;
+			event.timeEnd = timeEnd;
+			event.isInProgress = isInProgress;
+			isInProgress = false;
+			String b = "";
+			try {
+				if (!json.isNull("venue")) {
+					JSONObject jsonO = json.getJSONObject("venue");
+					if (!jsonO.isNull("street") || !jsonO.isNull("city")) {
+						b += jsonO.getString("street");
+						if (b.length() > 0)
+							b += ", ";
+						if (jsonO.has("city")) {
+							b += jsonO.getString("city");
+							if (b.length() > 0) {
+								b += ", ";
+							}
+						}
+						if (jsonO.has("country")) {
+							b += json.getString("country");
+						}
+					}
+				}
+			} catch (Exception e) {
+				Log.e("my events", "no venue");
+			}
+			event.venue = b;
+
+			Request.Callback callback = new Request.Callback() {
+				public void onCompleted(Response response) {
+					JSONArray jArrayRSVP = new JSONArray();
+					JSONObject jsonRSVP = response.getGraphObject()
+							.getInnerJSONObject();
+					try {
+						jArrayRSVP = jsonRSVP.getJSONArray("data");
+
+						if (jArrayRSVP.length() == 0) {
+							event.status_attending = "Not Invited";
+						} else {
+							jsonRSVP = jArrayRSVP.getJSONObject(0);
+							String rsvp = jsonRSVP.getString("rsvp_status");
+							event.status_attending = rsvp;
+						}
+					} catch (Exception e) {
+						// TODO: handle exception
+					}
+				}
+			};
+			Request request = new Request(session, event.event_ID + "/invited/"
+					+ userID, new Bundle(), HttpMethod.GET, callback);
+			request.executeAndWait();
+
+			eventCollection.getCompleteEventList().add(event);
+			URL img_value = null;
+			img_value = new URL(json.getString("pic_big"));
+			Bitmap image = BitmapFactory.decodeStream(img_value
+					.openConnection().getInputStream());
+			saveImageToDisk(event.event_ID, image);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+
 	}
 
 }

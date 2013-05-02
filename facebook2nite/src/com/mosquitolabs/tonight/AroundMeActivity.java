@@ -9,7 +9,6 @@ import java.util.TimeZone;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
@@ -19,7 +18,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -34,22 +32,17 @@ import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -63,7 +56,6 @@ import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
-import com.facebook.android.Facebook;
 import com.google.ads.AdRequest;
 import com.google.ads.AdView;
 import com.google.analytics.tracking.android.EasyTracker;
@@ -73,7 +65,6 @@ public class AroundMeActivity extends SherlockActivity {
 	final String APP_ID = "219909391458551";
 	private EventCollection eventCollection = EventCollection.getInstance();
 	private JSONObject json = new JSONObject();
-	private JSONArray jarray;
 	private JSONArray jarrayPlaces;
 	private JSONArray jarrayAround;
 	private JSONObject jsonObject;
@@ -87,11 +78,8 @@ public class AroundMeActivity extends SherlockActivity {
 	private MenuItem share;
 	private MenuItem seeOnFacebook;
 	private MenuItem sortsearch;
-	private myCustomAdapterStar pageArrayAdapter;
-	private myCustomAdapterAroundMe eventArrayAdapter;
 	private PageCollection pageCollection = PageCollection.getInstance();
-	// private Facebook mFacebook;
-	// private AsyncFacebookRunner mAsyncRunner;
+
 	private String loc;
 	private String desc;
 	private String currentPageID = null;
@@ -99,19 +87,16 @@ public class AroundMeActivity extends SherlockActivity {
 	private String name;
 	private SharedPreferences mPrefs;
 	private Preferences preferences = Preferences.getInstance();
-	private TextView progressSearch;
-	private boolean isFirstTime = false;
+	private boolean firstLocation = true;
 	private boolean eventHasAnEnd = true;
 	private boolean isBirthdayWeek = false;
-	private boolean isInsidePreview = false;
 	private boolean placesSorted = false;
-	private TextView textNoResult;
 	private com.actionbarsherlock.app.ActionBar actionbar;
-	private ViewPager viewPager;
+	private CustomViewPager viewPager;
 	private int page = 0;
 	private Button tab1;
 	private Button tab2;
-	private ViewPagerAdapter adapter;
+	private AroundMePagerAdapter adapter;
 	private TextView textEventEmpty;
 	private TextView textDesc;
 	private TextView textDescYEY;
@@ -135,16 +120,11 @@ public class AroundMeActivity extends SherlockActivity {
 	private String dayOfWeekEnd;
 	private String monthNameStart = "";
 	private String monthNameEnd = "";
-	private String result_events;
 	private boolean isInProgress = false;
-	private boolean isFirstTimeAround = true;
 	private boolean noPicture = true;
-	private boolean aroundMeFinished = false;
-	private int aroundMePictures;
 	private AdView adView;
 	private String gender;
 	private int searchSortChecked;
-	private int placesInt = 0;
 	private AdRequest adRequest = new AdRequest();
 	private Button buttonPlace;
 	private Button buttonNavigate;
@@ -161,19 +141,19 @@ public class AroundMeActivity extends SherlockActivity {
 		EasyTracker.getTracker().sendView();
 		pageCollection.clearPageAroundMe();
 		eventCollection.getAroundMeEventList().clear();
-
+		pageCollection.restorePreviousPage();
+		
 		actionbar = getSupportActionBar();
 		actionbar.setHomeButtonEnabled(true);
 		actionbar.setDisplayHomeAsUpEnabled(true);
-		adapter = new ViewPagerAdapter(AroundMeActivity.this);
-		viewPager = (ViewPager) findViewById(R.id.viewpager);
+		adapter = new AroundMePagerAdapter(AroundMeActivity.this);
+		viewPager = (CustomViewPager) findViewById(R.id.viewpager);
+		viewPager.setPagingEnabled(false);
 		viewPager.setAdapter(adapter);
-		BitmapDrawable background = new BitmapDrawable(
-				BitmapFactory.decodeResource(getResources(),
-						R.drawable.darkstripes_action));
+		Drawable background = getResources().getDrawable(
+				R.drawable.darkstripes_action);
 		actionbar.setBackgroundDrawable(background);
 
-		// mFacebook = new Facebook("219909391458551");
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 		String access_token = mPrefs.getString("access_token", null);
 
@@ -188,18 +168,13 @@ public class AroundMeActivity extends SherlockActivity {
 			}
 
 			if (access_token != null) {
-				// Clear the token info
+
 				SharedPreferences.Editor editor = mPrefs.edit();
 				editor.putString("access_token", null);
 				editor.commit();
-				// Create an AccessToken object for importing
-				// just pass in the access token and take the
-				// defaults on other values
 				AccessToken accessToken = AccessToken
 						.createFromExistingAccessToken(access_token, null,
 								null, null, null);
-
-				// statusCallback: Session.StatusCallback implementation
 				session.open(accessToken, statusCallback);
 				Session.setActiveSession(session);
 			} else {
@@ -221,6 +196,7 @@ public class AroundMeActivity extends SherlockActivity {
 		tab2.setText("Places");
 		tab2.setTextColor(getResources().getColor(R.color.android_gray));
 		tab1.setBackgroundColor(Color.rgb(217, 117, 0));
+
 		tab1.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -228,15 +204,16 @@ public class AroundMeActivity extends SherlockActivity {
 				tab2.setTextColor(getResources().getColor(R.color.android_gray));
 				tab1.setBackgroundResource(R.color.orange_title);
 				tab1.setTextColor(Color.WHITE);
-				page = 0;
-				viewPager.invalidate();
-				viewPager.setAdapter(adapter);
+				// page = 0;
+				// viewPager.invalidate();
+				// viewPager.setAdapter(adapter);
 				sort.setVisible(true);
 				distance.setVisible(false);
 				share.setVisible(false);
 				sortsearch.setVisible(false);
 				seeOnFacebook.setVisible(false);
 				rsvp.setVisible(false);
+				viewPager.setCurrentItem(0);
 				// aroundMe();
 
 			}
@@ -249,46 +226,21 @@ public class AroundMeActivity extends SherlockActivity {
 				tab1.setTextColor(getResources().getColor(R.color.android_gray));
 				tab2.setBackgroundResource(R.color.orange_title);
 				tab2.setTextColor(Color.WHITE);
-				page = 1;
-				viewPager.invalidate();
-				viewPager.setAdapter(adapter);
-				if (pageCollection.getPageAroundMe().isEmpty()) {
-					AroundMeActivity.this.runOnUiThread(new Runnable() {
-						public void run() {
-							progressSearch.setVisibility(View.VISIBLE);
-						}
-					});
-				}
+				// page = 1;
+				// viewPager.invalidate();
+				// viewPager.setAdapter(adapter);
+
 				sortsearch.setVisible(false);
 				sort.setVisible(false);
 				distance.setVisible(false);
 				share.setVisible(false);
 				seeOnFacebook.setVisible(false);
 				rsvp.setVisible(false);
-				if (!isFirstTimeAround) {
-					getPlacesAroundMe();
-				} else {
-					LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-					LocationListener ll = new mylocationlistener();
-					lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-							0, 0, ll);
-				}
+				// adapter.initializePlaces();
+				viewPager.setCurrentItem(1);
+
 			}
 		});
-
-		// actionbar.hide();
-
-		/*
-		 * String access_token = mPrefs.getString("access_token", null); long
-		 * expires = mPrefs.getLong("access_expires", 0);
-		 * 
-		 * if (access_token != null) { mFacebook.setAccessToken(access_token); }
-		 * 
-		 * if (expires != 0) { mFacebook.setAccessExpires(expires); }
-		 * 
-		 * mAsyncRunner = new AsyncFacebookRunner(mFacebook);
-		 */
-		// pageCollection.getModifiedPageList().clear();
 
 		isBirthdayWeek = mPrefs.getBoolean("isBirthdayWeek", false);
 		adRequest.addTestDevice("B51A78A2EC2CF273BB3EDAE13C5591AC");
@@ -326,6 +278,7 @@ public class AroundMeActivity extends SherlockActivity {
 				}
 
 			}
+			editor.commit();
 
 		}
 
@@ -337,79 +290,46 @@ public class AroundMeActivity extends SherlockActivity {
 		}
 	}
 
+	public void getLocation() {
+		Log.e("location", "getting location");
+		LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		LocationListener ll = new mylocationlistener();
+		lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, ll);
+	}
+
 	@Override
 	protected void onResume() {
 		pageCollection.readFromDisk(this);
 		if (listView != null) {
-			refreshPageAdapter();
+			adapter.refreshPageAdapter();
 		}
 		if (listViewAroundMe != null) {
-			refreshEventsAround();
+			adapter.refreshEventsAround();
 		}
-		if (sort != null && sortsearch != null && distance != null
-				&& share != null && rsvp != null && seeOnFacebook != null) {
-			switch (page) {
-			case 0:
-				tab2.setBackgroundResource(R.color.gray);
-				tab2.setTextColor(getResources().getColor(R.color.android_gray));
-				tab1.setBackgroundResource(R.color.orange_title);
-				tab1.setTextColor(Color.WHITE);
-				sort.setVisible(false);
-				sortsearch.setVisible(true);
-				distance.setVisible(false);
-				share.setVisible(false);
-				rsvp.setVisible(false);
-				seeOnFacebook.setVisible(false);
-				break;
-			case 1:
-				tab1.setBackgroundResource(R.color.gray);
-				tab1.setTextColor(getResources().getColor(R.color.android_gray));
-				tab2.setBackgroundResource(R.color.orange_title);
-				tab2.setTextColor(Color.WHITE);
-				sortsearch.setVisible(false);
-				sort.setVisible(true);
-				distance.setVisible(true);
-				share.setVisible(false);
-				rsvp.setVisible(false);
-				seeOnFacebook.setVisible(false);
-				break;
-			case 2:
-				tab2.setVisibility(View.GONE);
-				tab1.setVisibility(View.GONE);
-				sortsearch.setVisible(false);
-				sort.setVisible(false);
-				distance.setVisible(false);
-				share.setVisible(true);
-				rsvp.setVisible(true);
-				seeOnFacebook.setVisible(true);
-				isInsidePreview = true;
-				break;
-			}
-		}
+		
+		
 
 		super.onResume();
 	}
-	
+
 	@Override
 	protected void onStart() {
 		super.onStart();
 		Session.getActiveSession().addCallback(statusCallback);
 	}
-	
+
 	@Override
 	protected void onStop() {
 		super.onStop();
 		Session.getActiveSession().removeCallback(statusCallback);
 	}
-	
+
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		Session session = Session.getActiveSession();
 		Session.saveSession(session, outState);
 	}
-
-	
 
 	private void toast(final String paramString) {
 		AroundMeActivity.this.runOnUiThread(new Runnable() {
@@ -419,7 +339,7 @@ public class AroundMeActivity extends SherlockActivity {
 		});
 	}
 
-	private void infoPage(final PageData paramPageData) {
+	public void infoPage(final PageData paramPageData) {
 		final Dialog layout = new Dialog(AroundMeActivity.this);
 		layout.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		layout.setContentView(R.layout.page_info_prova);
@@ -438,10 +358,6 @@ public class AroundMeActivity extends SherlockActivity {
 		TextView textWebsiteTitle = (TextView) layout
 				.findViewById(R.id.textViewWebsiteTitle);
 
-		/*
-		 * TextView textName = (TextView) layout
-		 * .findViewById(R.id.textViewName);
-		 */
 		textTitle.setText(paramPageData.name);
 
 		final Button buttonNavigate = (Button) layout
@@ -503,8 +419,6 @@ public class AroundMeActivity extends SherlockActivity {
 		});
 
 		downloadInfoPageSmallImages(layout, paramPageData._ID);
-
-		// textName.setText(paramPageData.name);
 
 		if (paramPageData.phone.length() > 0)
 			textPhone.setText(paramPageData.phone);
@@ -626,27 +540,6 @@ public class AroundMeActivity extends SherlockActivity {
 
 			}
 		});
-
-		// DisplayMetrics displaymetrics = new DisplayMetrics();
-		// getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-		// int wwidth = displaymetrics.widthPixels;
-		/*
-		 * float dp; int widthdp = 100; switch
-		 * (getResources().getDisplayMetrics().densityDpi) { case
-		 * DisplayMetrics.DENSITY_LOW:
-		 * 
-		 * dp = wwidth * (120f / displaymetrics.densityDpi); widthdp = (int) (dp
-		 * / 3);
-		 * 
-		 * break; case DisplayMetrics.DENSITY_MEDIUM: dp = wwidth * (160f /
-		 * displaymetrics.densityDpi); widthdp = (int) (dp / 3);
-		 * 
-		 * break; case DisplayMetrics.DENSITY_HIGH: dp = wwidth * (240f /
-		 * displaymetrics.densityDpi); widthdp = (int) (dp / 3);
-		 * 
-		 * break; case DisplayMetrics.DENSITY_XHIGH: dp = wwidth * (320f /
-		 * displaymetrics.densityDpi); widthdp = (int) (dp / 3); break; }
-		 */
 
 		Bitmap icon = readImageFromDisk(paramPageData._ID);
 		if (icon != null) {
@@ -790,6 +683,7 @@ public class AroundMeActivity extends SherlockActivity {
 				};
 				Request request = new Request(session, "fql", bun,
 						HttpMethod.GET, callback);
+				request.executeAndWait();
 
 				return null;
 			}
@@ -809,26 +703,19 @@ public class AroundMeActivity extends SherlockActivity {
 
 	@Override
 	public void onBackPressed() {
-		if (isInsidePreview) {
 
-			tab2.setVisibility(View.VISIBLE);
-			tab1.setVisibility(View.VISIBLE);
-			tab1.performClick();
-			isInsidePreview = false;
-		} else {
-			if (!pageCollection.getModifiedPageList().isEmpty()) {
-				pageCollection.restoreSelectedPageList();
-				preferences.setisModifiedPageListToClear(false);
-			}
-			pageCollection.saveToDisk(this);
-			eventCollection.restoreEventList();
-			// facebookeventsActivity.read();
-			super.onBackPressed();
+		if (!pageCollection.getModifiedPageList().isEmpty()) {
+			pageCollection.restoreSelectedPageList();
+			preferences.setisModifiedPageListToClear(false);
 		}
+		pageCollection.saveToDisk(this);
+		eventCollection.restoreEventList();
+		super.onBackPressed();
 
 	}
 
 	public boolean onCreateOptionsMenu(Menu menu) {
+
 		MenuInflater inflater = getSupportMenuInflater();
 
 		inflater.inflate(R.menu.menu_search, menu);
@@ -869,12 +756,6 @@ public class AroundMeActivity extends SherlockActivity {
 			setSearchSortBy();
 			return true;
 
-			/*
-			 * case R.id.menu_search: mySearch =
-			 * editTextSearch.getText().toString(); if (mySearch.length() > 0) {
-			 * isSearchComplete = false; onButtonClickDoTHisThing(); } return
-			 * true;
-			 */
 		case R.id.menu_sort:
 			setSortBy();
 			return false;
@@ -1065,22 +946,6 @@ public class AroundMeActivity extends SherlockActivity {
 		}
 	}
 
-	private void refreshPageAdapter() {
-		AroundMeActivity.this.runOnUiThread(new Runnable() {
-			public void run() {
-				pageArrayAdapter.notifyDataSetChanged();
-			}
-		});
-	}
-
-	private void refreshEventsAround() {
-		AroundMeActivity.this.runOnUiThread(new Runnable() {
-			public void run() {
-				eventArrayAdapter.notifyDataSetChanged();
-			}
-		});
-	}
-
 	private void setSortBy() {
 		final CharSequence[] items = { "Start time", "Attending count" };
 		int checked = 1;
@@ -1101,9 +966,8 @@ public class AroundMeActivity extends SherlockActivity {
 							eventCollection.aroundMeSortByAttendingCount();
 						}
 						editor.commit();
-						aroundMePictures = 0;
-						aroundMePicture();
-						refreshEventsAround();
+						adapter.aroundMePicture();
+						adapter.refreshEventsAround();
 						dialog.dismiss();
 					}
 				});
@@ -1136,7 +1000,7 @@ public class AroundMeActivity extends SherlockActivity {
 							searchSortChecked = 2;
 							break;
 						}
-						refreshPageAdapter();
+						adapter.refreshPageAdapter();
 						dialog.dismiss();
 					}
 				});
@@ -1179,13 +1043,11 @@ public class AroundMeActivity extends SherlockActivity {
 					textEventEmpty.setVisibility(View.VISIBLE);
 					textEventEmpty
 							.setText("Please wait..\nLooking for events nearby \nwithin three days.\nThis may take a while.");
-					isFirstTimeAround = true;
-					aroundMeFinished = false;
+					firstLocation = true;
 					LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 					LocationListener ll = new mylocationlistener();
 					lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
 							0, 0, ll);
-					aroundMeFinished = false;
 					dialog.dismiss();
 				} else {
 					AlertDialog.Builder builderMax;
@@ -1213,131 +1075,7 @@ public class AroundMeActivity extends SherlockActivity {
 
 	}
 
-	public class myCustomAdapterStar extends BaseAdapter {
-		private LayoutInflater mInflater;
-
-		public myCustomAdapterStar(Context paramContext) {
-			this.mInflater = LayoutInflater.from(paramContext);
-		}
-
-		public int getCount() {
-			return pageCollection.getPageAroundMe().size();
-		}
-
-		public Object getItem(int paramInt) {
-			return Integer.valueOf(paramInt);
-		}
-
-		public long getItemId(int paramInt) {
-			return paramInt;
-		}
-
-		public View getView(final int paramInt, View paramView,
-				ViewGroup paramViewGroup) {
-			ViewHolderStar localViewHolder;
-
-			paramView = mInflater.inflate(R.layout.list_pages, null);
-			localViewHolder = new ViewHolderStar();
-			localViewHolder.text = (TextView) paramView
-					.findViewById(R.id.textViewListPages);
-			localViewHolder.star = (ImageView) paramView
-					.findViewById(R.id.imageViewStar);
-			localViewHolder.image = (ImageView) paramView
-					.findViewById(R.id.imageViewPage);
-			localViewHolder.text_fan = (TextView) paramView
-					.findViewById(R.id.textViewListPagesFanCount);
-
-			localViewHolder.text.setText(pageCollection.getPageAroundMe().get(
-					paramInt).name);
-
-			paramView.setTag(localViewHolder);
-
-			final PageData page = pageCollection.getPageAroundMe()
-					.get(paramInt);
-
-			if (readImageFromDisk(page._ID) != null) {
-				localViewHolder.image
-						.setImageBitmap(readImageFromDisk(page._ID));
-			}
-
-			localViewHolder.image
-					.setOnClickListener(new View.OnClickListener() {
-
-						@Override
-						public void onClick(View v) {
-
-							try {
-
-								json = jarray.getJSONObject(paramInt);
-								jsonObject = json.getJSONObject("location");
-
-								page.checkins = json.getInt("checkins");
-								page.website = json.getString("website");
-								page.phone = json.getString("phone");
-								page.desc = json.getString("description");
-
-								String a = "";
-								JSONArray jj = json.optJSONArray("categories");
-								for (int j = 0; j < jj.length(); j++) {
-									json = jj.getJSONObject(j);
-									if (a.length() == 0)
-										a += json.getString("name");
-									else
-										a += ", " + json.getString("name");
-								}
-
-								page.category = a;
-
-								a = "";
-								a += jsonObject.getString("street");
-								if (a.length() > 0)
-									a += ", ";
-								a += jsonObject.getString("city");
-								if (a.length() > 0)
-									a += ", ";
-								a += jsonObject.getString("country");
-								page.address = a;
-
-							} catch (Exception e) {
-								Log.e("page_info", e.toString());
-							}
-							infoPage(page);
-						}
-					});
-			try {
-				json = jarray.getJSONObject(paramInt);
-				page.number_of_likes = json.getInt("fan_count");
-			} catch (Exception e) {
-				Log.e("fan_count", e.toString());
-			}
-			localViewHolder.text_fan.setText(Integer
-					.toString(page.number_of_likes) + " likes");
-
-			localViewHolder.star
-					.setBackgroundResource(android.R.drawable.btn_star_big_off);
-			for (PageData currentPage : pageCollection.getPageList()) {
-				if (currentPage._ID.equals(page._ID)) {
-					localViewHolder.star
-							.setBackgroundResource(android.R.drawable.btn_star_big_on);
-					break;
-				}
-			}
-			/*
-			 * if (placesInt < jarrayPlaces.length() && isOneAdapterPlaces) {
-			 * getPlacesImages(placesInt); isOneAdapterPlaces = false; }
-			 */
-			return paramView;
-		}
-	}
-
-	static class ViewHolderStar {
-		ImageView star;
-		ImageView image;
-		TextView text;
-		TextView text_fan;
-	}
-
-	private void saveImageToDisk(String ID, Bitmap image) {
+	public void saveImageToDisk(String ID, Bitmap image) {
 		try {
 			String path = new String(ID);
 			java.io.FileOutputStream out = this.openFileOutput(path,
@@ -1348,7 +1086,7 @@ public class AroundMeActivity extends SherlockActivity {
 		}
 	}
 
-	private Bitmap readImageFromDisk(String ID) {
+	public Bitmap readImageFromDisk(String ID) {
 		try {
 			java.io.FileInputStream in = this.openFileInput(ID);
 			Bitmap image = BitmapFactory.decodeStream(in);
@@ -1579,25 +1317,30 @@ public class AroundMeActivity extends SherlockActivity {
 		}
 	}
 
-	private synchronized void aroundMe() {
+	public synchronized void getEventsAroundMe() {
 		AsyncTask<Void, Void, Bitmap> task = new AsyncTask<Void, Void, Bitmap>() {
 
 			@Override
 			public Bitmap doInBackground(Void... params) {
 				eventCollection.getAroundMeEventList().clear();
 				Calendar cal = Calendar.getInstance();
-				Calendar cal2 = Calendar.getInstance(TimeZone
-						.getTimeZone("America/Los_Angeles"));
-				long mi = cal.get(Calendar.ZONE_OFFSET);
-				long mu = cal2.get(Calendar.ZONE_OFFSET);
-				long def = mi - mu;
-				if (def < 0)
-					def = def * (-1);
-				String current_time = Long
-						.toString(cal.getTimeInMillis() + def);
+				/*
+				 * Calendar cal2 = Calendar.getInstance(TimeZone
+				 * .getTimeZone("America/Los_Angeles")); long mi =
+				 * cal.get(Calendar.ZONE_OFFSET); long mu =
+				 * cal2.get(Calendar.ZONE_OFFSET); long def = mi - mu; if (def <
+				 * 0) def = def * (-1); String current_time =
+				 * Long.toString(cal.getTimeInMillis() + def);
+				 */
+
+				String current_time = Long.toString(cal.getTimeInMillis());
 				long Hours24 = 86400000;
+
+				// String hours24FromNow = Long.toString(cal.getTimeInMillis()
+				// + def + Hours24);
+
 				String hours24FromNow = Long.toString(cal.getTimeInMillis()
-						+ def + Hours24);
+						+ Hours24);
 				current_time = current_time.substring(0, 10);
 				hours24FromNow = hours24FromNow.substring(0, 10);
 				String distance = Integer
@@ -1607,11 +1350,11 @@ public class AroundMeActivity extends SherlockActivity {
 					limit = "1000";
 				String a = "Select eid,name,attending_count,venue,creator,description,location,start_time,end_time,pic_big from event where eid in (SELECT eid from event_member WHERE uid in (Select page_id,name from place where distance(latitude, longitude,"
 						+ "\""
-						+ Double.toString(latitude)// "40.78"// latitude
+						+ Double.toString(latitude)
 						+ "\""
 						+ ","
 						+ "\""
-						+ Double.toString(longitude)// "-73.97"// longitude
+						+ Double.toString(longitude)
 						+ "\""
 						+ ")<"
 						+ distance
@@ -1626,12 +1369,13 @@ public class AroundMeActivity extends SherlockActivity {
 								.toString(Integer.parseInt(current_time) + 259200);
 				Bundle bundle = new Bundle();
 				bundle.putString("q", a);
-				
+
 				Request.Callback callback = new Request.Callback() {
 					public void onCompleted(Response response) {
 						int z = 0;
 						try {
-							JSONObject jsonAround = response.getGraphObject().getInnerJSONObject();
+							JSONObject jsonAround = response.getGraphObject()
+									.getInnerJSONObject();
 							jarrayAround = jsonAround.getJSONArray("data");
 
 							for (z = 0; z < jarrayAround.length(); z++) {
@@ -1661,27 +1405,27 @@ public class AroundMeActivity extends SherlockActivity {
 										.getInt("attending_count");
 
 								String b = "";
-								try{
-								if (!json.isNull("venue")) {
-									JSONObject jsonO = json
-											.getJSONObject("venue");
-									if (!jsonO.isNull("street")
-											|| !jsonO.isNull("city")) {
-										b += jsonO.getString("street");
-										if (b.length() > 0)
-											b += ", ";
-										if (jsonO.has("city")) {
-											b += jsonO.getString("city");
-											if (b.length() > 0) {
+								try {
+									if (!json.isNull("venue")) {
+										JSONObject jsonO = json
+												.getJSONObject("venue");
+										if (!jsonO.isNull("street")
+												|| !jsonO.isNull("city")) {
+											b += jsonO.getString("street");
+											if (b.length() > 0)
 												b += ", ";
+											if (jsonO.has("city")) {
+												b += jsonO.getString("city");
+												if (b.length() > 0) {
+													b += ", ";
+												}
+											}
+											if (jsonO.has("country")) {
+												b += json.getString("country");
 											}
 										}
-										if (jsonO.has("country")) {
-											b += json.getString("country");
-										}
 									}
-								}
-								}catch (Exception e) {
+								} catch (Exception e) {
 									// TODO: handle exception
 								}
 								event.venue = b;
@@ -1733,27 +1477,15 @@ public class AroundMeActivity extends SherlockActivity {
 						}
 					}
 				};
-				
-				Request request = new Request(session, "fql", bundle, HttpMethod.GET, callback);
+
+				Request request = new Request(session, "fql", bundle,
+						HttpMethod.GET, callback);
 				request.executeAndWait();
-				
+
 				AroundMeActivity.this.runOnUiThread(new Runnable() {
 					public void run() {
-						aroundMeFinished = true;
-						if (mPrefs.getBoolean("sort_by_date", true)) {
-							eventCollection.aroundMeSortByDate();
-						} else {
-							eventCollection.aroundMeSortByAttendingCount();
-						}
-						refreshEventsAround();
-						textEventEmpty
-								.setText("Sorry, can't find any event nearby");
-						if (eventCollection.getAroundMeEventList().isEmpty()) {
-							textEventEmpty.setVisibility(View.VISIBLE);
-						} else {
-							textEventEmpty.setVisibility(View.GONE);
-						}
-						aroundMePicture();
+						adapter.initializeEvents();
+						adapter.aroundMePicture();
 					}
 				});
 
@@ -1765,414 +1497,8 @@ public class AroundMeActivity extends SherlockActivity {
 
 	}
 
-	private synchronized void aroundMePicture() {
-		AsyncTask<Void, Void, Bitmap> task = new AsyncTask<Void, Void, Bitmap>() {
-
-			@Override
-			public Bitmap doInBackground(Void... params) {
-
-				Bitmap picture = null;
-				try {
-					JSONObject jsonAround = new JSONObject(result_events);
-					jarrayAround = jsonAround.getJSONArray("data");
-					int z = 0;
-					boolean b = true;
-					String index_ID = eventCollection.getAroundMeEventList()
-							.get(aroundMePictures).event_ID;
-					while (z < jarrayAround.length() && b) {
-						jsonAround = jarrayAround.getJSONObject(z);
-						if (index_ID.equals(jsonAround.getString("eid"))) {
-							b = false;
-						} else {
-							z++;
-						}
-					}
-					URL img_value = new URL(jsonAround.getString("pic_big"));
-					picture = BitmapFactory.decodeStream(img_value
-							.openConnection().getInputStream());
-					saveImageToDisk(jsonAround.getString("eid"), picture);
-				} catch (Exception e) {
-					Log.e("aroundMePicture", e.toString());
-				}
-				final Bitmap pic = picture;
-				AroundMeActivity.this.runOnUiThread(new Runnable() {
-					public void run() {
-						{
-							if (listViewAroundMe.getFirstVisiblePosition() <= aroundMePictures
-									&& aroundMePictures <= listViewAroundMe
-											.getLastVisiblePosition()) {
-								View v = listViewAroundMe.getChildAt(aroundMePictures
-										- listViewAroundMe
-												.getFirstVisiblePosition());
-								ImageView image = (ImageView) v
-										.findViewById(R.id.imageViewList);
-								if (pic != null) {
-									image.setImageBitmap(pic);
-								}
-							}
-						}
-						aroundMePictures++;
-						if (aroundMePictures < eventCollection
-								.getAroundMeEventList().size()) {
-							aroundMePicture();
-						}
-
-						// isOneAdapter = true;
-						// eventArrayAdapter.notifyDataSetChanged();
-					}
-				});
-				return null;
-			}
-
-		};
-		task.execute();
-	}
-
-	private class ViewPagerAdapter extends PagerAdapter {
-
-		private final Context context;
-		private View v;
-
-		public ViewPagerAdapter(Context context) {
-			this.context = context;
-		}
-
-		@Override
-		public int getCount() {
-
-			return (1);
-
-		}
-
-		@Override
-		public Object instantiateItem(View pager, int position) {
-
-			LayoutInflater inflater = (LayoutInflater) pager.getContext()
-					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-			v = null;
-
-			switch (position) {
-
-			case 0:
-				switch (page) {
-				case 0:
-					v = inflater.inflate(R.layout.main_activity, null);
-					listViewAroundMe = (ListView) v
-							.findViewById(R.id.listViewMain);
-					eventArrayAdapter = new myCustomAdapterAroundMe(
-							AroundMeActivity.this);
-					listViewAroundMe.setAdapter(eventArrayAdapter);
-					textEventEmpty = (TextView) v
-							.findViewById(R.id.textViewEventEmpty);
-
-					if (isFirstTimeAround) {
-						textEventEmpty.setVisibility(View.VISIBLE);
-						textEventEmpty
-								.setText("Please wait..\nLooking for events nearby \nwithin three days.\nThis may take a while.");
-						LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-						LocationListener ll = new mylocationlistener();
-
-						lm.requestLocationUpdates(
-								LocationManager.NETWORK_PROVIDER, 0, 0, ll);
-					} else {
-						if (aroundMeFinished) {
-							if (eventCollection.getAroundMeEventList()
-									.isEmpty()) {
-								textEventEmpty.setVisibility(View.VISIBLE);
-								textEventEmpty
-										.setText("Sorry, can't find any event nearby");
-							}
-						} else {
-							textEventEmpty.setVisibility(View.VISIBLE);
-							textEventEmpty
-									.setText("Please wait..\nLooking for events nearby \nwithin three days.\nThis may take a while.");
-						}
-
-					}
-
-					listViewAroundMe
-							.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-								public void onItemClick(
-										AdapterView<?> paramAdapterView,
-										View paramView, int paramInt,
-										long paramLong) {
-
-									tab2.setVisibility(View.GONE);
-									tab1.setVisibility(View.GONE);
-									page = 2;
-									viewPager.invalidate();
-									viewPager.setAdapter(adapter);
-									sort.setVisible(false);
-									distance.setVisible(false);
-									share.setVisible(true);
-									rsvp.setVisible(true);
-									seeOnFacebook.setVisible(true);
-									isInsidePreview = true;
-									currentPageID = eventCollection
-											.getAroundMeEventList().get(
-													paramInt).event_ID;
-									singlePage(paramInt);
-									actionbar.show();
-
-								}
-							});
-
-					if (isFirstTime) {
-						isFirstTimeAround = true;
-						aroundMeFinished = false;
-						LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-						LocationListener ll = new mylocationlistener();
-
-						lm.requestLocationUpdates(
-								LocationManager.NETWORK_PROVIDER, 0, 0, ll);
-						isFirstTime = false;
-					} else {
-						if (aroundMeFinished) {
-							if (eventCollection.getAroundMeEventList()
-									.isEmpty()) {
-								textEventEmpty.setVisibility(View.VISIBLE);
-								textEventEmpty
-										.setText("Sorry, can't find any event nearby");
-							} else {
-								refreshEventsAround();
-							}
-						} else {
-							textEventEmpty.setVisibility(View.VISIBLE);
-							textEventEmpty
-									.setText("Please wait..\nLooking for events nearby \nwithin three days.\nThis may take a while.");
-						}
-
-					}
-					break;
-
-				case 1:
-					v = inflater.inflate(R.layout.places_aroundme, null);
-					progressSearch = (TextView) v
-							.findViewById(R.id.progressBarSearch);
-					textNoResult = (TextView) v
-							.findViewById(R.id.textViewNoResult);
-
-					pageArrayAdapter = new myCustomAdapterStar(
-							AroundMeActivity.this);
-					listView = (ListView) v.findViewById(R.id.list);
-					listView.setAdapter(pageArrayAdapter);
-
-					listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-						public void onItemClick(
-								AdapterView<?> paramAdapterView,
-								View paramView, int paramInt, long paramLong) {
-
-							try {
-								json = jarray.getJSONObject(paramInt);
-
-								jsonObject = json.getJSONObject("location");
-								pageCollection.getPageAroundMe().get(paramInt).number_of_likes = json
-										.getInt("fan_count");
-								pageCollection.getPageAroundMe().get(paramInt).checkins = json
-										.getInt("checkins");
-								pageCollection.getPageAroundMe().get(paramInt).website = json
-										.getString("website");
-								pageCollection.getPageAroundMe().get(paramInt).phone = json
-										.getString("phone");
-								pageCollection.getPageAroundMe().get(paramInt).desc = json
-										.getString("description");
-								pageCollection.getPageAroundMe().get(paramInt).picURL = new URL(
-										json.getString("pic_large"));
-								String a = "";
-								JSONArray jj = json.optJSONArray("categories");
-								for (int j = 0; j < jj.length(); j++) {
-									json = jj.getJSONObject(j);
-									if (a.length() == 0)
-										a += json.getString("name");
-									else
-										a += ", " + json.getString("name");
-								}
-
-								pageCollection.getPageAroundMe().get(paramInt).category = a;
-
-								a = "";
-								a += jsonObject.getString("street");
-								if (a.length() > 0)
-									a += ", ";
-								a += jsonObject.getString("city");
-								if (a.length() > 0)
-									a += ", ";
-								a += jsonObject.getString("country");
-								pageCollection.getPageAroundMe().get(paramInt).address = a;
-
-							} catch (Exception e) {
-								// TODO: handle exception
-							}
-							pageCollection.addModifiedPage(pageCollection
-									.getPageAroundMe().get(paramInt));
-							if (pageCollection
-									.addPageToFavourites(pageCollection
-											.getPageAroundMe().get(paramInt))) {
-								toast(pageCollection.getPageAroundMe().get(
-										paramInt).name
-										+ " added as favourite!");
-								// mSearchView.setQuery("", false);
-								preferences.setModifiedPages(true);
-
-							} else {
-								pageCollection
-										.removePageFromFavourites(pageCollection
-												.getPageAroundMe()
-												.get(paramInt));
-								preferences.setModifiedPages(true);
-								preferences.setModifiedSinglePage(true);
-								toast(pageCollection.getPageAroundMe().get(
-										paramInt).name
-										+ " removed from favourites!");
-							}
-
-							refreshPageAdapter();
-						}
-					});
-
-					/*
-					 * listView.setOnItemLongClickListener(new
-					 * AdapterView.OnItemLongClickListener() { public boolean
-					 * onItemLongClick( AdapterView<?> paramAdapterView, View
-					 * paramView, int paramInt, long paramLong) { try { json =
-					 * jarray.getJSONObject(paramInt);
-					 * 
-					 * jsonObject = json.getJSONObject("location");
-					 * pageCollection.getPageAroundMe()
-					 * .get(paramInt).number_of_likes = json
-					 * .getInt("fan_count"); pageCollection.getPageAroundMe()
-					 * .get(paramInt).checkins = json .getInt("checkins");
-					 * pageCollection.getPageAroundMe() .get(paramInt).website =
-					 * json .getString("website");
-					 * pageCollection.getPageAroundMe() .get(paramInt).phone =
-					 * json .getString("phone");
-					 * pageCollection.getPageAroundMe() .get(paramInt).desc =
-					 * json .getString("description");
-					 * 
-					 * String a = ""; JSONArray jj =
-					 * json.optJSONArray("categories"); for (int j = 0; j <
-					 * jj.length(); j++) { json = jj.getJSONObject(j); if
-					 * (a.length() == 0) a += json.getString("name"); else a +=
-					 * ", " + json.getString("name"); }
-					 * 
-					 * pageCollection.getPageAroundMe() .get(paramInt).category
-					 * = a;
-					 * 
-					 * a = ""; a += jsonObject.getString("street"); if
-					 * (a.length() > 0) a += ", "; a +=
-					 * jsonObject.getString("city"); if (a.length() > 0) a +=
-					 * ", "; a += jsonObject.getString("country");
-					 * pageCollection.getPageAroundMe() .get(paramInt).address =
-					 * a;
-					 * 
-					 * } catch (Exception e) { // TODO: handle exception }
-					 * infoPage(pageCollection.getPageAroundMe().get(
-					 * paramInt)); return false; }});
-					 */
-
-					break;
-
-				case 2:
-					v = inflater.inflate(R.layout.single_page_prova, null);
-					eventPicture = (ImageView) v
-							.findViewById(R.id.imageViewEventCover);
-					textDesc = (TextView) v
-							.findViewById(R.id.textViewDescription);
-					textDescYEY = (TextView) v
-							.findViewById(R.id.textViewDescYEY);
-					textEnd = (TextView) v
-							.findViewById(R.id.textViewEndSinglePage);
-					textStart = (TextView) v
-							.findViewById(R.id.textViewStartSinglePage);
-					textLoc = (TextView) v
-							.findViewById(R.id.textViewLocationSinglePage);
-					textName = (TextView) v
-							.findViewById(R.id.textViewNameSinglePage);
-					textNamePage = (TextView) v
-							.findViewById(R.id.textViewLocationNamePage);
-					textPageEmpty = (TextView) v
-							.findViewById(R.id.textViewPageEmpty);
-					textAttending = (TextView) v
-							.findViewById(R.id.textViewAttendingCount);
-					buttonPlace = (Button) v.findViewById(R.id.buttonPlace);
-					buttonNavigate = (Button) v
-							.findViewById(R.id.buttonNavigate);
-					if (currentPageID != null
-							&& !eventCollection.getAroundMeEventList()
-									.isEmpty()
-							&& eventCollection
-									.getAroundMeEventByID(currentPageID) != null) {
-						status = eventCollection
-								.getAroundMeEventByID(currentPageID).status_attending;
-					}
-					textLoc.setOnClickListener(new OnClickListener() {
-
-						@Override
-						public void onClick(View v) {
-							PageData paramPageData = pageCollection.getPageByID(eventCollection
-									.getAroundMeEventByID(currentPageID).parentPage_ID);
-							try {
-								if (paramPageData.address.length() > 0) {
-									Intent i = new Intent(Intent.ACTION_VIEW,
-											Uri.parse("google.navigation:q="
-													+ paramPageData.address));
-									startActivity(i);
-								} else {
-									toast("Sorry, no address available for "
-											+ paramPageData.name);
-								}
-							} catch (Exception e) {
-								toast("Can't open navigator app, be sure to have installed it on your phone.");
-
-							}
-						}
-					});
-					adView = (AdView) v.findViewById(R.id.adView35);
-					textPageEmpty.setVisibility(View.GONE);
-					if (!isBirthdayWeek) {
-						adViewLoad();
-					}
-					buttonNavigate.setVisibility(View.GONE);
-					buttonPlace.setClickable(false);
-					break;
-
-				}
-				break;
-
-			}
-			((ViewPager) pager).addView(v, 0);
-			return v;
-		}
-
-		@Override
-		public void destroyItem(View pager, int position, Object view) {
-			((ViewPager) pager).removeView((View) view);
-		}
-
-		@Override
-		public boolean isViewFromObject(View view, Object object) {
-			return view.equals(object);
-		}
-
-		@Override
-		public void finishUpdate(ViewGroup container) {
-
-		}
-
-		@Override
-		public void restoreState(Parcelable p, ClassLoader c) {
-		}
-
-		@Override
-		public Parcelable saveState() {
-			return null;
-		}
-
-		@Override
-		public void startUpdate(ViewGroup container) {
-
-		}
+	private void activity() {
+		View v = null;
 
 	}
 
@@ -2279,250 +1605,21 @@ public class AroundMeActivity extends SherlockActivity {
 		textLoc.setTextColor(Color.rgb(11, 100, 217));
 	}
 
-	public class myCustomAdapterAroundMe extends BaseAdapter {
-		EventCollection eventCollection = EventCollection.getInstance();
-
-		private LayoutInflater mInflater;
-		// private Display display;
-		private Activity context;
-
-		public myCustomAdapterAroundMe(Activity paramContext) {
-			this.mInflater = LayoutInflater.from(paramContext);
-			context = paramContext;
-		}
-
-		public int getCount() {
-			return this.eventCollection.getAroundMeEventList().size();
-		}
-
-		public Object getItem(int paramInt) {
-			return Integer.valueOf(paramInt);
-		}
-
-		public long getItemId(int paramInt) {
-			return paramInt;
-		}
-
-		public View getView(int paramInt, View paramView,
-				ViewGroup paramViewGroup) {
-			ViewHolder localViewHolder;
-
-			if (paramView == null) {
-				paramView = mInflater.inflate(R.layout.list_item, null);
-				localViewHolder = new ViewHolder();
-				localViewHolder.text = (TextView) paramView
-						.findViewById(R.id.textViewText);
-				localViewHolder.desc = (TextView) paramView
-						.findViewById(R.id.textDescription);
-				localViewHolder.separatorMonth = (TextView) paramView
-						.findViewById(R.id.textViewSeparatorMonth);
-				localViewHolder.separatorDay = (TextView) paramView
-						.findViewById(R.id.textViewSeparatorDay);
-				localViewHolder.page = (TextView) paramView
-						.findViewById(R.id.textViewPage);
-				localViewHolder.image = (ImageView) paramView
-						.findViewById(R.id.imageViewList);
-				localViewHolder.relative = (RelativeLayout) paramView
-						.findViewById(R.id.RealativeListEvent);
-				localViewHolder.layout_separator = (LinearLayout) paramView
-						.findViewById(R.id.LayoutSeparator);
-				localViewHolder.triangle_attending = (ImageView) paramView
-						.findViewById(R.id.imageViewTriangleAttending);
-				localViewHolder.filterEvents = (TextView) paramView
-						.findViewById(R.id.spinnerFilter);
-				localViewHolder.filterPages = (TextView) paramView
-						.findViewById(R.id.spinnerPages);
-				localViewHolder.relativeFilter = (RelativeLayout) paramView
-						.findViewById(R.id.LayoutFilter);
-
-				paramView.setTag(localViewHolder);
-			}
-
-			localViewHolder = (ViewHolder) paramView.getTag();
-
-			EventData event = eventCollection.getAroundMeEventList().get(
-					paramInt);
-
-			DisplayMetrics displaymetrics = new DisplayMetrics();
-			getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
-			int wwidth = displaymetrics.widthPixels;
-			float dp = 0;
-			dp = wwidth - (145 * displaymetrics.density);
-
-			String name = event.name;
-			localViewHolder.text.setText(name);
-			int i = event.name.length() - 1;
-
-			float currentTextWidth = localViewHolder.text.getPaint()
-					.measureText(name);
-			while (dp <= currentTextWidth && i >= 1) {
-				name = event.name.substring(0, i) + "...";
-				i--;
-				currentTextWidth = localViewHolder.text.getPaint().measureText(
-						name);
-			}
-
-			String lastChar = name.substring(name.length() - 4,
-					name.length() - 3);
-			if (lastChar.equals(" ")) {
-				name = name.substring(0, name.length() - 4) + "...";
-			}
-
-			localViewHolder.text.setText(name);
-
-			if (event.desc.length() > 0) {
-				String desc = event.desc.replaceAll("(?m)^[ \t]*\r?\n", "");
-
-				localViewHolder.desc.setText(desc);
-			} else {
-				localViewHolder.desc.setText("No description available.");
-			}
-			localViewHolder.logo = (ImageView) paramView
-					.findViewById(R.id.imageViewLogoList);
-
-			// localViewHolder.text.setText(event.name);
-			localViewHolder.page.setText(event.parentPageName);
-			try {
-				java.io.FileInputStream in = context
-						.openFileInput(event.event_ID);
-				Bitmap image = BitmapFactory.decodeStream(in);
-				localViewHolder.image.setImageBitmap(image);
-			} catch (Exception e) {
-				// TODO: handle exception
-			}
-
-			boolean previousEventIsInProgress = false;
-			boolean currentEventIsInProgress = false;
-			String previousEventDay = "";
-			if (paramInt != 0) {
-				previousEventIsInProgress = eventCollection
-						.getAroundMeEventList().get(paramInt - 1).isInProgress;
-				previousEventDay = eventCollection.getAroundMeEventList().get(
-						paramInt - 1).dateStart;
-			}
-			currentEventIsInProgress = event.isInProgress;
-			String currentEventDay = event.dateStart;
-
-			if ((paramInt == 0)
-					|| (!previousEventDay.equals(currentEventDay) && !currentEventIsInProgress)
-					|| (previousEventDay.equals(currentEventDay)
-							&& previousEventIsInProgress && !currentEventIsInProgress)) {
-
-				if (currentEventIsInProgress) {
-					localViewHolder.separatorDay.setBackgroundColor(Color.rgb(
-							250, 60, 60));
-					localViewHolder.separatorMonth.setText("Now");
-
-					Bitmap bmp = BitmapFactory.decodeResource(
-							context.getResources(), R.drawable.stripes_redd);
-					BitmapDrawable background = new BitmapDrawable(bmp);
-					background.setTileModeXY(Shader.TileMode.REPEAT,
-							Shader.TileMode.REPEAT);
-					localViewHolder.separatorDay
-							.setBackgroundDrawable(background);
-					localViewHolder.separatorDay.setText("In Progress");
-					localViewHolder.separatorDay.setTextColor(Color.WHITE);
-				} else {
-					localViewHolder.logo.setVisibility(View.GONE);
-
-					localViewHolder.separatorDay
-							.setBackgroundResource(R.color.dark_gray);
-
-					Bitmap bmp = BitmapFactory.decodeResource(
-							context.getResources(), R.drawable.stripe_darkk);
-					BitmapDrawable background = new BitmapDrawable(bmp);
-					background.setTileModeXY(Shader.TileMode.REPEAT,
-							Shader.TileMode.REPEAT);
-					localViewHolder.separatorDay
-							.setBackgroundDrawable(background);
-
-					localViewHolder.separatorMonth.setText(event.dateStart);
-					localViewHolder.separatorDay.setText(event.dayStart);
-					localViewHolder.separatorDay.setTextColor(Color.DKGRAY);
-					localViewHolder.separatorDay.setTextColor(Color.WHITE);// kokokoko
-				}
-				localViewHolder.layout_separator.setVisibility(View.VISIBLE);
-			} else {
-				localViewHolder.layout_separator.setVisibility(View.GONE);
-
-			}
-
-			if (!mPrefs.getBoolean("sort_by_date", true)) {
-				localViewHolder.layout_separator.setVisibility(View.GONE);
-			}
-
-			String status = event.status_attending;
-			if (status.equals("attending")) {
-				BitmapDrawable triangle = new BitmapDrawable(
-						BitmapFactory.decodeResource(context.getResources(),
-								R.drawable.triangle_green));
-				localViewHolder.triangle_attending.setImageDrawable(triangle);
-				localViewHolder.triangle_attending.setVisibility(View.VISIBLE);
-			}
-			if (status.equals("unsure")) {
-				BitmapDrawable triangle = new BitmapDrawable(
-						BitmapFactory.decodeResource(context.getResources(),
-								R.drawable.triangle_yellow));
-				localViewHolder.triangle_attending.setImageDrawable(triangle);
-				localViewHolder.triangle_attending.setVisibility(View.VISIBLE);
-			}
-			if (status.equals("declined")) {
-				BitmapDrawable triangle = new BitmapDrawable(
-						BitmapFactory.decodeResource(context.getResources(),
-								R.drawable.triangle_red));
-				localViewHolder.triangle_attending.setImageDrawable(triangle);
-				localViewHolder.triangle_attending.setVisibility(View.VISIBLE);
-			}
-			if (!status.equals("attending") && !status.equals("unsure")
-					&& !status.equals("declined")) {
-				localViewHolder.triangle_attending.setVisibility(View.GONE);
-			}
-
-			/*
-			 * if (aroundMePictures < jarrayAround.length() && isOneAdapter) {
-			 * aroundMePicture(); isOneAdapter = false; }
-			 */
-
-			// DISABILITO IL FILTER!!
-
-			localViewHolder.relativeFilter.setVisibility(View.GONE);
-
-			// DA IMPLEMENTARE PRIMA O POI
-
-			return paramView;
-		}
-
-		private class ViewHolder {
-			LinearLayout layout_separator;
-			TextView separatorMonth;
-			TextView separatorDay;
-			TextView text;
-			TextView desc;
-			TextView page;
-			TextView filterPages;
-			TextView filterEvents;
-			ImageView image;
-			ImageView triangle_attending;
-			ImageView logo;
-			RelativeLayout relative;
-			RelativeLayout relativeFilter;
-
-		}
-	}
-
 	private class mylocationlistener implements LocationListener {
+
 		@Override
 		public void onLocationChanged(Location location) {
-			if (isFirstTimeAround) {
+
+			if (firstLocation) {
 				latitude = location.getLatitude();
 				longitude = location.getLongitude();
-				if (page == 0) {
-					aroundMe();
-				} else {
-					getPlacesAroundMe();
-				}
+				pageCollection.getPageAroundMe().clear();
+				eventCollection.getAroundMeEventList().clear();
+				getEventsAroundMe();
+				getPlacesAroundMe();
+				firstLocation = false;
 			}
-			isFirstTimeAround = false;
+
 		}
 
 		@Override
@@ -2538,232 +1635,119 @@ public class AroundMeActivity extends SherlockActivity {
 		}
 	}
 
-	private synchronized void getPlacesAroundMe() {
+	public synchronized void getPlacesAroundMe() {
 		AsyncTask<Void, Integer, Bitmap> task = new AsyncTask<Void, Integer, Bitmap>() {
 
 			@Override
 			public Bitmap doInBackground(Void... params) {
 
-				if (pageCollection.getPageAroundMe().isEmpty() && page == 1) {
+				Bundle bundle = new Bundle();
 
-					Bundle bundle = new Bundle();
+				String az = "Select page_id,name,location,fan_count,checkins,phone,description,pic_square,pic,pic_large,categories from page where page_id in (select page_id from place where distance(latitude, longitude,"
+						+ "\""
+						+ Double.toString(latitude)
+						+ "\""
+						+ ","
+						+ "\""
+						+ Double.toString(longitude)
+						+ "\""
+						+ ")<"
+						+ 50000
+						+ " and checkin_count>0"
 
-					String az = "Select page_id,name,location,fan_count,checkins,phone,description,pic_square,pic,pic_large,categories from page where page_id in (select page_id from place where distance(latitude, longitude,"
-							+ "\""
-							+ Double.toString(latitude)
-							+ "\""
-							+ ","
-							+ "\""
-							+ Double.toString(longitude)
-							+ "\""
-							+ ")<"
-							+ 50000
-							+ " and checkin_count>0"
+						+ " limit "
+						+ 500
+						+ ")"
 
-							+ " limit "
-							+ 500
-							+ ")"
+						+ "AND (type=\"CONCERT VENUE\" or type=\"ARTS/ENTERTAINMENT/NIGHTLIFE\"  or type=\"CLUB\" or type = \"ATTRACTIONS/THINGS TO DO\" or type =\"BAR\" or type=\"MOVIE THEATER\" or type=\"BOOK STORE\" or type = \"EVENT PLANNING/EVENT SERVICES\" or type=\"RESTAURANT/CAFE\" or type = \"UNIVERSITY\")";
 
-							+ "AND (type=\"CONCERT VENUE\" or type=\"ARTS/ENTERTAINMENT/NIGHTLIFE\"  or type=\"CLUB\" or type = \"ATTRACTIONS/THINGS TO DO\" or type =\"BAR\" or type=\"MOVIE THEATER\" or type=\"BOOK STORE\" or type = \"EVENT PLANNING/EVENT SERVICES\" or type=\"RESTAURANT/CAFE\" or type = \"UNIVERSITY\")";
+				bundle = new Bundle();
+				bundle.putString("q", az);
+				// String result_events = mFacebook.request("fql", bundle);
+				Request.Callback callback = new Request.Callback() {
+					public void onCompleted(Response response) {
+						try {
+							json = response.getGraphObject()
+									.getInnerJSONObject();
+							jarrayPlaces = json.getJSONArray("data");
+							int i = 0;
+							while (i < jarrayPlaces.length()) {
+								json = jarrayPlaces.getJSONObject(i);
 
-					bundle = new Bundle();
-					bundle.putString("q", az);
-					// String result_events = mFacebook.request("fql", bundle);
-					Request.Callback callback = new Request.Callback() {
-						public void onCompleted(Response response) {
-							try {
-								json = response.getGraphObject()
-										.getInnerJSONObject();
-								jarrayPlaces = json.getJSONArray("data");
-								int i = 0;
-								while (i < jarrayPlaces.length()) {
-									json = jarrayPlaces.getJSONObject(i);
+								PageData page = new PageData();
+								jsonObject = json.getJSONObject("location");
+								page._ID = json.getString("page_id");
+								page.name = json.getString("name");
+								page.number_of_likes = json.getInt("fan_count");
+								page.checkins = json.getInt("checkins");
+								page.phone = json.getString("phone");
+								page.desc = json.getString("description");
+								page.picURL = new URL(
+										json.getString("pic_large"));
 
-									PageData page = new PageData();
-									jsonObject = json.getJSONObject("location");
-									page._ID = json.getString("page_id");
-									page.name = json.getString("name");
-									page.number_of_likes = json
-											.getInt("fan_count");
-									page.checkins = json.getInt("checkins");
-									page.phone = json.getString("phone");
-									page.desc = json.getString("description");
-									page.picURL = new URL(
-											json.getString("pic_large"));
-
-									String az = "";
-									JSONArray jj = json
-											.optJSONArray("categories");
-									for (int j = 0; j < jj.length(); j++) {
-										json = jj.getJSONObject(j);
-										if (az.length() == 0)
-											az += json.getString("name");
-										else
-											az += ", " + json.getString("name");
-									}
-
-									page.category = az;
-
-									az = "";
-									az += jsonObject.getString("street");
-									if (az.length() > 0)
-										az += ", ";
-									if (jsonObject.has("city")) {
-										az += jsonObject.getString("city");
-										if (az.length() > 0) {
-											az += ", ";
-										}
-									}
-									if (jsonObject.has("country"))
-										az += jsonObject.getString("country");
-
-									page.address = az;
-									pageCollection.getPageAroundMe().add(page);
-									Log.i("added", "added");
-
-									i++;
-
+								String az = "";
+								JSONArray jj = json.optJSONArray("categories");
+								for (int j = 0; j < jj.length(); j++) {
+									json = jj.getJSONObject(j);
+									if (az.length() == 0)
+										az += json.getString("name");
+									else
+										az += ", " + json.getString("name");
 								}
 
-							} catch (Exception e) {
-								toast("An error occurred");
-								Log.e("getplaces", e.toString());
-							}
-						}
-					};
+								page.category = az;
 
-					Request request = new Request(session, "fql", bundle,
-							HttpMethod.GET, callback);
-					request.executeAndWait();
-				}
+								az = "";
+								az += jsonObject.getString("street");
+								if (az.length() > 0)
+									az += ", ";
+								if (jsonObject.has("city")) {
+									az += jsonObject.getString("city");
+									if (az.length() > 0) {
+										az += ", ";
+									}
+								}
+								if (jsonObject.has("country"))
+									az += jsonObject.getString("country");
+
+								page.address = az;
+								pageCollection.getPageAroundMe().add(page);
+								Log.i("added", "added");
+
+								i++;
+
+							}
+
+						} catch (Exception e) {
+							toast("An error occurred");
+							Log.e("getplaces", e.toString());
+						}
+					}
+				};
+
+				Request request = new Request(session, "fql", bundle,
+						HttpMethod.GET, callback);
+				request.executeAndWait();
+
 				return null;
 			}
 
 			@Override
 			protected void onPostExecute(Bitmap result) {
-				if (page == 1) {
-					if (!placesSorted) {
-						pageCollection.sortSearchByLikesAroundMeActivity();
-						placesSorted = true;
-					}
-					AroundMeActivity.this.runOnUiThread(new Runnable() {
-						public void run() {
-
-							refreshPageAdapter();
-							listView.setVisibility(View.VISIBLE);
-							progressSearch.setVisibility(View.GONE);
-							if (pageCollection.getPageAroundMe().isEmpty()) {
-								textNoResult.setVisibility(View.VISIBLE);
-							} else {
-								textNoResult.setVisibility(View.GONE);
-
-							}
-						}
-					});
-
-					/*Object obj = mPrefs.getBoolean("service_status", false);
-					if (obj == null
-							|| !mPrefs.getBoolean("service_status", false)) {
-						Intent serviceIntent = new Intent(
-								AroundMeActivity.this, ServiceUpdate.class);
-						serviceIntent.putExtra("userID",
-								mPrefs.getString("user_id", null));
-						serviceIntent.putExtra("accessToken",
-								mPrefs.getString("access_token", null));
-						serviceIntent.putExtra("expires",
-								mPrefs.getLong("access_expires", 0));
-
-						startService(serviceIntent);
-					} else {
-						SharedPreferences.Editor editor = mPrefs.edit();
-
-						editor.putBoolean("service_status", false);
-						editor.commit();
-					}*/
-					int i = 0;
-
-					if (jarrayPlaces != null && jarrayPlaces.length() > 0) {
-						getPlacesImages(i);
-
-					} else {
-						if (!pageCollection.getPageAroundMe().isEmpty()) {
-							getPlacesImages(i);
-						}
-					}
+				if (!placesSorted) {
+					pageCollection.sortSearchByLikesAroundMeActivity();
+					placesSorted = true;
 				}
+				adapter.initializePlaces();
+
+				int i = 0;
+
+				adapter.getPlacesImages(i);
+
 			}
 
 		};
 
-		task.execute();
-	}
-
-	private synchronized void getPlacesImages(final int i) {
-		AsyncTask<Void, Integer, Integer> task = new AsyncTask<Void, Integer, Integer>() {
-
-			@Override
-			public Integer doInBackground(Void... params) {
-				try {
-					int z = 0;
-					boolean b = true;
-					String index_ID = pageCollection.getPageAroundMe().get(i)._ID;
-					while (z < jarrayPlaces.length() && b) {
-						json = jarrayPlaces.getJSONObject(z);
-						if (index_ID.equals(json.getString("page_id"))) {
-							b = false;
-						} else {
-							z++;
-						}
-
-					}
-
-					if (!b) {
-						if (readImageFromDisk(json.getString("page_id")) == null) {
-
-							URL img_value = null;
-							if (json.getString("pic").length() > 0) {
-								img_value = new URL(json.getString("pic"));
-							} else {
-								img_value = new URL(
-										json.getString("pic_square"));
-							}
-							saveImageToDisk(json.getString("page_id"),
-									BitmapFactory.decodeStream(img_value
-											.openConnection().getInputStream()));
-						}
-					}
-
-				} catch (Exception e) {
-					Log.e("image_userlike", e.toString());
-					// toast("Error");
-				}
-
-				placesInt++;
-				return i;
-			}
-
-			@Override
-			public void onPostExecute(Integer i) {
-
-				{
-					if (listView.getFirstVisiblePosition() <= i
-							&& i <= listView.getLastVisiblePosition()) {
-						View v = listView.getChildAt(i
-								- listView.getFirstVisiblePosition());
-						ImageView image = (ImageView) v
-								.findViewById(R.id.imageViewPage);
-						image.setImageBitmap(readImageFromDisk(pageCollection
-								.getPageAroundMe().get(i)._ID));
-					}
-				}
-				if (i < pageCollection.getPageAroundMe().size()) {
-					getPlacesImages(placesInt);
-					// isOneAdapterPlaces = true;
-				}
-				// pageArrayAdapter.notifyDataSetChanged();
-
-			}
-		};
 		task.execute();
 	}
 
@@ -2790,6 +1774,13 @@ public class AroundMeActivity extends SherlockActivity {
 				Exception exception) {
 
 		}
+	}
+
+	public JSONArray getJArrayPlaces() {
+		return jarrayPlaces;
+	}
+	public JSONArray getJArrayAround() {
+		return jarrayAround;
 	}
 
 }
