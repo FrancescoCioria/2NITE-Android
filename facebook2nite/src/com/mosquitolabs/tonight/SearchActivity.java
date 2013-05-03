@@ -40,6 +40,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
@@ -652,6 +653,8 @@ public class SearchActivity extends SherlockActivity {
 
 			paramView = mInflater.inflate(R.layout.list_pages, null);
 			localViewHolder = new ViewHolderStar();
+			localViewHolder.selected = (RelativeLayout) paramView
+					.findViewById(R.id.imageViewSelected);
 			localViewHolder.text = (TextView) paramView
 					.findViewById(R.id.textViewListPages);
 			localViewHolder.star = (ImageView) paramView
@@ -673,7 +676,7 @@ public class SearchActivity extends SherlockActivity {
 								.getPageSearchList().get(paramInt)._ID));
 			}
 
-			localViewHolder.image
+			localViewHolder.selected
 					.setOnClickListener(new View.OnClickListener() {
 
 						@Override
@@ -760,6 +763,7 @@ public class SearchActivity extends SherlockActivity {
 	}
 
 	static class ViewHolderStar {
+		RelativeLayout selected;
 		ImageView star;
 		ImageView image;
 		TextView text;

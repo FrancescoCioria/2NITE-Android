@@ -4,7 +4,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Formatter;
-import java.util.TimeZone;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,7 +17,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationListener;
@@ -28,15 +26,11 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
@@ -56,8 +50,6 @@ import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.Session;
 import com.facebook.SessionState;
-import com.google.ads.AdRequest;
-import com.google.ads.AdView;
 import com.google.analytics.tracking.android.EasyTracker;
 
 public class AroundMeActivity extends SherlockActivity {
@@ -80,16 +72,11 @@ public class AroundMeActivity extends SherlockActivity {
 	private MenuItem sortsearch;
 	private PageCollection pageCollection = PageCollection.getInstance();
 
-	private String loc;
-	private String desc;
 	private String currentPageID = null;
 	private String attendingCount;
-	private String name;
 	private SharedPreferences mPrefs;
 	private Preferences preferences = Preferences.getInstance();
 	private boolean firstLocation = true;
-	private boolean eventHasAnEnd = true;
-	private boolean isBirthdayWeek = false;
 	private boolean placesSorted = false;
 	private com.actionbarsherlock.app.ActionBar actionbar;
 	private CustomViewPager viewPager;
@@ -98,36 +85,16 @@ public class AroundMeActivity extends SherlockActivity {
 	private Button tab2;
 	private AroundMePagerAdapter adapter;
 	private TextView textEventEmpty;
-	private TextView textDesc;
-	private TextView textDescYEY;
-	private TextView textEnd;
-	private TextView textStart;
-	private TextView textLoc;
-	private TextView textName;
-	private TextView textNamePage;
-	private TextView textPageEmpty;
 	private TextView textAttending;
-	private ImageView eventPicture;
-	private Bitmap mIcon1;
-	private String dateStart;
 	private String status;
-	private String dayStart;
-	private String dayEnd;
 	private String timeStart;
-	private String dateEnd;
 	private String timeEnd;
 	private String dayOfWeekStart;
 	private String dayOfWeekEnd;
 	private String monthNameStart = "";
 	private String monthNameEnd = "";
 	private boolean isInProgress = false;
-	private boolean noPicture = true;
-	private AdView adView;
-	private String gender;
 	private int searchSortChecked;
-	private AdRequest adRequest = new AdRequest();
-	private Button buttonPlace;
-	private Button buttonNavigate;
 
 	private Session.StatusCallback statusCallback = new SessionStatusCallback();
 	private Session session;
@@ -139,22 +106,24 @@ public class AroundMeActivity extends SherlockActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main_aroundme);
 		EasyTracker.getTracker().sendView();
+		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+
 		pageCollection.clearPageAroundMe();
 		eventCollection.getAroundMeEventList().clear();
 		pageCollection.restorePreviousPage();
-		
+
 		actionbar = getSupportActionBar();
 		actionbar.setHomeButtonEnabled(true);
 		actionbar.setDisplayHomeAsUpEnabled(true);
-		adapter = new AroundMePagerAdapter(AroundMeActivity.this);
-		viewPager = (CustomViewPager) findViewById(R.id.viewpager);
-		viewPager.setPagingEnabled(false);
-		viewPager.setAdapter(adapter);
 		Drawable background = getResources().getDrawable(
 				R.drawable.darkstripes_action);
 		actionbar.setBackgroundDrawable(background);
 
-		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+		adapter = new AroundMePagerAdapter(AroundMeActivity.this);
+		viewPager = (CustomViewPager) findViewById(R.id.viewpager);
+		viewPager.setPagingEnabled(false);
+		viewPager.setAdapter(adapter);
+
 		String access_token = mPrefs.getString("access_token", null);
 
 		session = Session.getActiveSession();
@@ -204,17 +173,15 @@ public class AroundMeActivity extends SherlockActivity {
 				tab2.setTextColor(getResources().getColor(R.color.android_gray));
 				tab1.setBackgroundResource(R.color.orange_title);
 				tab1.setTextColor(Color.WHITE);
-				// page = 0;
-				// viewPager.invalidate();
-				// viewPager.setAdapter(adapter);
+
 				sort.setVisible(true);
 				distance.setVisible(false);
 				share.setVisible(false);
 				sortsearch.setVisible(false);
 				seeOnFacebook.setVisible(false);
 				rsvp.setVisible(false);
+
 				viewPager.setCurrentItem(0);
-				// aroundMe();
 
 			}
 		});
@@ -226,9 +193,6 @@ public class AroundMeActivity extends SherlockActivity {
 				tab1.setTextColor(getResources().getColor(R.color.android_gray));
 				tab2.setBackgroundResource(R.color.orange_title);
 				tab2.setTextColor(Color.WHITE);
-				// page = 1;
-				// viewPager.invalidate();
-				// viewPager.setAdapter(adapter);
 
 				sortsearch.setVisible(false);
 				sort.setVisible(false);
@@ -236,58 +200,12 @@ public class AroundMeActivity extends SherlockActivity {
 				share.setVisible(false);
 				seeOnFacebook.setVisible(false);
 				rsvp.setVisible(false);
-				// adapter.initializePlaces();
+
 				viewPager.setCurrentItem(1);
 
 			}
 		});
 
-		isBirthdayWeek = mPrefs.getBoolean("isBirthdayWeek", false);
-		adRequest.addTestDevice("B51A78A2EC2CF273BB3EDAE13C5591AC");
-		adRequest.addTestDevice("3DBF295B2FE2E3DF5CFF75D962FF409C");
-		gender = mPrefs.getString("gender", null);
-		String year = mPrefs.getString("year", null);
-		String day = mPrefs.getString("day", null);
-		String month = mPrefs.getString("month", null);
-		isBirthdayWeek = mPrefs.getBoolean("isBirthdayWeek", false);
-		if (year != null && day != null && month != null) {
-			Calendar cal = Calendar.getInstance();
-			cal.set(Integer.parseInt(year), Integer.parseInt(month) - 1,
-					Integer.parseInt(day));
-			adRequest.setBirthday(cal);
-			cal.set(cal.get(Calendar.YEAR), Integer.parseInt("07") - 1,
-					Integer.parseInt("08"));
-			Calendar today = Calendar.getInstance();
-			SharedPreferences.Editor editor = mPrefs.edit();
-			if (!isBirthdayWeek
-					&& today.get(Calendar.DAY_OF_YEAR) == cal
-							.get(Calendar.DAY_OF_YEAR)) {
-
-				isBirthdayWeek = true;
-				editor.putBoolean("isBirthdayWeek", isBirthdayWeek);
-
-			}
-			if (isBirthdayWeek) {
-				cal.add(Calendar.DAY_OF_YEAR, 7);
-				if (cal.get(Calendar.DAY_OF_YEAR) <= today
-						.get(Calendar.DAY_OF_YEAR)
-						|| (cal.get(Calendar.DAY_OF_YEAR) - 7) > today
-								.get(Calendar.DAY_OF_YEAR)) {
-					isBirthdayWeek = false;
-					editor.putBoolean("isBirthdayWeek", isBirthdayWeek);
-				}
-
-			}
-			editor.commit();
-
-		}
-
-		if (gender != null) {
-			if (gender.equals("male"))
-				adRequest.setGender(AdRequest.Gender.MALE);
-			else
-				adRequest.setGender(AdRequest.Gender.FEMALE);
-		}
 	}
 
 	public void getLocation() {
@@ -306,8 +224,6 @@ public class AroundMeActivity extends SherlockActivity {
 		if (listViewAroundMe != null) {
 			adapter.refreshEventsAround();
 		}
-		
-		
 
 		super.onResume();
 	}
@@ -334,7 +250,8 @@ public class AroundMeActivity extends SherlockActivity {
 	private void toast(final String paramString) {
 		AroundMeActivity.this.runOnUiThread(new Runnable() {
 			public void run() {
-				Toast.makeText(AroundMeActivity.this, paramString, 0).show();
+				Toast.makeText(AroundMeActivity.this, paramString,
+						Toast.LENGTH_SHORT).show();
 			}
 		});
 	}
@@ -1497,127 +1414,19 @@ public class AroundMeActivity extends SherlockActivity {
 
 	}
 
-	private void activity() {
-		View v = null;
-
-	}
-
-	private synchronized void adViewLoad() {
-		AsyncTask<Void, Void, Bitmap> task = new AsyncTask<Void, Void, Bitmap>() {
-
-			@Override
-			public Bitmap doInBackground(Void... params) {
-				AroundMeActivity.this.runOnUiThread(new Runnable() {
-					public void run() {
-						adView.loadAd(adRequest);
-					}
-				});
-				return null;
-			}
-		};
-		task.execute();
-
-	}
-
-	private void singlePage(int eventIndex) {
-		if (!eventCollection.getAroundMeEventList().isEmpty()
-				&& currentPageID != null) {
-
-			EventData my = eventCollection.getAroundMeEventList().get(
-					eventIndex);
-			name = my.name;
-			loc = my.loc;
-			desc = my.desc;
-			dayEnd = my.dayEnd;
-			dateEnd = my.dateEnd;
-			timeEnd = my.timeEnd;
-			dateStart = my.dateStart;
-			attendingCount = Integer.toString(my.attending_count);
-
-			dayStart = my.dayStart;
-			timeStart = my.timeStart;
-
-			eventHasAnEnd = my.hasAnEnd;
-			if (readImageFromDisk(my.event_ID) != null) {
-				Bitmap image = readImageFromDisk(my.event_ID);
-				mIcon1 = image;
-				noPicture = false;
-			} else {
-				noPicture = true;
-			}
-			preferences.setModifiedSinglePage(false);
-			status = my.status_attending;
-
-			if (status.equals("Not Invited") || status.equals("not_replied")) {
-				rsvp.setTitle("RSVP: " + "Not Answered");
-			} else {
-				if (status.equals("attending")) {
-					rsvp.setTitle("RSVP: " + "Going");
-				}
-				if (status.equals("unsure")) {
-					rsvp.setTitle("RSVP: " + "Maybe");
-				}
-				if (status.equals("declined")) {
-					rsvp.setTitle("RSVP: " + "Declined");
-				}
-			}
-			singlePageQuickLoading();
-
-		}
-
-	}
-
-	private void singlePageQuickLoading() {
-		if (!noPicture) {
-			eventPicture.setImageBitmap(mIcon1);
-		}
-		textName.setText(name);
-		if (desc.length() > 0) {
-			textDesc.setText(desc);
-		} else {
-			textDesc.setText("No description available for this event.");
-		}
-		textDescYEY.setTextColor(Color.DKGRAY);
-		textAttending.setText(attendingCount + " people going!");
-
-		if (dayStart.equals("Today") || dayStart.equals("Tomorrow")) {
-			textStart.setText(dayStart + " at " + timeStart);
-		} else {
-			textStart.setText(dayStart + " " + dateStart + " at " + timeStart);
-		}
-		if (eventHasAnEnd) {
-			if (dayEnd.equals("Tomorrow") || dayEnd.equals("Today")) {
-				textEnd.setText(dayEnd + " at " + timeEnd);
-			} else {
-				textEnd.setText(dayEnd + " " + dateEnd + " at " + timeEnd);
-			}
-		} else {
-			textEnd.setText("End date not set");
-		}
-		textNamePage.setText(loc);
-		if (loc.equals("null")) {
-			buttonPlace.setText("N/A");
-
-		} else {
-			buttonPlace.setText("( i )" + loc);
-		}
-		textLoc.setText("");
-		textLoc.setTextColor(Color.rgb(11, 100, 217));
-	}
-
 	private class mylocationlistener implements LocationListener {
 
 		@Override
 		public void onLocationChanged(Location location) {
 
 			if (firstLocation) {
+				firstLocation = false;
 				latitude = location.getLatitude();
 				longitude = location.getLongitude();
 				pageCollection.getPageAroundMe().clear();
 				eventCollection.getAroundMeEventList().clear();
 				getEventsAroundMe();
 				getPlacesAroundMe();
-				firstLocation = false;
 			}
 
 		}
@@ -1779,6 +1588,7 @@ public class AroundMeActivity extends SherlockActivity {
 	public JSONArray getJArrayPlaces() {
 		return jarrayPlaces;
 	}
+
 	public JSONArray getJArrayAround() {
 		return jarrayAround;
 	}

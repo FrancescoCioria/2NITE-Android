@@ -180,7 +180,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private String monthNameStart = "";
 	private String monthNameEnd = "";
 	private String attendingCount;
-	private String loc;
+	private String loc = "null";
 
 	private boolean isReading = false;
 	private boolean isDoownloading = false;
@@ -2070,7 +2070,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
 			v = null;
-			loc = "null";
 
 			switch (position) {
 
@@ -2163,8 +2162,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							@Override
 							public void onItemClick(AdapterView<?> a, View v,
 									int i, long l) {
-								if (readImageFromDisk(eventCollection
-										.getEventList().get(i).event_ID) != null) {
+								if (i<eventCollection.getEventList().size()) {
 									preferences.setModifiedSinglePage(true);
 
 									currentPageID = eventCollection
@@ -2398,6 +2396,14 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						}
 					}
 				});
+
+				/*if (loc.equals("null")) {
+					buttonPlace.setText("N/A");
+					buttonPlace.setClickable(false);
+				} else {
+					buttonPlace.setText("( i ) " + loc);
+					buttonPlace.setClickable(true);
+				}*/
 
 				isPageAvailable = true;
 				adView = (AdView) v.findViewById(R.id.adView35);
@@ -4219,10 +4225,13 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			localViewHolder.text.setText(pageCollection.getPageList().get(
 					paramInt).name);
 
-			if (readImageFromDisk(pageCollection.getPageList().get(paramInt)._ID) != null) {
+			if (!pageCollection.getPageList().get(paramInt)._ID.equals("1")) {
+				Bitmap image = readImageFromDisk(pageCollection
+						.getPageList().get(paramInt)._ID);
+				if(image!=null){
 				localViewHolder.image
-						.setImageBitmap(readImageFromDisk(pageCollection
-								.getPageList().get(paramInt)._ID));
+						.setImageBitmap(image);
+				}
 			}
 
 			paramView.setTag(localViewHolder);
@@ -6355,7 +6364,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				filter();
 				// refreshEventsAdapter();
 			}
-			
+
 			Log.d("debug", "\"" + key + "\"" + " preference has been changed");
 		}
 	};

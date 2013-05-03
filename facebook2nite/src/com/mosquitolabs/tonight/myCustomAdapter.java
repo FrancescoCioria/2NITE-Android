@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.AsyncTask;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -20,7 +21,7 @@ import android.widget.TextView;
 
 public class myCustomAdapter extends BaseAdapter {
 	EventCollection eventCollection = EventCollection.getInstance();
-	
+
 	PageCollection pageCollection = PageCollection.getInstance();
 	Preferences preferences = Preferences.getInstance();
 
@@ -121,35 +122,35 @@ public class myCustomAdapter extends BaseAdapter {
 		final EventData event = eventCollection.getEventList().get(paramInt);
 
 		display = context.getWindowManager().getDefaultDisplay();
-		
+
 		localViewHolder.logo = (ImageView) paramView
 				.findViewById(R.id.imageViewLogoList);
 
-		
-		
 		DisplayMetrics displaymetrics = new DisplayMetrics();
-		parentActivity.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+		parentActivity.getWindowManager().getDefaultDisplay()
+				.getMetrics(displaymetrics);
 		int wwidth = displaymetrics.widthPixels;
-		float dp=0;
-		 dp=wwidth-(145*displaymetrics.density);
-		
+		float dp = 0;
+		dp = wwidth - (145 * displaymetrics.density);
+
 		String name = event.name;
 		localViewHolder.text.setText(name);
-		int i = event.name.length() - 1;
-		
-		float currentTextWidth = localViewHolder.text.getPaint().measureText(name);
-		while (dp<=currentTextWidth && i>=1) {
-			name = event.name.substring(0, i) + "...";
-			i--;
-			currentTextWidth = localViewHolder.text.getPaint().measureText(name);
-		}
-		
-		String lastChar = name.substring(name.length()-4,name.length()-3);
-		if(lastChar.equals(" ")){
-			name = name.substring(0, name.length()-4)+"...";
-		}
 
-		localViewHolder.text.setText(name);
+		/*
+		 * int i = event.name.length() - 1;
+		 * 
+		 * float currentTextWidth =
+		 * localViewHolder.text.getPaint().measureText(name); while
+		 * (dp<=currentTextWidth && i>=1) { name = event.name.substring(0, i) +
+		 * "..."; i--; currentTextWidth =
+		 * localViewHolder.text.getPaint().measureText(name); }
+		 * 
+		 * String lastChar = name.substring(name.length()-4,name.length()-3);
+		 * if(lastChar.equals(" ")){ name = name.substring(0,
+		 * name.length()-4)+"..."; }
+		 * 
+		 * localViewHolder.text.setText(name);
+		 */
 
 		if (event.desc.length() > 0) {
 			String desc = event.desc.replaceAll("(?m)^[ \t]*\r?\n", "");
@@ -166,10 +167,18 @@ public class myCustomAdapter extends BaseAdapter {
 		try {
 			java.io.FileInputStream in = context.openFileInput(event.event_ID);
 			Bitmap image = BitmapFactory.decodeStream(in);
-			localViewHolder.image.setImageBitmap(image);
+			if (image != null) {
+				localViewHolder.image.setImageBitmap(image);
+			}
 		} catch (Exception e) {
 			// TODO: handle exception
-		}/*
+		}
+		/*
+		 * 
+		 * 
+		 * 
+		 * 
+		 * 
 		 * if (!singlePageCollection.getImageList().isEmpty() &&
 		 * singlePageCollection.getImageByID(eventCollection
 		 * .getEventList().get(paramInt).event_ID) != null) {
@@ -216,8 +225,7 @@ public class myCustomAdapter extends BaseAdapter {
 						&& previousEventIsInProgress && !currentEventIsInProgress)) {
 
 			if (currentEventIsInProgress) {
-				localViewHolder.separatorDay.setBackgroundColor(Color.rgb(250,
-						60, 60));
+			//	localViewHolder.separatorDay.setBackgroundColor(Color.rgb(250,60, 60));
 				// -16401681 azzurro
 				localViewHolder.separatorMonth.setText("Now");
 				// localViewHolder.separatorMonth.setTextColor(Color.BLACK);
@@ -230,7 +238,8 @@ public class myCustomAdapter extends BaseAdapter {
 
 				Bitmap bmp = BitmapFactory.decodeResource(
 						context.getResources(), R.drawable.stripes_redd);
-				BitmapDrawable background = new BitmapDrawable(bmp);
+				BitmapDrawable background = new BitmapDrawable(
+						context.getResources(), bmp);
 				background.setTileModeXY(Shader.TileMode.REPEAT,
 						Shader.TileMode.REPEAT);
 				localViewHolder.separatorDay.setBackgroundDrawable(background);
@@ -239,15 +248,15 @@ public class myCustomAdapter extends BaseAdapter {
 			} else {
 				localViewHolder.logo.setVisibility(View.GONE);
 
-				localViewHolder.separatorDay
-						.setBackgroundResource(R.color.dark_gray);
+				//localViewHolder.separatorDay.setBackgroundResource(R.color.dark_gray);
 				// (Color.rgb(251,148, 11)); // verde -16001681
 				// localViewHolder.separatorDay.setBackgroundColor(Color.rgb(235,
 				// 163, 91));
 
 				Bitmap bmp = BitmapFactory.decodeResource(
 						context.getResources(), R.drawable.stripe_darkk);
-				BitmapDrawable background = new BitmapDrawable(bmp);
+				BitmapDrawable background = new BitmapDrawable(
+						context.getResources(), bmp);
 				background.setTileModeXY(Shader.TileMode.REPEAT,
 						Shader.TileMode.REPEAT);
 				localViewHolder.separatorDay.setBackgroundDrawable(background);
@@ -256,8 +265,8 @@ public class myCustomAdapter extends BaseAdapter {
 						.getEventList().get(paramInt).dateStart);
 				localViewHolder.separatorDay.setText(eventCollection
 						.getEventList().get(paramInt).dayStart);
-				localViewHolder.separatorDay.setTextColor(Color.DKGRAY);
-				localViewHolder.separatorDay.setTextColor(Color.WHITE);// kokokoko
+				// localViewHolder.separatorDay.setTextColor(Color.DKGRAY);
+				localViewHolder.separatorDay.setTextColor(Color.WHITE);
 			}
 			localViewHolder.layout_separator.setVisibility(View.VISIBLE);
 		} else {
@@ -328,6 +337,7 @@ public class myCustomAdapter extends BaseAdapter {
 						.equals("declined"))) {
 			parentActivity.filter();
 		}
+		
 
 		return paramView;
 
@@ -341,6 +351,33 @@ public class myCustomAdapter extends BaseAdapter {
 		} else {
 			return false;
 		}
+	}
+
+	public  void getImage(final View v, final int i) {
+		AsyncTask<Void, Bitmap, Bitmap> task = new AsyncTask<Void, Bitmap, Bitmap>() {
+
+			@Override
+			public Bitmap doInBackground(Void... params) {
+
+				
+				return parentActivity
+						.readImageFromDisk(eventCollection.getEventList()
+								.get(i).event_ID);
+			}
+			
+			@Override
+			protected void onPostExecute(Bitmap bmp) {
+				ImageView image = (ImageView) v
+						.findViewById(R.id.imageViewPage);
+				if (eventCollection.getEventList().size() > i) {
+					image.setImageBitmap(bmp);
+				}
+				
+				super.onPostExecute(null);
+			}
+
+		};
+		task.execute();
 	}
 
 	static class ViewHolder {

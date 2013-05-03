@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -98,8 +99,8 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 									.addPageToFavourites(pageCollection
 											.getPageSearchList().get(i))) {
 								preferences.setModifiedPages(true);
-								toast(pageCollection
-										.getPageSearchList().get(i).name + " has been added to your pages.");
+								toast(pageCollection.getPageSearchList().get(i).name
+										+ " has been added to your pages.");
 
 							} else {
 								pageCollection
@@ -107,8 +108,8 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 												.getPageSearchList().get(i));
 								preferences.setModifiedPages(true);
 								preferences.setModifiedSinglePage(true);
-								toast(pageCollection
-										.getPageSearchList().get(i).name + " has been removed from your pages.");
+								toast(pageCollection.getPageSearchList().get(i).name
+										+ " has been removed from your pages.");
 							}
 							refreshUserLikesAdapter();
 							refreshPlacesAdapter();
@@ -138,8 +139,8 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 									.addPageToFavourites(pageCollection
 											.getPageAroundMe().get(i))) {
 								preferences.setModifiedPages(true);
-								toast(pageCollection
-											.getPageAroundMe().get(i).name + " has been added to your pages.");
+								toast(pageCollection.getPageAroundMe().get(i).name
+										+ " has been added to your pages.");
 
 							} else {
 								pageCollection
@@ -147,8 +148,8 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 												.getPageAroundMe().get(i));
 								preferences.setModifiedPages(true);
 								preferences.setModifiedSinglePage(true);
-								toast(pageCollection
-										.getPageAroundMe().get(i).name + " has been removed from your pages.");
+								toast(pageCollection.getPageAroundMe().get(i).name
+										+ " has been removed from your pages.");
 							}
 							refreshPlacesAdapter();
 							refreshUserLikesAdapter();
@@ -344,6 +345,8 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 			final PageData page = temp;
 			paramView = mInflater.inflate(R.layout.list_pages, null);
 			localViewHolder = new ViewHolderStar();
+			localViewHolder.selected = (RelativeLayout) paramView
+					.findViewById(R.id.imageViewSelected);
 			localViewHolder.text = (TextView) paramView
 					.findViewById(R.id.textViewListPages);
 			localViewHolder.text_fan = (TextView) paramView
@@ -371,7 +374,7 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 					break;
 				}
 			}
-			localViewHolder.image
+			localViewHolder.selected
 					.setOnClickListener(new View.OnClickListener() {
 
 						@Override
@@ -389,6 +392,7 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 	}
 
 	static class ViewHolderStar {
+		RelativeLayout selected;
 		ImageView star;
 		ImageView image;
 		TextView text;
@@ -426,6 +430,8 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 			final PageData page = temp;
 			paramView = mInflater.inflate(R.layout.list_pages, null);
 			localViewHolder = new ViewHolderStarPlaces();
+			localViewHolder.selected = (RelativeLayout) paramView
+					.findViewById(R.id.imageViewSelected);
 			localViewHolder.text = (TextView) paramView
 					.findViewById(R.id.textViewListPages);
 			localViewHolder.text_fan = (TextView) paramView
@@ -453,7 +459,7 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 					break;
 				}
 			}
-			localViewHolder.image
+			localViewHolder.selected
 					.setOnClickListener(new View.OnClickListener() {
 
 						@Override
@@ -471,6 +477,7 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 	}
 
 	static class ViewHolderStarPlaces {
+		RelativeLayout selected;
 		ImageView star;
 		ImageView image;
 		TextView text;

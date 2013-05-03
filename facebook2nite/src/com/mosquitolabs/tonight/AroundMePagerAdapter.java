@@ -23,6 +23,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -302,87 +303,7 @@ public class AroundMePagerAdapter extends PagerAdapter {
 		return null;
 	}
 
-	public class myCustomAdapterUserLikes extends BaseAdapter {
-		private LayoutInflater mInflater;
 
-		public myCustomAdapterUserLikes(Context paramContext) {
-			this.mInflater = LayoutInflater.from(paramContext);
-		}
-
-		public int getCount() {
-
-			return pageCollection.getPageSearchList().size();
-
-		}
-
-		public Object getItem(int paramInt) {
-			return Integer.valueOf(paramInt);
-		}
-
-		public long getItemId(int paramInt) {
-			return paramInt;
-		}
-
-		public View getView(final int paramInt, View paramView,
-				ViewGroup paramViewGroup) {
-			ViewHolderStar localViewHolder;
-			PageData temp = new PageData();
-
-			temp = (pageCollection.getPageSearchList().get(paramInt));
-
-			final PageData page = temp;
-			paramView = mInflater.inflate(R.layout.list_pages, null);
-			localViewHolder = new ViewHolderStar();
-			localViewHolder.text = (TextView) paramView
-					.findViewById(R.id.textViewListPages);
-			localViewHolder.text_fan = (TextView) paramView
-					.findViewById(R.id.textViewListPagesFanCount);
-			localViewHolder.star = (ImageView) paramView
-					.findViewById(R.id.imageViewStar);
-			localViewHolder.image = (ImageView) paramView
-					.findViewById(R.id.imageViewPage);
-			localViewHolder.text.setText(page.name);
-
-			int counter = userLikesInt;
-
-			if (paramInt <= counter
-					&& context.readImageFromDisk(page._ID) != null) {
-				localViewHolder.image.setImageBitmap(context
-						.readImageFromDisk(page._ID));
-			}
-
-			localViewHolder.star
-					.setBackgroundResource(android.R.drawable.btn_star_big_off);
-			for (PageData currentPage : pageCollection.getPageList()) {
-				if (currentPage._ID.equals(page._ID)) {
-					localViewHolder.star
-							.setBackgroundResource(android.R.drawable.btn_star_big_on);
-					break;
-				}
-			}
-			localViewHolder.image
-					.setOnClickListener(new View.OnClickListener() {
-
-						@Override
-						public void onClick(View v) {
-							context.infoPage(page);
-						}
-					});
-
-			localViewHolder.text_fan.setText(Integer
-					.toString(page.number_of_likes) + " likes");
-			paramView.setTag(localViewHolder);
-
-			return paramView;
-		}
-	}
-
-	static class ViewHolderStar {
-		ImageView star;
-		ImageView image;
-		TextView text;
-		TextView text_fan;
-	}
 
 	public class myCustomAdapterPlaces extends BaseAdapter {
 		private LayoutInflater mInflater;
@@ -415,6 +336,8 @@ public class AroundMePagerAdapter extends PagerAdapter {
 			final PageData page = temp;
 			paramView = mInflater.inflate(R.layout.list_pages, null);
 			localViewHolder = new ViewHolderStarPlaces();
+			localViewHolder.selected = (RelativeLayout) paramView
+					.findViewById(R.id.imageViewSelected);
 			localViewHolder.text = (TextView) paramView
 					.findViewById(R.id.textViewListPages);
 			localViewHolder.text_fan = (TextView) paramView
@@ -442,7 +365,7 @@ public class AroundMePagerAdapter extends PagerAdapter {
 					break;
 				}
 			}
-			localViewHolder.image
+			localViewHolder.selected
 					.setOnClickListener(new View.OnClickListener() {
 
 						@Override
@@ -460,6 +383,7 @@ public class AroundMePagerAdapter extends PagerAdapter {
 	}
 
 	static class ViewHolderStarPlaces {
+		RelativeLayout selected;
 		ImageView star;
 		ImageView image;
 		TextView text;
@@ -530,7 +454,7 @@ public class AroundMePagerAdapter extends PagerAdapter {
 
 	private void toast(final String paramString) {
 
-		Toast.makeText(context, paramString, 0).show();
+		Toast.makeText(context, paramString, Toast.LENGTH_SHORT).show();
 
 	}
 
