@@ -248,11 +248,16 @@ public class AroundMePagerAdapter extends PagerAdapter {
 							z++;
 						}
 					}
-					URL img_value = new URL(jsonAround.getString("pic_big"));
-					picture = BitmapFactory.decodeStream(img_value
-							.openConnection().getInputStream());
-					context.saveImageToDisk(jsonAround.getString("eid"),
-							picture);
+					picture = context.readImageFromDisk(jsonAround
+							.getString("eid"));
+
+					if (picture == null) {
+						URL img_value = new URL(jsonAround.getString("pic_big"));
+						picture = BitmapFactory.decodeStream(img_value
+								.openConnection().getInputStream());
+						context.saveImageToDisk(jsonAround.getString("eid"),
+								picture);
+					}
 				} catch (Exception e) {
 					Log.e("aroundMePicture", e.toString());
 				}
@@ -264,15 +269,17 @@ public class AroundMePagerAdapter extends PagerAdapter {
 			@Override
 			public void onPostExecute(Bitmap pic) {
 
-				if (listViewAroundMe.getFirstVisiblePosition() <= aroundMePictures
-						&& aroundMePictures <= listViewAroundMe
-								.getLastVisiblePosition()) {
-					View v = listViewAroundMe.getChildAt(aroundMePictures
-							- listViewAroundMe.getFirstVisiblePosition());
-					ImageView image = (ImageView) v
-							.findViewById(R.id.imageViewList);
-					if (pic != null) {
+				if (pic != null) {
+					if (listViewAroundMe.getFirstVisiblePosition() <= aroundMePictures
+							&& aroundMePictures <= listViewAroundMe
+									.getLastVisiblePosition()) {
+						View v = listViewAroundMe.getChildAt(aroundMePictures
+								- listViewAroundMe.getFirstVisiblePosition());
+						ImageView image = (ImageView) v
+								.findViewById(R.id.imageViewList);
+
 						image.setImageBitmap(pic);
+
 					}
 				}
 
@@ -302,8 +309,6 @@ public class AroundMePagerAdapter extends PagerAdapter {
 	public Parcelable saveState() {
 		return null;
 	}
-
-
 
 	public class myCustomAdapterPlaces extends BaseAdapter {
 		private LayoutInflater mInflater;
@@ -354,6 +359,10 @@ public class AroundMePagerAdapter extends PagerAdapter {
 					&& context.readImageFromDisk(page._ID) != null) {
 				localViewHolder.image.setImageBitmap(context
 						.readImageFromDisk(page._ID));
+			} else {
+				localViewHolder.image.setImageBitmap(BitmapFactory
+						.decodeResource(context.getResources(),
+								R.drawable.icon_other_events));
 			}
 
 			localViewHolder.star

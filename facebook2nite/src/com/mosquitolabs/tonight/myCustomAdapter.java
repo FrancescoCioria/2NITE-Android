@@ -28,6 +28,11 @@ public class myCustomAdapter extends BaseAdapter {
 	private LayoutInflater mInflater;
 	private Display display;
 	private Activity context;
+	
+	private Bitmap standardImage = null;
+	
+	int counter = 0;
+	int counterDownloading = 0;
 
 	private FacebookeventsActivity parentActivity;
 
@@ -107,6 +112,10 @@ public class myCustomAdapter extends BaseAdapter {
 						}
 					});
 
+			
+			standardImage =  BitmapFactory.decodeResource(
+					context.getResources(), R.drawable.standard_image);
+			
 			paramView.setTag(localViewHolder);
 		}
 
@@ -164,7 +173,40 @@ public class myCustomAdapter extends BaseAdapter {
 		} else {
 			localViewHolder.page.setText(event.loc);
 		}
-		try {
+		
+		
+		
+		
+		localViewHolder.image.setImageBitmap(standardImage);
+		
+		if(counter <=3||parentActivity.isDownloadingImages()){
+			if(parentActivity.isDownloadingImages()&&counterDownloading==0){
+				parentActivity.showImageEventList(paramInt);
+				counterDownloading++;
+			}
+			try {
+				java.io.FileInputStream in = context.openFileInput(event.event_ID);
+				Bitmap image = BitmapFactory.decodeStream(in);
+				if (image != null) {
+					localViewHolder.image.setImageBitmap(image);
+				}
+			} catch (Exception e) {
+				// TODO: handle exception
+			}
+			counter++;
+			
+		}else{
+			if(counterDownloading>0){
+				counterDownloading=0;
+			}
+		parentActivity.showImageEventList(paramInt);
+		}
+		
+		
+		/*
+		 * 
+		 * 
+		 * try {
 			java.io.FileInputStream in = context.openFileInput(event.event_ID);
 			Bitmap image = BitmapFactory.decodeStream(in);
 			if (image != null) {
@@ -173,7 +215,6 @@ public class myCustomAdapter extends BaseAdapter {
 		} catch (Exception e) {
 			// TODO: handle exception
 		}
-		/*
 		 * 
 		 * 
 		 * 
@@ -337,6 +378,8 @@ public class myCustomAdapter extends BaseAdapter {
 						.equals("declined"))) {
 			parentActivity.filter();
 		}
+		
+		
 		
 
 		return paramView;

@@ -16,8 +16,8 @@
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:layout_marginLeft="20dp"
-            android:layout_marginTop="13dp"
             android:layout_weight="2.7"
             android:background="@color/android_gray"
             android:padding="0.1dp" >
@@ -25,7 +25,7 @@
             <TextView
                 android:id="@+id/buttonPagesILike"
                 android:layout_width="fill_parent"
-                android:layout_height="33dp"
+                android:layout_height="34.5dp"
                 android:background="@layout/gray_button"
                 android:gravity="center"
                 android:text="Start"
@@ -75,7 +75,5 @@
             android:textColor="@color/android_gray"
             android:textSize="15sp" />
     </LinearLayout>
-
-   
 
 </RelativeLayout>

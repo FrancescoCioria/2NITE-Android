@@ -64,6 +64,7 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -113,7 +114,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 	private final static int ATTENDING = 0;
 	private final static int ATTENDING_UNSURE = 1;
-	private final static int ALL = 2;
+	private final static int NO_DECLINED = 2;
+	private final static int ALL = 3;
 
 	private myCustomAdapter eventArrayAdapter;
 	private myCustomAdapterPage pageArrayAdapter;
@@ -144,6 +146,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private TextView textAttending;
 	private TextView filterPages;
 	private TextView filterEvents;
+
+	private ScrollView scrollViewDescriptionPage;
 
 	private ImageView eventPicture;
 	private double latitude;
@@ -190,7 +194,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private boolean isPageJustOpened = true;
 	private boolean isPageAvailable = false;
 	private boolean newDownloads = false;
-	private boolean isReloading = false;
+	private boolean isdownloadingImages = false;
 	private boolean isFirstTimeAround = true;
 
 	private boolean eventHasAnEnd = true;
@@ -341,6 +345,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 		case ATTENDING_UNSURE:
 			myEventsSettings = "and (rsvp_status=\"attending\" or rsvp_status=\"unsure\")";
+			break;
+
+		case NO_DECLINED:
+			myEventsSettings = "and rsvp_status!=\"declined\"";
+
 			break;
 
 		case ALL:
@@ -1449,6 +1458,13 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 										add = false;
 								}
 
+								for (PageData currentPage : pageCollection
+										.getModifiedPageList()) {
+									if (currentPage._ID.equals(json
+											.getString("creator")))
+										add = false;
+								}
+
 								for (EventData currentEvent : eventCollection
 										.getCompleteEventList()) {
 									if (currentEvent.event_ID.equals(json
@@ -1589,11 +1605,15 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 									URL img_value = null;
 									img_value = new URL(
 											json.getString("pic_big"));
+									
+									downloadImage(img_value, event.event_ID);
+									
+									/*
 									Bitmap image = BitmapFactory
 											.decodeStream(img_value
 													.openConnection()
 													.getInputStream());
-									saveImageToDisk(event.event_ID, image);
+									saveImageToDisk(event.event_ID, image);*/
 									newdownloads = true;
 									final int p = progress;
 									FacebookeventsActivity.this
@@ -2162,7 +2182,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							@Override
 							public void onItemClick(AdapterView<?> a, View v,
 									int i, long l) {
-								if (i<eventCollection.getEventList().size()) {
+								if (i < eventCollection.getEventList().size()) {
 									preferences.setModifiedSinglePage(true);
 
 									currentPageID = eventCollection
@@ -2170,6 +2190,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 									singlePage(i);
 									textPageEmpty.setVisibility(View.GONE);
 									pagerMain.setCurrentItem(DESCRIPTION);
+									scrollViewDescriptionPage
+											.fullScroll(ScrollView.FOCUS_UP);
 								} else {
 									toast("The event appears to no longer exist..",
 											true);
@@ -2244,6 +2266,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 				eventPicture = (ImageView) v
 						.findViewById(R.id.imageViewEventCover);
+
+				scrollViewDescriptionPage = (ScrollView) v
+						.findViewById(R.id.scrollViewDescriptionPage);
 
 				eventPicture.setOnClickListener(new OnClickListener() {
 
@@ -2397,13 +2422,12 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					}
 				});
 
-				/*if (loc.equals("null")) {
-					buttonPlace.setText("N/A");
-					buttonPlace.setClickable(false);
-				} else {
-					buttonPlace.setText("( i ) " + loc);
-					buttonPlace.setClickable(true);
-				}*/
+				/*
+				 * if (loc.equals("null")) { buttonPlace.setText("N/A");
+				 * buttonPlace.setClickable(false); } else {
+				 * buttonPlace.setText("( i ) " + loc);
+				 * buttonPlace.setClickable(true); }
+				 */
 
 				isPageAvailable = true;
 				adView = (AdView) v.findViewById(R.id.adView35);
@@ -3217,8 +3241,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						}
 					}
 				};
-				Request request = new Request(session, currentPageID + "/"
-						+ element, bundle, HttpMethod.POST, callback);
+
+				Request request = new Request(session, ID + "/" + element,
+						bundle, HttpMethod.POST, callback);
 				request.executeAndWait();
 
 				return null;
@@ -3248,128 +3273,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 				if (which == 0) {
 					if (paramPageData._ID.equals("1")) {
-						final CharSequence[] items = { "Events i'm going to",
-								"Events i'm going or might go to",
-								"Every events i've been invited to" };
-						AlertDialog.Builder builder = new AlertDialog.Builder(
-								FacebookeventsActivity.this);
-
-						builder.setTitle("Which events do you want to download?");
-						final int checked = mPrefs
-								.getInt("myEventsSettings", 2);
-						builder.setSingleChoiceItems(items, checked,
-								new DialogInterface.OnClickListener() {
-									public void onClick(DialogInterface dialog,
-											int item) {
-										SharedPreferences.Editor editor = mPrefs
-												.edit();
-										int checked_editor = 2;
-										ArrayList<String> remove = new ArrayList<String>();
-										int i = 0;
-										switch (item) {
-										case 0:
-											if (checked != 0) {
-												myEventsSettings = "and rsvp_status=\"attending\"";
-												checked_editor = 0;
-												for (EventData event : eventCollection
-														.getCompleteEventList()) {
-													if (event.parentPage_ID
-															.equals("1")
-															&& (event.status_attending
-																	.equals("declined")
-																	|| event.status_attending
-																			.equals("Not Invited")
-																	|| event.status_attending
-																			.equals("not_replied") || event.status_attending
-																		.equals("unsure"))) {
-														remove.add(Integer
-																.toString(i));
-													}
-													i++;
-												}
-												int g = 0;
-												for (String index : remove) {
-													eventCollection
-															.getCompleteEventList()
-															.remove(Integer
-																	.parseInt(index)
-																	- g);
-													g++;
-												}
-												eventCollection
-														.restoreEventList();
-												eventCollection
-														.saveToDisk(FacebookeventsActivity.this);
-												refreshEventsAdapter();
-											}
-											break;
-
-										case 1:
-											if (checked != 1) {
-												myEventsSettings = "and (rsvp_status=\"attending\" or rsvp_status=\"unsure\")";
-												if (checked == 0) {
-													checked_editor = 1;
-													pageCollection
-															.getModifiedPageList()
-															.clear();
-													myEventsSettingsDownload();
-												} else {
-													checked_editor = 1;
-
-													for (EventData event : eventCollection
-															.getCompleteEventList()) {
-														if (event.parentPage_ID
-																.equals("1")
-																&& (event.status_attending
-																		.equals("declined")
-																		|| event.status_attending
-																				.equals("Not Invited") || event.status_attending
-																			.equals("not_replied"))) {
-															remove.add(Integer
-																	.toString(i));
-														}
-														i++;
-													}
-													int g = 0;
-													for (String index : remove) {
-														eventCollection
-																.getCompleteEventList()
-																.remove(Integer
-																		.parseInt(index)
-																		- g);
-														g++;
-													}
-													eventCollection
-															.restoreEventList();
-													eventCollection
-															.saveToDisk(FacebookeventsActivity.this);
-													refreshEventsAdapter();
-												}
-
-											}
-											break;
-
-										case 2:
-											if (checked != 2) {
-												myEventsSettings = "";
-												checked_editor = 2;
-												pageCollection
-														.getModifiedPageList()
-														.clear();
-												myEventsSettingsDownload();
-											}
-											break;
-										}
-										editor.putInt("myEventsSettings",
-												checked_editor);
-										editor.commit();
-										dialog.dismiss();
-
-									}
-								});
-						AlertDialog alert = builder.create();
-						alert.show();
-
+						myEventsSettings(paramPageData);
 					} else {
 						pageCollection.restorePreviousPage();
 						if (pageCollection
@@ -3378,12 +3282,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 									+ " removed from favourites", false);
 							preferences.setModifiedSinglePage(true);
 							currentPageID = null;
-							/*
-							 * preferences.setModifiedPages(true);
-							 * pageCollection.getModifiedPageList().add(
-							 * paramPageData);
-							 * preferences.setIsSelectedPage(false);
-							 */
 							viewAll();
 							pageCollection
 									.saveToDisk(FacebookeventsActivity.this);
@@ -3395,7 +3293,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							if (eventCollection.getCompleteEventList()
 									.isEmpty())
 								textEventEmpty.setVisibility(View.VISIBLE);
-
 						}
 					}
 				}
@@ -3497,37 +3394,76 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	}
 
 	private void myEventsSettings(PageData paramPageData) {
-		if (paramPageData._ID.equals("1")) {
-			final CharSequence[] items = { "Events i'm going to",
-					"Events i'm going or might go to",
-					"Every events i've been invited to" };
-			AlertDialog.Builder builder = new AlertDialog.Builder(
-					FacebookeventsActivity.this);
 
-			builder.setTitle("Which events do you want to download?");
-			final int checked = mPrefs.getInt("myEventsSettings", 2);
-			builder.setSingleChoiceItems(items, checked,
-					new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int item) {
-							SharedPreferences.Editor editor = mPrefs.edit();
-							int checked_editor = 2;
-							ArrayList<String> remove = new ArrayList<String>();
-							int i = 0;
-							switch (item) {
-							case 0:
-								if (checked != 0) {
-									myEventsSettings = "and rsvp_status=\"attending\"";
-									checked_editor = 0;
+		final CharSequence[] items = {
+				"Events I'm going to",
+				"Events I'm going or might go to",
+				"Every events I've been invited to (excluding \"declined\" ones)",
+				"Every events I've been invited to" };
+		AlertDialog.Builder builder = new AlertDialog.Builder(
+				FacebookeventsActivity.this);
+
+		builder.setTitle("Which events do you want to download?");
+		final int checked = mPrefs.getInt("myEventsSettings", 2);
+		builder.setSingleChoiceItems(items, checked,
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int item) {
+						SharedPreferences.Editor editor = mPrefs.edit();
+						int checked_editor = 2;
+						ArrayList<String> remove = new ArrayList<String>();
+						int i = 0;
+						switch (item) {
+						case 0:
+							if (checked != 0) {
+								myEventsSettings = "and rsvp_status=\"attending\"";
+								checked_editor = 0;
+								for (EventData event : eventCollection
+										.getCompleteEventList()) {
+									if (event.parentPage_ID.equals("1")
+											&& (event.status_attending
+													.equals("declined")
+													|| event.status_attending
+															.equals("Not Invited")
+													|| event.status_attending
+															.equals("not_replied") || event.status_attending
+														.equals("unsure"))) {
+										remove.add(Integer.toString(i));
+									}
+									i++;
+								}
+								int g = 0;
+								for (String index : remove) {
+									eventCollection
+											.getCompleteEventList()
+											.remove(Integer.parseInt(index) - g);
+									g++;
+								}
+								eventCollection.restoreEventList();
+								eventCollection
+										.saveToDisk(FacebookeventsActivity.this);
+								refreshEventsAdapter();
+							}
+							break;
+
+						case 1:
+							if (checked != 1) {
+								myEventsSettings = "and (rsvp_status=\"attending\" or rsvp_status=\"unsure\")";
+								if (checked == 0) {
+									checked_editor = 1;
+									pageCollection.getModifiedPageList()
+											.clear();
+									myEventsSettingsDownload();
+								} else {
+									checked_editor = 1;
+
 									for (EventData event : eventCollection
 											.getCompleteEventList()) {
 										if (event.parentPage_ID.equals("1")
 												&& (event.status_attending
 														.equals("declined")
 														|| event.status_attending
-																.equals("Not Invited")
-														|| event.status_attending
-																.equals("not_replied") || event.status_attending
-															.equals("unsure"))) {
+																.equals("Not Invited") || event.status_attending
+															.equals("not_replied"))) {
 											remove.add(Integer.toString(i));
 										}
 										i++;
@@ -3540,90 +3476,72 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 										g++;
 									}
 									eventCollection.restoreEventList();
+									eventCollection
+											.saveToDisk(FacebookeventsActivity.this);
 									refreshEventsAdapter();
 								}
-								break;
 
-							case 1:
-								if (checked != 1) {
-									myEventsSettings = "and (rsvp_status=\"attending\" or rsvp_status=\"unsure\")";
-									if (checked == 0) {
-										checked_editor = 1;
-										pageCollection.getModifiedPageList()
-												.clear();
-										myEventsSettingsDownload();
-									} else {
-										checked_editor = 1;
+							}
+							break;
 
-										for (EventData event : eventCollection
-												.getCompleteEventList()) {
-											if (event.parentPage_ID.equals("1")
-													&& (event.status_attending
-															.equals("declined")
-															|| event.status_attending
-																	.equals("Not Invited") || event.status_attending
-																.equals("not_replied"))) {
-												remove.add(Integer.toString(i));
-											}
-											i++;
-										}
-										int g = 0;
-										for (String index : remove) {
-											eventCollection
-													.getCompleteEventList()
-													.remove(Integer
-															.parseInt(index)
-															- g);
-											g++;
-										}
-										eventCollection.restoreEventList();
-										refreshEventsAdapter();
-									}
+						case 2:
+							if (checked != 2) {
 
-								}
-								break;
+								myEventsSettings = "and rsvp_status!=\"declined\"";
+								checked_editor = 2;
 
-							case 2:
-								if (checked != 2) {
-									myEventsSettings = "";
-									checked_editor = 2;
+								if (checked < 2) {
+
 									pageCollection.getModifiedPageList()
 											.clear();
 									myEventsSettingsDownload();
+
+								} else {
+
+									for (EventData event : eventCollection
+											.getCompleteEventList()) {
+										if (event.parentPage_ID.equals("1")
+												&& (event.status_attending
+														.equals("declined"))) {
+											remove.add(Integer.toString(i));
+										}
+										i++;
+									}
+									int g = 0;
+									for (String index : remove) {
+										eventCollection.getCompleteEventList()
+												.remove(Integer.parseInt(index)
+														- g);
+										g++;
+									}
+									eventCollection.restoreEventList();
+									eventCollection
+											.saveToDisk(FacebookeventsActivity.this);
+									refreshEventsAdapter();
+
 								}
-								break;
+
 							}
-							editor.putInt("myEventsSettings", checked_editor);
-							editor.commit();
-							dialog.dismiss();
+							break;
 
+						case 3:
+							if (checked != 3) {
+								myEventsSettings = "";
+								checked_editor = 3;
+								pageCollection.getModifiedPageList().clear();
+								myEventsSettingsDownload();
+							}
+							break;
 						}
-					});
-			AlertDialog alert = builder.create();
-			alert.show();
+						editor.putInt("myEventsSettings", checked_editor);
+						editor.commit();
+						dialog.dismiss();
 
-		} else {
-			pageCollection.restorePreviousPage();
-			if (pageCollection.removePageFromFavourites(paramPageData)) {
-				toast(paramPageData.name + " removed from favourites", false);
-				preferences.setModifiedSinglePage(true);
-				currentPageID = null;
-				/*
-				 * preferences.setModifiedPages(true);
-				 * pageCollection.getModifiedPageList().add( paramPageData);
-				 * preferences.setIsSelectedPage(false);
-				 */
-				viewAll();
-				pageCollection.saveToDisk(FacebookeventsActivity.this);
-				eventCollection.saveToDisk(FacebookeventsActivity.this);
-				refreshPageAdapter();
-				refreshEventsAdapter();
-				pageCollection.restoreSelectedPageList();
-				if (eventCollection.getCompleteEventList().isEmpty())
-					textEventEmpty.setVisibility(View.VISIBLE);
+					}
+				});
+		AlertDialog alert = builder.create();
+		alert.show();
 
-			}
-		}
 	}
 
 	private synchronized void myEventsSettingsDownload() {
@@ -4226,11 +4144,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					paramInt).name);
 
 			if (!pageCollection.getPageList().get(paramInt)._ID.equals("1")) {
-				Bitmap image = readImageFromDisk(pageCollection
-						.getPageList().get(paramInt)._ID);
-				if(image!=null){
-				localViewHolder.image
-						.setImageBitmap(image);
+				Bitmap image = readImageFromDisk(pageCollection.getPageList()
+						.get(paramInt)._ID);
+				if (image != null) {
+					localViewHolder.image.setImageBitmap(image);
 				}
 			}
 
@@ -4286,6 +4203,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 			Request.Callback callback = new Request.Callback() {
 				public void onCompleted(Response response) {
+
+					// MY EVENTS //
+
 					try {
 						json = response.getGraphObject().getInnerJSONObject();
 						jDataArray = json.getJSONArray("data");
@@ -4293,13 +4213,18 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						for (int i = 0; i < jDataArray.length(); i++) {
 							json = jDataArray.getJSONObject(i);
 							boolean add = true;
-							if (!isReloading) {
-								for (PageData currentPage : pageCollection
-										.getPageList()) {
-									if (currentPage._ID.equals(json
-											.getString("creator")))
-										add = false;
-								}
+
+							for (PageData currentPage : pageCollection
+									.getPageList()) {
+								if (currentPage._ID.equals(json
+										.getString("creator")))
+									add = false;
+							}
+							for (PageData currentPage : pageCollection
+									.getModifiedPageList()) {
+								if (currentPage._ID.equals(json
+										.getString("creator")))
+									add = false;
 							}
 
 							for (EventData currentEvent : eventCollection
@@ -4340,13 +4265,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						for (int i = 0; i < jDataArray.length(); i++) {
 							json = jDataArray.getJSONObject(i);
 							boolean add = true;
-							if (!isReloading) {
-								for (PageData currentPage : pageCollection
-										.getPageList()) {
-									if (currentPage._ID.equals(json
-											.getString("creator")))
-										add = false;
-								}
+							for (PageData currentPage : pageCollection
+									.getPageList()) {
+								if (currentPage._ID.equals(json
+										.getString("creator")))
+									add = false;
 							}
 
 							for (EventData currentEvent : eventCollection
@@ -4451,11 +4374,15 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 									img_value = new URL(
 											json.getString("pic_big"));
 								}
-								Bitmap image = BitmapFactory
-										.decodeStream(img_value
-												.openConnection()
-												.getInputStream());
-								saveImageToDisk(event.event_ID, image);
+
+								downloadImage(img_value, event.event_ID);
+
+								/*
+								 * Bitmap image = BitmapFactory
+								 * .decodeStream(img_value .openConnection()
+								 * .getInputStream());
+								 * saveImageToDisk(event.event_ID, image);
+								 */
 
 								final int p = progress;
 								;
@@ -4493,19 +4420,26 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			for (PageData currentpage : pageCollection.getModifiedPageList()) {
 				if (!currentpage._ID.equals("1")) {
 					String my = currentpage._ID;
-					try {
-						Bitmap icon = BitmapFactory
-								.decodeStream(currentpage.picURL
-										.openConnection().getInputStream());
-						Bitmap cover = BitmapFactory
-								.decodeStream(currentpage.coverURL
-										.openConnection().getInputStream());
-						saveImageToDisk(currentpage._ID, icon);
-						saveImageToDisk("cover" + currentpage._ID, cover);
 
-					} catch (Exception e) {
-						Log.e("image newdownloadevents", e.toString());
-					}
+					downloadImage(currentpage.picURL, currentpage._ID);
+					downloadImage(currentpage.coverURL, "cover"
+							+ currentpage._ID);
+
+					/*
+					 * try {
+					 * 
+					 * 
+					 * Bitmap icon = BitmapFactory
+					 * .decodeStream(currentpage.picURL
+					 * .openConnection().getInputStream()); Bitmap cover =
+					 * BitmapFactory .decodeStream(currentpage.coverURL
+					 * .openConnection().getInputStream());
+					 * saveImageToDisk(currentpage._ID, icon);
+					 * saveImageToDisk("cover" + currentpage._ID, cover);
+					 * 
+					 * } catch (Exception e) { Log.e("image newdownloadevents",
+					 * e.toString()); }
+					 */
 
 					a += "\""
 							+ my
@@ -4518,8 +4452,12 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			a += "}";
 			bundle = new Bundle();
 			bundle.putString("q", a);
+
 			Request.Callback callback2 = new Request.Callback() {
 				public void onCompleted(Response response) {
+
+					// PAGE EVENTS
+
 					try {
 						jsonObject = response.getGraphObject()
 								.getInnerJSONObject();
@@ -4688,20 +4626,26 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 												.openFileInput(jsonObject
 														.getString("creator"));
 										image = BitmapFactory.decodeStream(in);
+										saveImageToDisk(event.event_ID, image);
 									} catch (Exception e) {
-										image = BitmapFactory
-												.decodeStream(img_value
-														.openConnection()
-														.getInputStream());
+										downloadImage(img_value, event.event_ID);
 									}
 
 								} else {
-									image = BitmapFactory
-											.decodeStream(img_value
-													.openConnection()
-													.getInputStream());
+
+									downloadImage(img_value, event.event_ID);
+
+									/*
+									 * image = BitmapFactory
+									 * .decodeStream(img_value .openConnection()
+									 * .getInputStream());
+									 * 
+									 * image = BitmapFactory
+									 * .decodeStream(img_value .openConnection()
+									 * .getInputStream());
+									 * saveImageToDisk(event.event_ID, image);
+									 */
 								}
-								saveImageToDisk(event.event_ID, image);
 
 								n++;
 								final int q = n;
@@ -4715,7 +4659,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							}
 							m++;
 						}
-						isReloading = false;
 						isReading = false;
 
 					} catch (Exception e) {
@@ -5304,12 +5247,18 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 													event);
 											URL img_value = new URL(
 													myJson.getString("pic_big"));
+											
+											downloadImage(img_value, event.event_ID);
+											
+											/*
 											Bitmap image = BitmapFactory
 													.decodeStream(img_value
 															.openConnection()
 															.getInputStream());
 											saveImageToDisk(event.event_ID,
 													image);
+													*/
+													
 											dayOfWeek(event.startMillis,
 													event.endMillis, event.unix);
 											event.dateStart = monthNameStart;
@@ -5621,6 +5570,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	}
 
 	private void redownloadAll() {
+
 		int index = 1;
 		if (pageCollection.getPageList().size() > 1) {
 			while (index < pageCollection.getPageList().size()) {
@@ -5661,7 +5611,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			eventCollection.getCompleteEventList().clear();
 			eventCollection.getEventList().clear();
 			pageCollection.getPreviousPageList().clear();
-			isReloading = true;
+			// isReloading = true;
 			read();
 		} else {
 			listViewMain.setVisibility(View.GONE);
@@ -5709,7 +5659,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						Integer.parseInt(s) - g);
 				g++;
 			}
-			isReloading = true;
+			// isReloading = true;
 			read();
 		} else {
 			listViewMain.setVisibility(View.GONE);
@@ -6488,89 +6438,90 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 	}
 
-	private void createEventFromJSON(JSONObject json, boolean isMyEvent) {
-		try {
-			final EventData event = new EventData();
-			if (isMyEvent) {
-				event.parentPage_ID = "1";
-				event.parentPageName = "My Events..";
-			}
+	
+	public void showImageEventList(final int i) {
+		AsyncTask<Void, Integer, Bitmap> task = new AsyncTask<Void, Integer, Bitmap>() {
 
-			event.event_ID = json.getString("eid");
-			event.name = json.getString("name");
-			event.desc = json.getString("description");
-			event.loc = json.getString("location");
-			event.startMillis = getMillis(json.getString("start_time"), event);
-			event.endMillis = getMillis(json.getString("end_time"), event);
-			event.last_update = getMillis(json.getString("update_time"), event);
-			event.attending_count = json.getInt("attending_count");
-			dayOfWeek(event.startMillis, event.endMillis, event.unix);
-			event.dateStart = monthNameStart;
-			event.dayStart = dayOfWeekStart;
-			event.timeStart = timeStart;
-			event.dateEnd = monthNameEnd;
-			event.dayEnd = dayOfWeekEnd;
-			event.timeEnd = timeEnd;
-			event.isInProgress = isInProgress;
-			isInProgress = false;
-			String b = "";
-			try {
-				if (!json.isNull("venue")) {
-					JSONObject jsonO = json.getJSONObject("venue");
-					if (!jsonO.isNull("street") || !jsonO.isNull("city")) {
-						b += jsonO.getString("street");
-						if (b.length() > 0)
-							b += ", ";
-						if (jsonO.has("city")) {
-							b += jsonO.getString("city");
-							if (b.length() > 0) {
-								b += ", ";
-							}
-						}
-						if (jsonO.has("country")) {
-							b += json.getString("country");
-						}
-					}
-				}
-			} catch (Exception e) {
-				Log.e("my events", "no venue");
-			}
-			event.venue = b;
+			@Override
+			public Bitmap doInBackground(Void... params) {
+				isdownloadingImages = false;
 
-			Request.Callback callback = new Request.Callback() {
-				public void onCompleted(Response response) {
-					JSONArray jArrayRSVP = new JSONArray();
-					JSONObject jsonRSVP = response.getGraphObject()
-							.getInnerJSONObject();
+				Bitmap bmp = null;
+
+				if (eventCollection.getEventList().size() > i) {
+
 					try {
-						jArrayRSVP = jsonRSVP.getJSONArray("data");
+						Log.i("showImage", Integer.toString(i));
 
-						if (jArrayRSVP.length() == 0) {
-							event.status_attending = "Not Invited";
-						} else {
-							jsonRSVP = jArrayRSVP.getJSONObject(0);
-							String rsvp = jsonRSVP.getString("rsvp_status");
-							event.status_attending = rsvp;
-						}
+						java.io.FileInputStream in = FacebookeventsActivity.this
+								.openFileInput(eventCollection.getEventList()
+										.get(i).event_ID);
+						bmp = BitmapFactory.decodeStream(in);
+
 					} catch (Exception e) {
 						// TODO: handle exception
 					}
+
+					// bmp =
+					// readImageFromDisk(eventCollection.getEventList().get(i).event_ID);
+
 				}
-			};
-			Request request = new Request(session, event.event_ID + "/invited/"
-					+ userID, new Bundle(), HttpMethod.GET, callback);
-			request.executeAndWait();
 
-			eventCollection.getCompleteEventList().add(event);
-			URL img_value = null;
-			img_value = new URL(json.getString("pic_big"));
-			Bitmap image = BitmapFactory.decodeStream(img_value
-					.openConnection().getInputStream());
-			saveImageToDisk(event.event_ID, image);
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
+				return bmp;
+			}
 
+			@Override
+			public void onPostExecute(Bitmap bmp) {
+				if (listViewMain.getFirstVisiblePosition() <= i
+						&& i <= listViewMain.getLastVisiblePosition()) {
+
+					View v = listViewMain.getChildAt(i
+							- listViewMain.getFirstVisiblePosition());
+					ImageView image = (ImageView) v
+							.findViewById(R.id.imageViewList);
+					if (bmp != null) {
+						image.setImageBitmap(bmp);
+					}
+
+				}
+
+			}
+
+		};
+		task.execute();
+	}
+
+	private void downloadImage(final URL img_value, final String ID) {
+		AsyncTask<Void, Integer, Bitmap> task = new AsyncTask<Void, Integer, Bitmap>() {
+
+			@Override
+			public Bitmap doInBackground(Void... params) {
+				isdownloadingImages = true;
+				Bitmap image = null;
+				try {
+					image = BitmapFactory.decodeStream(img_value
+							.openConnection().getInputStream());
+					saveImageToDisk(ID, image);
+				} catch (Exception e) {
+					Log.e("download image", e.toString());
+				}
+
+				Log.i("download image", ID);
+
+				return image;
+			}
+
+			@Override
+			protected void onPostExecute(Bitmap result) {
+
+			}
+
+		};
+		task.execute();
+	}
+	
+	public boolean isDownloadingImages(){
+		return isdownloadingImages;
 	}
 
 }

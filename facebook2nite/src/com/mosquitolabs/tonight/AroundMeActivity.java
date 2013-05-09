@@ -1417,7 +1417,7 @@ public class AroundMeActivity extends SherlockActivity {
 	private class mylocationlistener implements LocationListener {
 
 		@Override
-		public void onLocationChanged(Location location) {
+		public synchronized void onLocationChanged(Location location) {
 
 			if (firstLocation) {
 				firstLocation = false;

@@ -343,18 +343,23 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 			temp = (pageCollection.getPageSearchList().get(paramInt));
 
 			final PageData page = temp;
-			paramView = mInflater.inflate(R.layout.list_pages, null);
-			localViewHolder = new ViewHolderStar();
-			localViewHolder.selected = (RelativeLayout) paramView
-					.findViewById(R.id.imageViewSelected);
-			localViewHolder.text = (TextView) paramView
-					.findViewById(R.id.textViewListPages);
-			localViewHolder.text_fan = (TextView) paramView
-					.findViewById(R.id.textViewListPagesFanCount);
-			localViewHolder.star = (ImageView) paramView
-					.findViewById(R.id.imageViewStar);
-			localViewHolder.image = (ImageView) paramView
-					.findViewById(R.id.imageViewPage);
+			if (paramView == null) {
+				paramView = mInflater.inflate(R.layout.list_pages, null);
+				localViewHolder = new ViewHolderStar();
+				localViewHolder.selected = (RelativeLayout) paramView
+						.findViewById(R.id.imageViewSelected);
+				localViewHolder.text = (TextView) paramView
+						.findViewById(R.id.textViewListPages);
+				localViewHolder.text_fan = (TextView) paramView
+						.findViewById(R.id.textViewListPagesFanCount);
+				localViewHolder.star = (ImageView) paramView
+						.findViewById(R.id.imageViewStar);
+				localViewHolder.image = (ImageView) paramView
+						.findViewById(R.id.imageViewPage);
+				paramView.setTag(localViewHolder);
+			}
+			localViewHolder = (ViewHolderStar) paramView.getTag();
+
 			localViewHolder.text.setText(page.name);
 
 			int counter = userLikesInt;
@@ -363,6 +368,10 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 					&& context.readImageFromDisk(page._ID) != null) {
 				localViewHolder.image.setImageBitmap(context
 						.readImageFromDisk(page._ID));
+			} else {
+				localViewHolder.image.setImageBitmap(BitmapFactory
+						.decodeResource(context.getResources(),
+								R.drawable.icon_other_events));
 			}
 
 			localViewHolder.star
@@ -385,7 +394,6 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 
 			localViewHolder.text_fan.setText(Integer
 					.toString(page.number_of_likes) + " likes");
-			paramView.setTag(localViewHolder);
 
 			return paramView;
 		}
@@ -422,24 +430,31 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 
 		public View getView(final int paramInt, View paramView,
 				ViewGroup paramViewGroup) {
-			ViewHolderStarPlaces localViewHolder;
+			ViewHolderStarUser localViewHolder;
 			PageData temp = new PageData();
 
 			temp = (pageCollection.getPageAroundMe().get(paramInt));
 
 			final PageData page = temp;
-			paramView = mInflater.inflate(R.layout.list_pages, null);
-			localViewHolder = new ViewHolderStarPlaces();
-			localViewHolder.selected = (RelativeLayout) paramView
-					.findViewById(R.id.imageViewSelected);
-			localViewHolder.text = (TextView) paramView
-					.findViewById(R.id.textViewListPages);
-			localViewHolder.text_fan = (TextView) paramView
-					.findViewById(R.id.textViewListPagesFanCount);
-			localViewHolder.star = (ImageView) paramView
-					.findViewById(R.id.imageViewStar);
-			localViewHolder.image = (ImageView) paramView
-					.findViewById(R.id.imageViewPage);
+			if (paramView == null) {
+				paramView = mInflater.inflate(R.layout.list_pages, null);
+				localViewHolder = new ViewHolderStarUser();
+				localViewHolder.selected = (RelativeLayout) paramView
+						.findViewById(R.id.imageViewSelected);
+				localViewHolder.text = (TextView) paramView
+						.findViewById(R.id.textViewListPages);
+				localViewHolder.text_fan = (TextView) paramView
+						.findViewById(R.id.textViewListPagesFanCount);
+				localViewHolder.star = (ImageView) paramView
+						.findViewById(R.id.imageViewStar);
+				localViewHolder.image = (ImageView) paramView
+						.findViewById(R.id.imageViewPage);
+
+				paramView.setTag(localViewHolder);
+			}
+
+			localViewHolder = (ViewHolderStarUser) paramView.getTag();
+
 			localViewHolder.text.setText(page.name);
 
 			int counter = placesInt;
@@ -448,6 +463,10 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 					&& context.readImageFromDisk(page._ID) != null) {
 				localViewHolder.image.setImageBitmap(context
 						.readImageFromDisk(page._ID));
+			} else {
+				localViewHolder.image.setImageBitmap(BitmapFactory
+						.decodeResource(context.getResources(),
+								R.drawable.icon_other_events));
 			}
 
 			localViewHolder.star
@@ -470,13 +489,12 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 
 			localViewHolder.text_fan.setText(Integer
 					.toString(page.number_of_likes) + " likes");
-			paramView.setTag(localViewHolder);
 
 			return paramView;
 		}
 	}
 
-	static class ViewHolderStarPlaces {
+	static class ViewHolderStarUser {
 		RelativeLayout selected;
 		ImageView star;
 		ImageView image;
