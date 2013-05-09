@@ -175,16 +175,45 @@ public class PageCollection {
 	}
 	
 	
-	public boolean removePageFromFavourites(PageData paramPageData) {
+	public boolean removePageFromFavouritesAndEvents(FacebookeventsActivity context,PageData paramPageData) {
 		int i = 0;
 		if (PageList.isEmpty()) {
 			return false;
 		}
+		
+		final int ATTENDING = 0;
+		final int ATTENDING_UNSURE = 1;
+		final int NOT_DECLINED = 2;
+		final int ALL = 3;
+		
+		String container = "";
+		
+		switch (1){
+		case ATTENDING:
+			container = "attending";
+			break;
+			
+		case ATTENDING_UNSURE:
+			container = "attending,unsure";
+
+			break;
+		case NOT_DECLINED:
+			container = "attending,unsure,Not Invited,not_replied";
+
+			break;
+		case ALL:
+			container = "attending,unsure,Not Invited,not_replied,declined";
+
+			break;
+			
+		}
+		
+		
 		ArrayList<String> remove = new ArrayList<String>();
 		for (PageData currentPage : PageList) {
 			if (currentPage._ID.equals(paramPageData._ID)) {
 				for(EventData event : eventCollection.getCompleteEventList()){
-					if(event.parentPage_ID.equals(currentPage._ID)&&event.status_attending.equals("attending")){
+					if(event.parentPage_ID.equals(currentPage._ID)&&container.contains(event.status_attending)){
 						event.parentPage_ID="1";
 						event.parentPageName="My Events";
 					}
@@ -210,6 +239,20 @@ public class PageCollection {
 
 		return false;
 
+	}
+	public boolean removePageFromFavourites(PageData paramPageData) {
+		int i = 0;
+		
+		for (PageData currentPage : PageList) {
+			if (currentPage._ID.equals(paramPageData._ID)) {
+				PageList.remove(i);
+				return true;
+			}
+			i++;
+		}
+		
+		return false;
+		
 	}
 	
 	

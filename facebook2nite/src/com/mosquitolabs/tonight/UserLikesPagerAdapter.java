@@ -104,8 +104,8 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 
 							} else {
 								pageCollection
-										.removePageFromFavourites(pageCollection
-												.getPageSearchList().get(i));
+								.removePageFromFavourites(pageCollection
+										.getPageSearchList().get(i));
 								preferences.setModifiedPages(true);
 								preferences.setModifiedSinglePage(true);
 								toast(pageCollection.getPageSearchList().get(i).name
@@ -143,9 +143,8 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 										+ " has been added to your pages.");
 
 							} else {
-								pageCollection
-										.removePageFromFavourites(pageCollection
-												.getPageAroundMe().get(i));
+								pageCollection.removePageFromFavourites(pageCollection
+										.getPageAroundMe().get(i));
 								preferences.setModifiedPages(true);
 								preferences.setModifiedSinglePage(true);
 								toast(pageCollection.getPageAroundMe().get(i).name

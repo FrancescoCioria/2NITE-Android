@@ -477,5 +477,67 @@ public class EventCollection {
 		completeEventList.add(event);
 		return true;
 	}
+	
+	
+	public void removeEventsByParentPageID(FacebookeventsActivity context , String pageID){
+		
+		ArrayList<String> remove = new ArrayList<String>();
+		final int ATTENDING = 0;
+		final int ATTENDING_UNSURE = 1;
+		final int NOT_DECLINED = 2;
+		final int ALL = 3;
+		
+		String container = "";
+		
+		switch (1){
+		case ATTENDING:
+			container = "attending";
+			break;
+			
+		case ATTENDING_UNSURE:
+			container = "attending,unsure";
+
+			break;
+		case NOT_DECLINED:
+			container = "attending,unsure,Not Invited,not_replied";
+
+			break;
+		case ALL:
+			container = "attending,unsure,Not Invited,not_replied,declined";
+
+			break;
+			
+		}
+		
+		for(EventData event : completeEventList){
+			if(event.parentPage_ID.equals(pageID)&&container.contains(event.status_attending)){
+				event.parentPage_ID="1";
+				event.parentPageName="My Events";
+			}
+		}
+		int q=0;
+		for(EventData event : completeEventList){
+			if(event.parentPage_ID.equals(pageID)){
+				remove.add(Integer.toString(q));
+			}
+			q++;
+		}
+		q=0;
+		for(String s : remove){
+			completeEventList.remove(Integer.parseInt(s)-q);
+			q++;
+		}
+		
+		if(context.isViewAllVisible()){
+			context.viewAll();
+		}else{
+		restoreEventList();
+		context.refreshEventsAdapter();
+		}
+		
+	}
+	
+	
+	
 
 }

@@ -1283,25 +1283,13 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 									for (PageData page : pageCollection
 											.getPreviousPageList()) {
 										if (modified._ID.equals(page._ID)) {
-											int i = 0;
-											for (EventData event : eventCollection
-													.getCompleteEventList()) {
-												if (event.parentPage_ID
-														.equals(modified._ID)) {
-													removeEvent.add(Integer
-															.toString(i));
-												}
-												i++;
-											}
-											for (String s : removeEvent) {
-												eventCollection
-														.getCompleteEventList()
-														.remove(Integer
-																.parseInt(s)
-																- g);
-												g++;
-											}
+
+											eventCollection
+													.removeEventsByParentPageID(
+															this, page._ID);
+
 											removePage.add(Integer.toString(f));
+
 										}
 									}
 									f++;
@@ -1342,10 +1330,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 									toast("No internet connection", true);
 									for (PageData modified : pageCollection
 											.getModifiedPageList()) {
-										PageData page = new PageData();
-										page._ID = modified._ID;
 										pageCollection
-												.removePageFromFavourites(page);
+												.removePageFromFavouritesAndEvents(
+														this, modified);
 									}
 								}
 								eventCollection.restoreEventList();
@@ -1407,9 +1394,13 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		String a = "SELECT name,attending_count,update_time,venue,host,creator, location,description, pic_big, eid,start_time,end_time FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid ="
 				+ userID
 				+ myEventsSettings
-				+ ") and end_time>"
+				+ ")"
+				+ " AND (end_time > "
 				+ "'"
-				+ current_time + "'";
+				+ current_time
+				+ "'"
+				+ "OR (end_time = '' AND start_time > "
+				+ "'" + current_time + "'))";
 		bundle.putString("q", a);
 		getMyEventsComplete(bundle, update);
 
@@ -1522,8 +1513,23 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 									event.loc = json.getString("location");
 									event.startMillis = getMillis(
 											json.getString("start_time"), event);
-									event.endMillis = getMillis(
-											json.getString("end_time"), event);
+									String end_time = "";
+									long day = 0;
+
+									if (json.isNull("end_time")) {
+										end_time = json.getString("start_time");
+										day = 86400;
+									} else {
+										end_time = json.getString("end_time");
+									}
+									if (day > 0) {
+										long millis = Long.parseLong(getMillis(
+												end_time, event)) + day;
+										event.endMillis = Long.toString(millis);
+									} else {
+										event.endMillis = getMillis(end_time,
+												event);
+									}
 									event.parentPage_ID = "1";
 									event.parentPageName = "My Events..";
 									event.last_update = getMillis(
@@ -1605,15 +1611,15 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 									URL img_value = null;
 									img_value = new URL(
 											json.getString("pic_big"));
-									
+
 									downloadImage(img_value, event.event_ID);
-									
+
 									/*
-									Bitmap image = BitmapFactory
-											.decodeStream(img_value
-													.openConnection()
-													.getInputStream());
-									saveImageToDisk(event.event_ID, image);*/
+									 * Bitmap image = BitmapFactory
+									 * .decodeStream(img_value .openConnection()
+									 * .getInputStream());
+									 * saveImageToDisk(event.event_ID, image);
+									 */
 									newdownloads = true;
 									final int p = progress;
 									FacebookeventsActivity.this
@@ -2770,6 +2776,17 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		switch (item.getItemId()) {
 		case R.id.menu_refresh:
 			if (isOnline()) {
+				if(isViewAllVisible()){
+					pageCollection.getModifiedPageList().add(
+							pageCollection.getPageList().get(0));
+					preferences.setModifiedPages(false);
+					preferences.setIsSelectedPage(false);
+					pageCollection.restoreSelectedPageList();
+					filter = "all";
+					read();
+					filterBar();
+					viewall.setVisible(false);
+				}
 				listViewMain.setVisibility(View.GONE);
 				getMyEvents(true);
 			} else {
@@ -3276,8 +3293,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						myEventsSettings(paramPageData);
 					} else {
 						pageCollection.restorePreviousPage();
-						if (pageCollection
-								.removePageFromFavourites(paramPageData)) {
+						if (pageCollection.removePageFromFavouritesAndEvents(
+								FacebookeventsActivity.this, paramPageData)) {
 							toast(paramPageData.name
 									+ " removed from favourites", false);
 							preferences.setModifiedSinglePage(true);
@@ -4196,9 +4213,15 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			a = "SELECT name, update_time,host,creator,location,description,venue,pic_big,pic_cover,eid,start_time,end_time FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid ="
 					+ userID
 					+ myEventsSettings
-					+ " ) and end_time>"
+					+ " )"
+					+ " AND (end_time > "
 					+ "'"
-					+ current_time + "'";
+					+ current_time
+					+ "'"
+					+ "OR (end_time = '' AND start_time > "
+					+ "'"
+					+ current_time + "'))";
+
 			bundle.putString("q", a);
 
 			Request.Callback callback = new Request.Callback() {
@@ -4287,8 +4310,22 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 								event.loc = json.getString("location");
 								event.startMillis = getMillis(
 										json.getString("start_time"), event);
-								event.endMillis = getMillis(
-										json.getString("end_time"), event);
+								String end_time = "";
+								long day = 0;
+
+								if (json.isNull("end_time")) {
+									end_time = json.getString("start_time");
+									day = 86400;
+								} else {
+									end_time = json.getString("end_time");
+								}
+								if (day > 0) {
+									long millis = Long.parseLong(getMillis(
+											end_time, event)) + day;
+									event.endMillis = Long.toString(millis);
+								} else {
+									event.endMillis = getMillis(end_time, event);
+								}
 								event.parentPage_ID = "1";
 								event.parentPageName = "My Events";
 								event.last_update = getMillis(
@@ -4445,8 +4482,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							+ my
 							+ "\""
 							+ ":\"SELECT eid,creator,name,attending_count,start_time,end_time,venue,description,location,pic_big,pic_cover,update_time FROM event WHERE eid IN (SELECT eid from event_member WHERE uid = "
-							+ currentpage._ID + ")" + " AND end_time > " + "'"
-							+ current_time + "'" + "\"" + ",";
+							+ currentpage._ID + ")" + " AND (end_time > " + "'"
+							+ current_time + "'"
+							+ "OR (end_time = '' AND start_time > " + "'"
+							+ current_time + "'))" + "\"" + ",";
 				}
 			}
 			a += "}";
@@ -4529,8 +4568,24 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 								event.startMillis = getMillis(
 										jsonObject.getString("start_time"),
 										event);
-								event.endMillis = getMillis(
-										jsonObject.getString("end_time"), event);
+
+								String end_time = "";
+								long day = 0;
+
+								if (jsonObject.isNull("end_time")) {
+									end_time = jsonObject
+											.getString("start_time");
+									day = 86400;
+								} else {
+									end_time = jsonObject.getString("end_time");
+								}
+								if (day > 0) {
+									long millis = Long.parseLong(getMillis(
+											end_time, event)) + day;
+									event.endMillis = Long.toString(millis);
+								} else {
+									event.endMillis = getMillis(end_time, event);
+								}
 								event.attending_count = jsonObject
 										.getInt("attending_count");
 								event.last_update = getMillis(
@@ -4662,7 +4717,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						isReading = false;
 
 					} catch (Exception e) {
-						Log.e("download", e.toString());
 						if (!myEventsSettingsDownload) {
 							Log.e("new downloads", e.toString());
 							FacebookeventsActivity.this
@@ -4677,9 +4731,12 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 												toast("Internet connection lost. Please try reloading later.",
 														true);
 											}
+
+											isReading = false;
 										}
 									});
 						} else {
+							Log.e("download", e.toString());
 							myEventsSettingsDownload = false;
 						}
 					}
@@ -4722,7 +4779,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				newDownloadEvents();
 
 				if (!isReading) {
-
 					FacebookeventsActivity.this.runOnUiThread(new Runnable() {
 						public void run() {
 							progressDialog.dismiss();
@@ -4735,7 +4791,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							progressDialog.show();
 						}
 					});
-
+					// refreshPageAdapter();
 					pageCollection.getPreviousPageList().clear();
 					for (EventData event : eventCollection
 							.getCompleteEventList()) {
@@ -4744,9 +4800,12 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					eventCollection.sortByDate();
 					eventCollection.saveCompleteEventList();
 					eventCollection.saveToDisk(FacebookeventsActivity.this);
+
 					if (pageCollection.getPageList().size() == pageCollection
 							.getSelectedPageList().size()) {
+						// EMPTY //
 					}
+
 					FacebookeventsActivity.this.runOnUiThread(new Runnable() {
 						public void run() {
 							textEventEmpty.setVisibility(View.GONE);
@@ -4908,9 +4967,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	}
 
 	private void updateEventDays() {
+		checkAndDeleteOrphans();
 		eventCollection.cleanCompleteEventList();
 		for (EventData event : eventCollection.getCompleteEventList()) {
-
 			dayOfWeek(event.startMillis, event.endMillis, event.unix);
 			event.dayStart = dayOfWeekStart;
 			event.isInProgress = isInProgress;
@@ -5050,8 +5109,22 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						event.loc = myJson.getString("location");
 						event.startMillis = getMillis(
 								myJson.getString("start_time"), event);
-						event.endMillis = getMillis(
-								myJson.getString("end_time"), event);
+						String end_time = "";
+						long day = 0;
+
+						if (myJson.isNull("end_time")) {
+							end_time = myJson.getString("start_time");
+							day = 86400;
+						} else {
+							end_time = myJson.getString("end_time");
+						}
+						if (day > 0) {
+							long millis = Long.parseLong(getMillis(end_time,
+									event)) + day;
+							event.endMillis = Long.toString(millis);
+						} else {
+							event.endMillis = getMillis(end_time, event);
+						}
 						event.name = myJson.getString("name");
 						event.attending_count = myJson
 								.getInt("attending_count");
@@ -5147,8 +5220,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 									+ my
 									+ "\""
 									+ ":\"SELECT eid,name,start_time,end_time,description,venue,location,pic_big,update_time,creator FROM event WHERE eid IN (SELECT eid from event_member WHERE uid = "
-									+ page._ID + ") AND end_time > " + "'"
-									+ current_time + "'" + "\"";
+									+ page._ID + ")" + " AND (end_time > "
+									+ "'" + current_time + "'"
+									+ "OR (end_time = '' AND start_time > "
+									+ "'" + current_time + "'))" + "'" + "\"";
 							if (p != pageCollection.getPageList().size()) {
 								az += ",";
 							}
@@ -5237,9 +5312,28 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 											event.startMillis = getMillis(
 													myJson.getString("start_time"),
 													event);
-											event.endMillis = getMillis(
-													myJson.getString("end_time"),
-													event);
+											String end_time = "";
+											long day = 0;
+
+											if (myJson.isNull("end_time")) {
+												end_time = myJson
+														.getString("start_time");
+												day = 86400;
+											} else {
+												end_time = myJson
+														.getString("end_time");
+											}
+											if (day > 0) {
+												long millis = Long
+														.parseLong(getMillis(
+																end_time, event))
+														+ day;
+												event.endMillis = Long
+														.toString(millis);
+											} else {
+												event.endMillis = getMillis(
+														end_time, event);
+											}
 											event.name = myJson
 													.getString("name");
 											event.last_update = getMillis(
@@ -5247,18 +5341,19 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 													event);
 											URL img_value = new URL(
 													myJson.getString("pic_big"));
-											
-											downloadImage(img_value, event.event_ID);
-											
+
+											downloadImage(img_value,
+													event.event_ID);
+
 											/*
-											Bitmap image = BitmapFactory
-													.decodeStream(img_value
-															.openConnection()
-															.getInputStream());
-											saveImageToDisk(event.event_ID,
-													image);
-													*/
-													
+											 * Bitmap image = BitmapFactory
+											 * .decodeStream(img_value
+											 * .openConnection()
+											 * .getInputStream());
+											 * saveImageToDisk(event.event_ID,
+											 * image);
+											 */
+
 											dayOfWeek(event.startMillis,
 													event.endMillis, event.unix);
 											event.dateStart = monthNameStart;
@@ -5588,7 +5683,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				pageTemp.website = pageCollection.getPageList().get(index).website;
 				pageTemp.picURL = pageCollection.getPageList().get(index).picURL;
 
-				pageCollection.removePageFromFavourites(pageTemp);
+				pageCollection
+						.removePageFromFavouritesAndEvents(this, pageTemp);
 				pageCollection.getModifiedPageList().add(pageTemp);
 				pageCollection.addPageToFavourites(pageTemp);
 				eventCollection.restoreEventList();
@@ -5621,6 +5717,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			progressDialog.setCancelable(false);
 			progressDialog.setMessage("Downloading: \"My Events..\"");
 			progressDialog.show();
+			eventCollection.removeEventsByParentPageID(this, "1");
 			getMyEvents(false);
 		}
 	}
@@ -5640,7 +5737,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			pageTemp.website = pageCollection.getPageList().get(index).website;
 			pageTemp.picURL = pageCollection.getPageList().get(index).picURL;
 
-			pageCollection.removePageFromFavourites(pageTemp);
+			pageCollection.removePageFromFavouritesAndEvents(this, pageTemp);
 			pageCollection.restorePreviousPage();
 			pageCollection.getModifiedPageList().add(pageTemp);
 			pageCollection.addPageToFavourites(pageTemp);
@@ -5666,8 +5763,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			progressDialog = new ProgressDialog(FacebookeventsActivity.this);
 			progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 			progressDialog.setCancelable(false);
-			progressDialog.setMessage("Updating: \"My Events..\"");
+			progressDialog.setMessage("Downloading: \"My Events..\"");
 			progressDialog.show();
+			eventCollection.removeEventsByParentPageID(this, "1");
 			getMyEvents(false);
 		}
 
@@ -6113,7 +6211,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		}
 	}
 
-	private void refreshEventsAdapter() {
+	public void refreshEventsAdapter() {
 		FacebookeventsActivity.this.runOnUiThread(new Runnable() {
 			public void run() {
 				if (!isFromFilter) {
@@ -6371,6 +6469,18 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private String getMillis(String UNIX, EventData event) {
 		if (UNIX.length() == 10) {
 			event.unix = true;
+
+			if (UNIX.substring(4, 5).equals("-")) {
+				long millis = 0;
+				Calendar cal = Calendar.getInstance();
+				int year = Integer.parseInt(UNIX.substring(0, 4));
+				int month = Integer.parseInt(UNIX.substring(5, 7)) - 1;
+				int day = Integer.parseInt(UNIX.substring(8, 10));
+				cal.set(year, month, day, 0, 0, 0);
+				millis = cal.getTimeInMillis();
+				return Long.toString(millis).substring(0, 10);
+			}
+
 			return UNIX;
 		} else {
 			long millis = 0;
@@ -6438,7 +6548,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 	}
 
-	
 	public void showImageEventList(final int i) {
 		AsyncTask<Void, Integer, Bitmap> task = new AsyncTask<Void, Integer, Bitmap>() {
 
@@ -6462,8 +6571,25 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						// TODO: handle exception
 					}
 
-					// bmp =
-					// readImageFromDisk(eventCollection.getEventList().get(i).event_ID);
+					if (bmp == null) {
+						try {
+							Log.i("showImage", Integer.toString(i));
+							String pageID = eventCollection.getEventList().get(
+									i).parentPage_ID;
+							if (pageID.equals("1")) {
+								bmp = BitmapFactory.decodeResource(
+										getResources(),
+										R.drawable.icon_other_events);
+							} else {
+								java.io.FileInputStream in = FacebookeventsActivity.this
+										.openFileInput(pageID);
+								bmp = BitmapFactory.decodeStream(in);
+							}
+
+						} catch (Exception e) {
+							// TODO: handle exception
+						}
+					}
 
 				}
 
@@ -6519,9 +6645,43 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		};
 		task.execute();
 	}
-	
-	public boolean isDownloadingImages(){
+
+	public boolean isDownloadingImages() {
 		return isdownloadingImages;
+	}
+
+	public int getMyeventsSettings() {
+		return mPrefs.getInt("myEventsSettings", 2);
+	}
+
+	public boolean isViewAllVisible() {
+		return viewall.isVisible();
+	}
+
+	private void checkAndDeleteOrphans() {
+		int i = 0;
+		ArrayList<Integer> removeList = new ArrayList<Integer>();
+		for (EventData event : eventCollection.getCompleteEventList()) {
+			boolean remove = true;
+			for (PageData page : pageCollection.getPageList()) {
+				if (event.parentPage_ID.equals(page._ID)) {
+					remove = false;
+				}
+			}
+
+			if (remove) {
+				removeList.add(i);
+			}
+			i++;
+		}
+		int g = 0;
+		for (int s : removeList) {
+			eventCollection.getCompleteEventList().remove(s - g);
+			g++;
+		}
+
+		//eventCollection.restoreEventList();
+
 	}
 
 }

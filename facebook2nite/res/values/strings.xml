@@ -2,8 +2,8 @@
 <resources>
 
     <string name="hello">Hello World, FacebookeventsActivity!</string>
-    <string name="version">Ver. 1.4.3</string>
-    <string name="version_manifest">1.4.3</string>
+    <string name="version">Ver. 2.0</string>
+    <string name="version_manifest">2.0</string>
     <string name="app_name">Facebookevents</string>
     <string name="app_id">219909391458551</string>
 

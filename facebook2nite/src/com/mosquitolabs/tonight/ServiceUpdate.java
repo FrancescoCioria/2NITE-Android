@@ -70,22 +70,21 @@ public class ServiceUpdate extends Service {
 		Context ctx = getApplicationContext();
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 		userID = mPrefs.getString("user_id", null);
-		//session = Session.getActiveSession();
-		
-		
-		session=Session.getActiveSession();
-		if(session==null){
-			//toast("session_cache", true);
+		// session = Session.getActiveSession();
+
+		session = Session.getActiveSession();
+		if (session == null) {
+			// toast("session_cache", true);
 			session = Session.openActiveSessionFromCache(ctx);
 		}
-		
-		if(session!=null){
-		if (userID == null) {
-			getUserIDasync();
-		}
-		checkCriticalUpdate();
-		startservice();
-		}else{
+
+		if (session != null) {
+			if (userID == null) {
+				getUserIDasync();
+			}
+			checkCriticalUpdate();
+			startservice();
+		} else {
 			Log.e("ServiceUpdate", "session_null");
 		}
 		return START_STICKY;
@@ -106,7 +105,7 @@ public class ServiceUpdate extends Service {
 		timer.scheduleAtFixedRate(new TimerTask() {
 
 			public void run() {
-				if (session!=null && session.isOpened()) {
+				if (session != null && session.isOpened()) {
 					if (isOnline()) {
 						service();
 					} else {
@@ -121,7 +120,7 @@ public class ServiceUpdate extends Service {
 						}, 60000, 60000);
 					}
 
-				}else{
+				} else {
 					getSession();
 				}
 			}
@@ -129,24 +128,18 @@ public class ServiceUpdate extends Service {
 		}, 600000, 6 * 3600000);
 
 	}
-	
-	
-	
-	private void service(){
+
+	private void service() {
 		Log.i("ServiceUpdate", "start timer");
-		SharedPreferences.Editor editor = mPrefs
-				.edit();
+		SharedPreferences.Editor editor = mPrefs.edit();
 		editor.putBoolean("service_status", true);
 		editor.commit();
-		eventCollection
-				.readFromDisk(ServiceUpdate.this);
-		pageCollection
-				.readFromDisk(ServiceUpdate.this);
+		eventCollection.readFromDisk(ServiceUpdate.this);
+		pageCollection.readFromDisk(ServiceUpdate.this);
 		update();
 		editor.putBoolean("service_status", false);
 		editor.commit();
 	}
-	
 
 	private void stopservice() {
 		if (timer != null) {
@@ -260,13 +253,27 @@ public class ServiceUpdate extends Service {
 											Integer.parseInt(s));
 							event.desc = myJson.getString("description");
 							event.loc = myJson.getString("location");
-							event.startMillis = getMillis(myJson
-									.getString("start_time"));
-							event.endMillis = getMillis(myJson
-									.getString("end_time"));
+							event.startMillis = getMillis(
+									myJson.getString("start_time"), event);
+							String end_time = "";
+							long day = 0;
+
+							if (myJson.isNull("end_time")) {
+								end_time = myJson.getString("start_time");
+								day = 86400;
+							} else {
+								end_time = myJson.getString("end_time");
+							}
+							if (day > 0) {
+								long millis = Long.parseLong(getMillis(
+										end_time, event)) + day;
+								event.endMillis = Long.toString(millis);
+							} else {
+								event.endMillis = getMillis(end_time, event);
+							}
 							event.name = myJson.getString("name");
-							event.last_update = getMillis(myJson
-									.getString("update_time"));
+							event.last_update = getMillis(
+									myJson.getString("update_time"), event);
 							event.attending_count = myJson
 									.getInt("attending_count");
 							dayOfWeek(event.startMillis, event.endMillis);
@@ -319,8 +326,10 @@ public class ServiceUpdate extends Service {
 									+ my
 									+ "\""
 									+ ":\"SELECT eid,name,start_time,end_time,attending_count,description,location,pic_big,pic_cover,update_time,creator FROM event WHERE eid IN (SELECT eid from event_member WHERE uid = "
-									+ page._ID + ") AND end_time > " + "'"
-									+ current_time + "'" + "\"" + ",";
+									+ page._ID + ")" + " AND (end_time > "
+									+ "'" + current_time + "'"
+									+ "OR (end_time = '' AND start_time > "
+									+ "'" + current_time + "'))" + "\"" + ",";
 							p++;
 							pagename.add(page.name);
 						}
@@ -366,14 +375,36 @@ public class ServiceUpdate extends Service {
 													.getString("description");
 											event.loc = myJson
 													.getString("location");
-											event.startMillis = getMillis(myJson
-													.getString("start_time"));
-											event.endMillis = getMillis(myJson
-													.getString("end_time"));
+											event.startMillis = getMillis(
+													myJson.getString("start_time"),
+													event);
+											String end_time = "";
+											long day = 0;
+
+											if (jsonObject.isNull("end_time")) {
+												end_time = jsonObject
+														.getString("start_time");
+												day = 86400;
+											} else {
+												end_time = jsonObject
+														.getString("end_time");
+											}
+											if (day > 0) {
+												long millis = Long
+														.parseLong(getMillis(
+																end_time, event))
+														+ day;
+												event.endMillis = Long
+														.toString(millis);
+											} else {
+												event.endMillis = getMillis(
+														end_time, event);
+											}
 											event.name = myJson
 													.getString("name");
-											event.last_update = getMillis(myJson
-													.getString("update_time"));
+											event.last_update = getMillis(
+													myJson.getString("update_time"),
+													event);
 											event.attending_count = myJson
 													.getInt("attending_count");
 											URL img_value = null;
@@ -858,7 +889,15 @@ public class ServiceUpdate extends Service {
 		}
 
 		String a = "SELECT name, update_time,host,creator, location,description, pic_big, eid,start_time,end_time FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid ="
-				+ userID + myEventsSettings + ") and end_time>" + current_time;
+				+ userID
+				+ myEventsSettings
+				+ ")"
+				+ " AND (end_time > "
+				+ "'"
+				+ current_time
+				+ "'"
+				+ "OR (end_time = '' AND start_time > "
+				+ "'" + current_time + "'))";
 		bundle.putString("q", a);
 
 		Request.Callback callback = new Request.Callback() {
@@ -891,15 +930,29 @@ public class ServiceUpdate extends Service {
 							event.name = json.getString("name");
 							event.desc = json.getString("description");
 							event.loc = json.getString("location");
-							event.startMillis = getMillis(json
-									.getString("start_time"));
-							event.endMillis = getMillis(json
-									.getString("end_time"));
+							event.startMillis = getMillis(
+									json.getString("start_time"), event);
+							String end_time = "";
+							long day = 0;
+
+							if (json.isNull("end_time")) {
+								end_time = json.getString("start_time");
+								day = 86400;
+							} else {
+								end_time = json.getString("end_time");
+							}
+							if (day > 0) {
+								long millis = Long.parseLong(getMillis(
+										end_time, event)) + day;
+								event.endMillis = Long.toString(millis);
+							} else {
+								event.endMillis = getMillis(end_time, event);
+							}
 							event.parentPage_ID = "1";
 							event.parentPageName = pageCollection
 									.getPageByID("1").name;
-							event.last_update = getMillis(json
-									.getString("update_time"));
+							event.last_update = getMillis(
+									json.getString("update_time"), event);
 							dayOfWeek(event.startMillis, event.endMillis);
 							event.dateStart = monthNameStart;
 							event.dayStart = dayOfWeekStart;
@@ -996,8 +1049,21 @@ public class ServiceUpdate extends Service {
 		}
 	}
 
-	private String getMillis(String UNIX) {
+	private String getMillis(String UNIX, EventData event) {
 		if (UNIX.length() == 10) {
+			event.unix = true;
+
+			if (UNIX.substring(4, 5).equals("-")) {
+				long millis = 0;
+				Calendar cal = Calendar.getInstance();
+				int year = Integer.parseInt(UNIX.substring(0, 4));
+				int month = Integer.parseInt(UNIX.substring(5, 7)) - 1;
+				int day = Integer.parseInt(UNIX.substring(8, 10));
+				cal.set(year, month, day, 0, 0, 0);
+				millis = cal.getTimeInMillis();
+				return Long.toString(millis).substring(0, 10);
+			}
+
 			return UNIX;
 		} else {
 			long millis = 0;
@@ -1009,7 +1075,7 @@ public class ServiceUpdate extends Service {
 			int minute = Integer.parseInt(UNIX.substring(14, 16));
 			cal.set(year, month, day, hour, minute, 0);
 			millis = cal.getTimeInMillis();
-
+			event.unix = true;
 			return Long.toString(millis).substring(0, 10);
 		}
 	}
@@ -1057,7 +1123,7 @@ public class ServiceUpdate extends Service {
 				}
 			}
 		};
-		
+
 		Request request = new Request(session, "me", bundle, HttpMethod.GET,
 				callback);
 		request.executeAsync();
@@ -1079,7 +1145,8 @@ public class ServiceUpdate extends Service {
 					json = jDataArray.getJSONObject(0);
 					SharedPreferences.Editor editor = mPrefs.edit();
 					editor.putString("message", json.getString("description"));
-					editor.putInt("versionCode", Integer.parseInt(json.getString("name")));
+					editor.putInt("versionCode",
+							Integer.parseInt(json.getString("name")));
 					editor.putBoolean("criticalUpdate", true);
 					editor.commit();
 				} catch (Exception e) {
@@ -1093,30 +1160,27 @@ public class ServiceUpdate extends Service {
 		request.executeAsync();
 
 	}
-	
-	private void toast(final String string, final boolean Long) {
-		
-				if (!Long)
-					Toast.makeText(ServiceUpdate.this, string,
-							Toast.LENGTH_SHORT).show();
-				else
-					Toast.makeText(ServiceUpdate.this, string,
-							Toast.LENGTH_LONG).show();
-			}
 
-	
-	private void getSession(){
-		if((session == null)||session.isClosed()){
-			session=Session.getActiveSession();
-			if(session==null){
+	private void toast(final String string, final boolean Long) {
+
+		if (!Long)
+			Toast.makeText(ServiceUpdate.this, string, Toast.LENGTH_SHORT)
+					.show();
+		else
+			Toast.makeText(ServiceUpdate.this, string, Toast.LENGTH_LONG)
+					.show();
+	}
+
+	private void getSession() {
+		if ((session == null) || session.isClosed()) {
+			session = Session.getActiveSession();
+			if (session == null) {
 				session = Session.openActiveSessionFromCache(this);
 			}
-			if(session!=null&session.isOpened()){
+			if (session != null & session.isOpened()) {
 				service();
 			}
 		}
 	}
-	
-	
-	
+
 }
