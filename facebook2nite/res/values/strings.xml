@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World, FacebookeventsActivity!</string>
-    <string name="version">Ver. 2.0</string>
-    <string name="version_manifest">2.0</string>
+    <string name="version">Ver. 2.0.1</string>
+    <string name="version_manifest">2.0.1</string>
     <string name="app_name">Facebookevents</string>
     <string name="app_id">219909391458551</string>
+    <string name="image_event">100dp</string>
 
     <color name="orange_dark">#E38120</color>
     <color name="dark_gray">#595754</color>
@@ -20,9 +20,6 @@
     <color name="dark_dark_gray">#2E2B2C</color>
     <color name="dark_logo">#080808</color>
     <color name="sfondo">#E3E2E0</color>
-
-    <string name="image_event">100dp</string>
-
     <color name="orange_shit">#EBA35B</color>
     <color name="orange_title">#FB940B</color>
     <color name="actionbar_gray">#DDDDDD</color>

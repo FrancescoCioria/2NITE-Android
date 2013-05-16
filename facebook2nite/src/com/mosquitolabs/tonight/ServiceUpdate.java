@@ -49,7 +49,6 @@ public class ServiceUpdate extends Service {
 	private PageCollection pageCollection = PageCollection.getInstance();
 	private EventCollection eventCollection = EventCollection.getInstance();
 	private SharedPreferences mPrefs;
-	private Session session;
 
 	public class LocalBinder extends Binder {
 		ServiceUpdate getService() {
@@ -70,15 +69,9 @@ public class ServiceUpdate extends Service {
 		Context ctx = getApplicationContext();
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 		userID = mPrefs.getString("user_id", null);
-		// session = Session.getActiveSession();
-
-		session = Session.getActiveSession();
-		if (session == null) {
-			// toast("session_cache", true);
-			session = Session.openActiveSessionFromCache(ctx);
-		}
-
-		if (session != null) {
+		
+		
+		if (getSession() != null) {
 			if (userID == null) {
 				getUserIDasync();
 			}
@@ -105,7 +98,7 @@ public class ServiceUpdate extends Service {
 		timer.scheduleAtFixedRate(new TimerTask() {
 
 			public void run() {
-				if (session != null && session.isOpened()) {
+				if (getSession() != null && getSession().isOpened()) {
 					if (isOnline()) {
 						service();
 					} else {
@@ -120,12 +113,10 @@ public class ServiceUpdate extends Service {
 						}, 60000, 60000);
 					}
 
-				} else {
-					getSession();
 				}
 			}
 
-		}, 600000, 6 * 3600000);
+		}, 60000, 6 * 3600000);
 
 	}
 
@@ -381,12 +372,12 @@ public class ServiceUpdate extends Service {
 											String end_time = "";
 											long day = 0;
 
-											if (jsonObject.isNull("end_time")) {
-												end_time = jsonObject
+											if (myJson.isNull("end_time")) {
+												end_time = myJson
 														.getString("start_time");
 												day = 86400;
 											} else {
-												end_time = jsonObject
+												end_time = myJson
 														.getString("end_time");
 											}
 											if (day > 0) {
@@ -419,12 +410,26 @@ public class ServiceUpdate extends Service {
 												img_value = new URL(
 														myJson.getString("pic_big"));
 											}
+											if (img_value
+													.toString()
+													.equals("https://fbcdn-profile-a.akamaihd.net/static-ak/rsrc.php/v2/yn/r/5uwzdFmIMKQ.png")) {
+												try {
+													java.io.FileInputStream in = ServiceUpdate.this
+															.openFileInput(jsonObject
+																	.getString("creator"));
+													saveImageToDisk(event.event_ID, BitmapFactory.decodeStream(in));
+												} catch (Exception e) {
+												
+												}
+
+											} else{
 											Bitmap image = BitmapFactory
 													.decodeStream(img_value
 															.openConnection()
 															.getInputStream());
 											saveImageToDisk(event.event_ID,
 													image);
+											}
 
 											dayOfWeek(event.startMillis,
 													event.endMillis);
@@ -449,10 +454,11 @@ public class ServiceUpdate extends Service {
 												public void onCompleted(
 														Response response) {
 													JSONArray jArrayRSVP = new JSONArray();
-													JSONObject jsonRSVP = response
-															.getGraphObject()
-															.getInnerJSONObject();
+													
 													try {
+														JSONObject jsonRSVP = response
+																.getGraphObject()
+																.getInnerJSONObject();
 														jArrayRSVP = jsonRSVP
 																.getJSONArray("data");
 
@@ -472,7 +478,8 @@ public class ServiceUpdate extends Service {
 												}
 											};
 											Request request = new Request(
-													session, event.event_ID
+													getSession(),
+													event.event_ID
 															+ "/invited/"
 															+ userID,
 													new Bundle(),
@@ -489,20 +496,27 @@ public class ServiceUpdate extends Service {
 									m++;
 								}
 							} catch (Exception e) {
-								Log.e("new events - service", e.toString());
+								if(getSession()==null || !getSession().isOpened()){
+									Log.e("new events - service", "session is null or closed");
+								}else{
+									Log.e("new events - service", e.toString());
+								}
 							}
 						}
 					};
-					Request request = new Request(session, "fql", bundle,
-							HttpMethod.GET, callback);
+					
+					
+					Request request = new Request(getSession(),
+							"fql", bundle, HttpMethod.GET, callback);
 					request.executeAndWait();
 
 				}
 
 			}
 		};
-		Request request = new Request(session, "fql", bundle, HttpMethod.GET,
-				callback);
+		
+		Request request = new Request(getSession(), "fql",
+				bundle, HttpMethod.GET, callback);
 		request.executeAndWait();
 
 		if (newDownloads) {
@@ -558,9 +572,9 @@ public class ServiceUpdate extends Service {
 		bundleA.putString("q", a);
 		bundleB.putString("q", b);
 		bundleC.putString("q", c);
-
-		Request requestA = new Request(session, "fql", bundleA, HttpMethod.GET,
-				new Request.Callback() {
+		
+		Request requestA = new Request(getSession(), "fql",
+				bundleA, HttpMethod.GET, new Request.Callback() {
 					public void onCompleted(Response response) {
 						try {
 							JSONObject jsonA = response.getGraphObject()
@@ -582,8 +596,8 @@ public class ServiceUpdate extends Service {
 					}
 				});
 
-		Request requestB = new Request(session, "fql", bundleB, HttpMethod.GET,
-				new Request.Callback() {
+		Request requestB = new Request(getSession(), "fql",
+				bundleB, HttpMethod.GET, new Request.Callback() {
 					public void onCompleted(Response response) {
 						try {
 							JSONObject jsonB = response.getGraphObject()
@@ -606,8 +620,8 @@ public class ServiceUpdate extends Service {
 					}
 				});
 
-		Request requestC = new Request(session, "fql", bundleC, HttpMethod.GET,
-				new Request.Callback() {
+		Request requestC = new Request(getSession(), "fql",
+				bundleC, HttpMethod.GET, new Request.Callback() {
 					public void onCompleted(Response response) {
 						try {
 							JSONObject jsonC = response.getGraphObject()
@@ -970,10 +984,11 @@ public class ServiceUpdate extends Service {
 							Request.Callback callback = new Request.Callback() {
 								public void onCompleted(Response response) {
 									JSONArray jArrayRSVP = new JSONArray();
-									JSONObject jsonRSVP = response
-											.getGraphObject()
-											.getInnerJSONObject();
+
 									try {
+										JSONObject jsonRSVP = response
+												.getGraphObject()
+												.getInnerJSONObject();
 										jArrayRSVP = jsonRSVP
 												.getJSONArray("data");
 
@@ -992,8 +1007,10 @@ public class ServiceUpdate extends Service {
 									}
 								}
 							};
-							Request request = new Request(session,
-									event.event_ID + "/invited/" + userID,
+							
+							Request request = new Request(
+									getSession(), event.event_ID
+											+ "/invited/" + userID,
 									new Bundle(), HttpMethod.GET, callback);
 							request.executeAndWait();
 
@@ -1008,6 +1025,7 @@ public class ServiceUpdate extends Service {
 							} else {
 								img_value = new URL(json.getString("pic_big"));
 							}
+							
 							Bitmap image = BitmapFactory.decodeStream(img_value
 									.openConnection().getInputStream());
 							saveImageToDisk(event.event_ID, image);
@@ -1021,8 +1039,9 @@ public class ServiceUpdate extends Service {
 				}
 			}
 		};
-		Request request = new Request(session, "fql", bundle, HttpMethod.GET,
-				callback);
+		
+		Request request = new Request(getSession(), "fql",
+				bundle, HttpMethod.GET, callback);
 		request.executeAndWait();
 
 		pageCollection.saveToDisk(ServiceUpdate.this);
@@ -1086,8 +1105,9 @@ public class ServiceUpdate extends Service {
 
 		Request.Callback callback = new Request.Callback() {
 			public void onCompleted(Response response) {
-				JSONObject j = response.getGraphObject().getInnerJSONObject();
 				try {
+					JSONObject j = response.getGraphObject()
+							.getInnerJSONObject();
 					String s = j.getString("id");
 					userID = s;
 					SharedPreferences.Editor editor = mPrefs.edit();
@@ -1098,9 +1118,9 @@ public class ServiceUpdate extends Service {
 				}
 			}
 		};
-
-		Request request = new Request(session, "me", bundle, HttpMethod.GET,
-				callback);
+		
+		Request request = new Request(getSession(), "me", bundle,
+				HttpMethod.GET, callback);
 		request.executeAndWait();
 
 	}
@@ -1111,8 +1131,9 @@ public class ServiceUpdate extends Service {
 
 		Request.Callback callback = new Request.Callback() {
 			public void onCompleted(Response response) {
-				JSONObject j = response.getGraphObject().getInnerJSONObject();
 				try {
+					JSONObject j = response.getGraphObject()
+							.getInnerJSONObject();
 					String s = j.getString("id");
 					userID = s;
 					SharedPreferences.Editor editor = mPrefs.edit();
@@ -1123,9 +1144,9 @@ public class ServiceUpdate extends Service {
 				}
 			}
 		};
-
-		Request request = new Request(session, "me", bundle, HttpMethod.GET,
-				callback);
+		
+		Request request = new Request(getSession(), "me", bundle,
+				HttpMethod.GET, callback);
 		request.executeAsync();
 
 	}
@@ -1155,8 +1176,9 @@ public class ServiceUpdate extends Service {
 
 			}
 		};
-		Request request = new Request(session, "fql", bundle, HttpMethod.GET,
-				callback);
+		
+		Request request = new Request(getSession(), "fql",
+				bundle, HttpMethod.GET, callback);
 		request.executeAsync();
 
 	}
@@ -1171,16 +1193,14 @@ public class ServiceUpdate extends Service {
 					.show();
 	}
 
-	private void getSession() {
-		if ((session == null) || session.isClosed()) {
-			session = Session.getActiveSession();
+	private Session getSession() {
+		
+		Session	session = Session.getActiveSession();
 			if (session == null) {
 				session = Session.openActiveSessionFromCache(this);
 			}
-			if (session != null & session.isOpened()) {
-				service();
-			}
+			return session;
 		}
-	}
+	
 
 }

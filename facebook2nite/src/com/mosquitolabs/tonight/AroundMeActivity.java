@@ -212,7 +212,7 @@ public class AroundMeActivity extends SherlockActivity {
 		Log.e("location", "getting location");
 		LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		LocationListener ll = new mylocationlistener();
-		lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, ll);
+		lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 10000, 1000, ll);
 	}
 
 	@Override
@@ -839,7 +839,7 @@ public class AroundMeActivity extends SherlockActivity {
 						}
 					}
 				};
-				Request request = new Request(session, currentPageID + "/"
+				Request request = new Request(Session.getActiveSession(), currentPageID + "/"
 						+ element, bundle, HttpMethod.POST, callback);
 				request.executeAndWait();
 				return null;
@@ -1350,10 +1350,11 @@ public class AroundMeActivity extends SherlockActivity {
 								Request.Callback callback = new Request.Callback() {
 									public void onCompleted(Response response) {
 										JSONArray jArrayRSVP = new JSONArray();
-										JSONObject jsonRSVP = response
-												.getGraphObject()
-												.getInnerJSONObject();
+										
 										try {
+											JSONObject jsonRSVP = response
+													.getGraphObject()
+													.getInnerJSONObject();
 											jArrayRSVP = jsonRSVP
 													.getJSONArray("data");
 
@@ -1371,7 +1372,7 @@ public class AroundMeActivity extends SherlockActivity {
 									}
 								};
 
-								Request request = new Request(session,
+								Request request = new Request(Session.getActiveSession(),
 										event.event_ID
 												+ "/invited/"
 												+ mPrefs.getString("user_id",
@@ -1395,7 +1396,7 @@ public class AroundMeActivity extends SherlockActivity {
 					}
 				};
 
-				Request request = new Request(session, "fql", bundle,
+				Request request = new Request(Session.getActiveSession(), "fql", bundle,
 						HttpMethod.GET, callback);
 				request.executeAndWait();
 
@@ -1534,10 +1535,9 @@ public class AroundMeActivity extends SherlockActivity {
 					}
 				};
 
-				Request request = new Request(session, "fql", bundle,
+				Request request = new Request(Session.getActiveSession(), "fql", bundle,
 						HttpMethod.GET, callback);
 				request.executeAndWait();
-
 				return null;
 			}
 

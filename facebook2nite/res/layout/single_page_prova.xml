@@ -61,67 +61,54 @@
                 <ImageView
                     android:id="@+id/imageViewEventCover"
                     android:layout_width="fill_parent"
-                    android:layout_height="100dp"
+                    android:layout_height="110dp"
                     android:layout_centerHorizontal="true"
                     android:adjustViewBounds="true"
                     android:contentDescription="@android:drawable/alert_light_frame"
                     android:scaleType="centerCrop"
                     android:src="@drawable/standard_image" />
 
-                <TextView
-                    android:id="@+id/textViewAttendingCountOLD"
+                <View
                     android:layout_width="fill_parent"
-                    android:layout_height="25dp"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignRight="@+id/imageViewEvent"
-                    android:background="@drawable/black_50_transparent"
-                    android:gravity="center"
-                    android:text="Going: 132"
-                    android:textColor="@android:color/background_light"
-                    android:textSize="13sp"
-                    android:textStyle="bold|italic"
-                    android:visibility="gone" />
+                    android:layout_height="110dp"
+                    android:background="@drawable/gradient_shadow" />
 
-                <TextView
-                    android:id="@+id/textViewAttendingCount"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true"
-                    android:layout_alignParentLeft="true"
-                    android:background="@android:color/background_dark"
-                    android:gravity="center"
-                    android:paddingBottom="1.5dp"
-                    android:paddingLeft="3dp"
-                    android:paddingRight="3dp"
-                    android:paddingTop="1.5dp"
-                    android:text="Going: 132"
-                    android:textColor="@android:color/background_light"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:layout_alignParentBottom="true" 
+                    android:paddingLeft="10dp"
+                    android:paddingBottom="5dp"
+                    android:orientation="vertical"
+                    >
+
+                    <TextView
+                        android:id="@+id/textViewNameSinglePage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Event Name"
+                        android:layout_marginRight="20dp"
+                        android:textColor="@android:color/background_light"
+                        android:textSize="16sp"
+                        android:ellipsize="end"
+                        android:maxLines="2"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/textViewAttendingCount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Going: 132"
+                        android:textColor="@android:color/background_light"
+                        android:textSize="12sp"
+                         />
+                </LinearLayout>
             </RelativeLayout>
-            
-             <TextView
-               
-                android:layout_width="match_parent"
-                android:layout_height="0.1dp"
-                android:background="@color/light_gray"
-                />
-            
 
             <TextView
-                android:id="@+id/textViewNameSinglePage"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/background_light"
-                android:gravity="center"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
-                android:paddingTop="3dp"
-                android:text="Event Name"
-                android:textColor="@color/dark_gray"
-                android:textSize="12sp"
-                android:textStyle="italic|bold"
-                android:typeface="serif" />
+                android:layout_height="0.1dp"
+                android:background="@color/light_gray" />
 
             <LinearLayout
                 android:layout_width="match_parent"

@@ -105,7 +105,6 @@ public class SearchActivity extends SherlockActivity {
 		this.setTheme(R.style.Theme_Sherlock);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.search_prova);
-		initialize();
 
 		EasyTracker.getTracker().sendView();
 
@@ -151,6 +150,9 @@ public class SearchActivity extends SherlockActivity {
 			mySearch = (extras.getString("search"));
 			isFirstTime = true;
 		}
+		
+		initialize();
+
 
 	}
 
@@ -204,13 +206,17 @@ public class SearchActivity extends SherlockActivity {
 			Request.Callback callback = new Request.Callback() {
 				public void onCompleted(Response response) {
 					Log.i("request", "end_first");
+					try{
 					JSONObject j = response.getGraphObject()
 							.getInnerJSONObject();
 					searchComplete(j);
+					}catch (Exception e) {
+						// TODO: handle exception
+					}
 				}
 			};
 
-			Request request = new Request(session, "search", localBundle,
+			Request request = new Request(Session.getActiveSession(), "search", localBundle,
 					HttpMethod.GET, callback);
 			request.executeAsync();
 
@@ -490,7 +496,7 @@ public class SearchActivity extends SherlockActivity {
 					}
 				};
 
-				Request request = new Request(session, "fql", bun,
+				Request request = new Request(Session.getActiveSession(), "fql", bun,
 						HttpMethod.GET, callback);
 				request.executeAndWait();
 
@@ -804,7 +810,7 @@ public class SearchActivity extends SherlockActivity {
 									@Override
 									public void onClick(DialogInterface dialog,
 											int which) {
-										session.openForRead(new Session.OpenRequest(
+										Session.getActiveSession().openForRead(new Session.OpenRequest(
 												SearchActivity.this)
 												.setCallback(statusCallback));
 									}
@@ -871,7 +877,7 @@ public class SearchActivity extends SherlockActivity {
 				}
 			}
 		};
-		Request request = new Request(session, "fql", bundle, HttpMethod.GET,
+		Request request = new Request(Session.getActiveSession(), "fql", bundle, HttpMethod.GET,
 				callback);
 		request.executeAsync();
 	}
