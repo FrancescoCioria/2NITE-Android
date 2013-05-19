@@ -197,8 +197,9 @@ public class EventCollection {
 		int i = 0;
 		Calendar localCalendar = Calendar.getInstance();
 
-		Calendar eventCalendar = Calendar.getInstance(TimeZone
-				.getTimeZone("America/Los_Angeles"));
+		//Calendar eventCalendar = Calendar.getInstance(TimeZone
+			//	.getTimeZone("America/Los_Angeles"));
+		Calendar eventCalendar = Calendar.getInstance();
 
 		Formatter localFormatter = new Formatter();
 		Formatter formatterTime = new Formatter();

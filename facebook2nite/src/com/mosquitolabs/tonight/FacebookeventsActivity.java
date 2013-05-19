@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Currency;
 import java.util.Formatter;
 import java.util.List;
 import java.util.TimeZone;
@@ -200,7 +201,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private CustomViewPager pagerUserLikes;
 
 	private Bitmap mIcon1;
-	private ProgressBar progressLogin;
+	private ProgressBar progressWelcome;
+	private RelativeLayout progressLogin;
 	private ArrayList<String> items = new ArrayList<String>();
 
 	private AdView adView;
@@ -279,7 +281,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		initializeMain();
 		mPrefs.registerOnSharedPreferenceChangeListener(mListener);
 		login = (Button) findViewById(R.id.buttonLogin);
-		progressLogin = (ProgressBar) findViewById(R.id.progressBarLogin);
+		progressLogin = (RelativeLayout) findViewById(R.id.progressLogin);
+		progressWelcome = (ProgressBar) findViewById(R.id.progressBarWelcome);
 
 		if (!session.isOpened()) {
 
@@ -307,7 +310,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			}
 		} else {
 			loginVisible(false);
-			progressLoginVisible(true);
+			progressWelcomeVisible(true);
 			showMyLogo();
 		}
 
@@ -1351,6 +1354,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		page.name = "My Events..";
 		page.address = "";
 		pageCollection.addPageToFavourites(page);
+		refreshPageAdapter();
 		String a = "SELECT name,attending_count,update_time,venue,host,creator, location,description, pic_big, eid,start_time,end_time FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid ="
 				+ userID
 				+ myEventsSettings
@@ -2041,13 +2045,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 		@Override
 		public int getCount() {
-			if (pageCollection.getPageList().isEmpty()) {
-				isPageAvailable = false;
-				return (2);
-			} else {
 
-				return (3);
-			}
+			return (3);
+
 		}
 
 		@Override
@@ -2096,7 +2096,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 											+ " selected", false);
 
 									preferences.setModifiedSinglePage(true);
-									currentPageID = null;
+									invalidateCurrentPageId();
 									refreshPageAdapter();
 								}
 								filterBar();
@@ -2383,8 +2383,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							alertDialog.show();
 
 						} else {
-							infoPage(pageCollection
-									.getPageByID(event.parentPage_ID));
+							if (event != null)
+								infoPage(pageCollection
+										.getPageByID(event.parentPage_ID));
 						}
 					}
 				});
@@ -2908,7 +2909,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 								pageCollection.getModifiedPageList().clear();
 								preferences.setModifiedPages(true);
 								preferences.setModifiedSinglePage(true);
-								currentPageID = null;
+								invalidateCurrentPageId();
 								preferences.setIsSelectedPage(false);
 								preferences.setisModifiedPageListToClear(false);
 								redownloadAll();
@@ -3272,7 +3273,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							toast(paramPageData.name
 									+ " removed from favourites", false);
 							preferences.setModifiedSinglePage(true);
-							currentPageID = null;
+							invalidateCurrentPageId();
 							viewAll();
 							pageCollection
 									.saveToDisk(FacebookeventsActivity.this);
@@ -3293,7 +3294,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						pageCollection.getModifiedPageList().clear();
 						preferences.setModifiedPages(true);
 						preferences.setModifiedSinglePage(true);
-						currentPageID = null;
+						invalidateCurrentPageId();
 						preferences.setIsSelectedPage(false);
 						preferences.setisModifiedPageListToClear(false);
 						redownloadPageEvents(index);
@@ -4186,6 +4187,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			page.name = "My Events..";
 			page.address = "";
 			pageCollection.addPageToFavourites(page);
+			refreshPageAdapter();
 			a = "SELECT name, update_time,host,creator,location,description,venue,pic_big,pic_cover,eid,start_time,end_time FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid ="
 					+ userID
 					+ myEventsSettings
@@ -4791,11 +4793,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 				preferences.setModifiedPages(false);
 				refreshEventsAdapter();
+				refreshPageAdapter();
 				FacebookeventsActivity.this.runOnUiThread(new Runnable() {
 					public void run() {
 
 						listViewMain.setVisibility(View.VISIBLE);
-						refreshPageAdapter();
 						progressDialog.dismiss();
 					}
 				});
@@ -4922,6 +4924,19 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					progressLogin.setVisibility(View.GONE);
 				}
 
+			}
+		});
+	}
+	private void progressWelcomeVisible(final boolean b) {
+		FacebookeventsActivity.this.runOnUiThread(new Runnable() {
+			public void run() {
+				
+				if (b) {
+					progressWelcome.setVisibility(View.VISIBLE);
+				} else {
+					progressWelcome.setVisibility(View.GONE);
+				}
+				
 			}
 		});
 	}
@@ -5437,7 +5452,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					eventCollection.sortByDate();
 					eventCollection.saveCompleteEventList();
 					eventCollection.saveToDisk(FacebookeventsActivity.this);
-					refreshEventsAdapter();
+					// refreshEventsAdapter();
 					newDownloads = false;
 
 				}
@@ -5454,6 +5469,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				});
 
 				refreshEventsAdapter();
+				refreshPageAdapter();
 
 			}
 
@@ -5662,6 +5678,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				}
 				index++;
 			}
+			refreshPageAdapter();
 			eventCollection.getCompleteEventList().clear();
 			eventCollection.getEventList().clear();
 			pageCollection.getPreviousPageList().clear();
@@ -5714,6 +5731,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						Integer.parseInt(s) - g);
 				g++;
 			}
+			refreshPageAdapter();
 			// isReloading = true;
 			read();
 		} else {
@@ -5780,6 +5798,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				pageCollection.getPageAroundMe().clear();
 				pageCollection.getPageSearchListRelevant().clear();
 				pageCollection.getPageSearchList().clear();
+				refreshPageAdapter();
 
 			}
 		});
@@ -6127,7 +6146,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 										+ " selected", false);
 
 								preferences.setModifiedSinglePage(true);
-								currentPageID = null;
+								invalidateCurrentPageId();
 								refreshPageAdapter();
 								filter();
 								setViewAll(true);
@@ -6666,4 +6685,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 	}
 
+	private void invalidateCurrentPageId() {
+		currentPageID = null;
+		if (textPageEmpty != null) {
+			textPageEmptyVisible(true);
+		}
+	}
 }

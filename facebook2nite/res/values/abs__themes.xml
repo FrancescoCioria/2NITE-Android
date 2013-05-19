@@ -209,7 +209,7 @@
 
     <style name="MyTheme" parent="android:Theme.Light">
         <item name="android:windowNoTitle">true</item>
-        <item name="android:windowBackground">@drawable/background_qubix</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
     </style>
 
 </resources>

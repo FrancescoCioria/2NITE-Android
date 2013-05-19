@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="libGoogleAnalyticsV2">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/Dropbox/Android/ADT/sdk/extras/google/analytics_sdk_v2/libGoogleAnalyticsV2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
