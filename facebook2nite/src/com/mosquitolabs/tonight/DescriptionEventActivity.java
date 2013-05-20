@@ -108,8 +108,89 @@ public class DescriptionEventActivity extends SherlockActivity {
 		// if (!isBirthdayWeek) {
 		// adViewLoad();
 		// }
+		
+		buttonNavigate.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				AlertDialog.Builder builder;
+				final AlertDialog alertDialog;
+				final PageData paramPageData = pageCollection.getPageByID(eventCollection
+						.getCompleteEventByID(currentPageID).parentPage_ID);
+				String a = "";
+				EventData event = eventCollection
+						.getCompleteEventByID(currentPageID);
+				if (event.venue != null && event.venue.length() > 0) {
+					a = event.venue;
+				} else {
+					a = paramPageData.address;
+				}
+				final String address = a;
+
+				builder = new AlertDialog.Builder(
+						DescriptionEventActivity.this);
+				builder.setTitle(event.loc);
+				builder.setMessage(address);
+				builder.setNegativeButton("Cancel",
+						new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								dialog.cancel();
+							}
+						});
+				builder.setNeutralButton("See on GMaps",
+						new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								try {
+									String uri = "geo:0,0?q=" + address;
+									startActivity(new Intent(
+											android.content.Intent.ACTION_VIEW,
+											Uri.parse(uri)));
+								} catch (Exception e) {
+									Log.e("Gmaps", e.toString());
+									toast("Can't open Google Maps, be sure to have installed it on your phone.");
+								}
+							}
+						});
+				builder.setPositiveButton("Navigate",
+						new DialogInterface.OnClickListener() {
+
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+
+								try {
+									if (address.length() > 0) {
+										Intent i = new Intent(
+												Intent.ACTION_VIEW,
+												Uri.parse("google.navigation:q="
+														+ address));
+										startActivity(i);
+									} else {
+										toast("Sorry, no address available for "
+												+ paramPageData.name);
+									}
+								} catch (Exception e) {
+									toast("Can't open navigator app, be sure to have installed it on your phone.");
+
+								}
+							}
+						});
+
+				alertDialog = builder.create();
+				alertDialog.show();
+
+			}
+		});
+
+		
 		buttonNavigate.setVisibility(View.GONE);
-		buttonPlace.setClickable(false);
+		//buttonPlace.setClickable(false);
 
 		EventData my = eventCollection.getAroundMeEventByID(currentPageID);
 		textName.setText(my.name);
@@ -167,6 +248,14 @@ public class DescriptionEventActivity extends SherlockActivity {
 		}
 		textLoc.setText("");
 		textLoc.setTextColor(Color.rgb(11, 100, 217));
+		
+		if(my.venue!=null && my.venue.length()>0){
+			buttonNavigate.setVisibility(View.VISIBLE);
+		}
+		
+		buttonPlace.setEnabled(false);
+		buttonPlace.setTextColor(getResources().getColor(R.color.android_gray));
+		
 
 	}
 
@@ -377,6 +466,26 @@ public class DescriptionEventActivity extends SherlockActivity {
 						currentPageID + "/" + element, bundle, HttpMethod.POST,
 						callback);
 				request.executeAndWait();
+				
+				boolean add = true;
+				for (EventData temp : eventCollection
+						.getCompleteEventList()) {
+					if (event.event_ID
+							.equals(temp.event_ID)) {
+							add = false;
+						break;
+					}
+				}
+				if (add) {
+					event.parentPage_ID="1";
+					event.parentPageName="My Events..";
+					eventCollection
+							.addToCompleteEventList(event);
+				}else{
+					eventCollection.getCompleteEventByID(event.event_ID).status_attending=event.status_attending;
+					eventCollection.getCompleteEventByID(event.event_ID).attending_count=event.attending_count;
+				}
+				
 				return null;
 			}
 		};

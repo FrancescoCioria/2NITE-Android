@@ -24,9 +24,9 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 
 	private LayoutInflater mInflater;
 	// private Display display;
-	private AroundMeActivity context;
+	private Activity context;
 
-	public MyCustomAdapterEventsAroundMe(AroundMeActivity paramContext) {
+	public MyCustomAdapterEventsAroundMe(Activity paramContext) {
 		this.mInflater = LayoutInflater.from(paramContext);
 		context = paramContext;
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -45,8 +45,7 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		return paramInt;
 	}
 
-	public View getView(int paramInt, View paramView,
-			ViewGroup paramViewGroup) {
+	public View getView(int paramInt, View paramView, ViewGroup paramViewGroup) {
 		ViewHolder localViewHolder;
 
 		if (paramView == null) {
@@ -82,11 +81,11 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 
 		localViewHolder = (ViewHolder) paramView.getTag();
 
-		EventData event = eventCollection.getAroundMeEventList().get(
-				paramInt);
+		EventData event = eventCollection.getAroundMeEventList().get(paramInt);
 
 		DisplayMetrics displaymetrics = new DisplayMetrics();
-		context.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+		context.getWindowManager().getDefaultDisplay()
+				.getMetrics(displaymetrics);
 		int wwidth = displaymetrics.widthPixels;
 		float dp = 0;
 		dp = wwidth - (145 * displaymetrics.density);
@@ -95,17 +94,16 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		localViewHolder.text.setText(name);
 		int i = event.name.length() - 1;
 
-		float currentTextWidth = localViewHolder.text.getPaint()
-				.measureText(name);
+		float currentTextWidth = localViewHolder.text.getPaint().measureText(
+				name);
 		while (dp <= currentTextWidth && i >= 1) {
 			name = event.name.substring(0, i) + "...";
 			i--;
-			currentTextWidth = localViewHolder.text.getPaint().measureText(
-					name);
+			currentTextWidth = localViewHolder.text.getPaint()
+					.measureText(name);
 		}
 
-		String lastChar = name.substring(name.length() - 4,
-				name.length() - 3);
+		String lastChar = name.substring(name.length() - 4, name.length() - 3);
 		if (lastChar.equals(" ")) {
 			name = name.substring(0, name.length() - 4) + "...";
 		}
@@ -125,9 +123,11 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		// localViewHolder.text.setText(event.name);
 		localViewHolder.page.setText(event.parentPageName);
 		try {
-			java.io.FileInputStream in = context
-					.openFileInput(event.event_ID);
+			java.io.FileInputStream in = context.openFileInput(event.event_ID);
 			Bitmap image = BitmapFactory.decodeStream(in);
+			if(image==null){
+				image = BitmapFactory.decodeResource(context.getResources(), R.drawable.standard_image);
+			}
 			localViewHolder.image.setImageBitmap(image);
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -137,8 +137,8 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		boolean currentEventIsInProgress = false;
 		String previousEventDay = "";
 		if (paramInt != 0) {
-			previousEventIsInProgress = eventCollection
-					.getAroundMeEventList().get(paramInt - 1).isInProgress;
+			previousEventIsInProgress = eventCollection.getAroundMeEventList()
+					.get(paramInt - 1).isInProgress;
 			previousEventDay = eventCollection.getAroundMeEventList().get(
 					paramInt - 1).dateStart;
 		}
@@ -151,8 +151,8 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 						&& previousEventIsInProgress && !currentEventIsInProgress)) {
 
 			if (currentEventIsInProgress) {
-				localViewHolder.separatorDay.setBackgroundColor(Color.rgb(
-						250, 60, 60));
+				localViewHolder.separatorDay.setBackgroundColor(Color.rgb(250,
+						60, 60));
 				localViewHolder.separatorMonth.setText("Now");
 
 				Bitmap bmp = BitmapFactory.decodeResource(
@@ -160,8 +160,7 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 				BitmapDrawable background = new BitmapDrawable(bmp);
 				background.setTileModeXY(Shader.TileMode.REPEAT,
 						Shader.TileMode.REPEAT);
-				localViewHolder.separatorDay
-						.setBackgroundDrawable(background);
+				localViewHolder.separatorDay.setBackgroundDrawable(background);
 				localViewHolder.separatorDay.setText("In Progress");
 				localViewHolder.separatorDay.setTextColor(Color.WHITE);
 			} else {
@@ -175,8 +174,7 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 				BitmapDrawable background = new BitmapDrawable(bmp);
 				background.setTileModeXY(Shader.TileMode.REPEAT,
 						Shader.TileMode.REPEAT);
-				localViewHolder.separatorDay
-						.setBackgroundDrawable(background);
+				localViewHolder.separatorDay.setBackgroundDrawable(background);
 
 				localViewHolder.separatorMonth.setText(event.dateStart);
 				localViewHolder.separatorDay.setText(event.dayStart);
@@ -194,6 +192,10 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		}
 
 		String status = event.status_attending;
+		if (status == null) {
+			status = "";
+		}
+		
 		if (status.equals("attending")) {
 			BitmapDrawable triangle = new BitmapDrawable(
 					BitmapFactory.decodeResource(context.getResources(),
@@ -251,4 +253,3 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 
 	}
 }
-

@@ -52,6 +52,12 @@
             android:theme="@style/Theme.Sherlock.Light" >
         </activity>
         <activity
+            android:name=".DiscoverActivity"
+            android:label="Discover"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Sherlock.Light" >
+        </activity>
+        <activity
             android:name=".PhotostreamActivity"
             android:label=""
             android:screenOrientation="portrait"

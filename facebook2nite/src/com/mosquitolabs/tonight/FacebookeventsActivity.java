@@ -76,6 +76,7 @@ import com.facebook.Request;
 import com.facebook.RequestBatch;
 import com.facebook.Response;
 import com.facebook.Session;
+import com.facebook.Request.Callback;
 import com.facebook.Session.NewPermissionsRequest;
 import com.facebook.SessionState;
 import com.facebook.Settings;
@@ -150,7 +151,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private com.actionbarsherlock.view.MenuItem search;
 	private com.actionbarsherlock.view.MenuItem viewall;
 	private com.actionbarsherlock.view.MenuItem rsvp;
-	private com.actionbarsherlock.view.MenuItem like;
+	//private com.actionbarsherlock.view.MenuItem like;
 	private com.actionbarsherlock.view.MenuItem info_2nite;
 	private com.actionbarsherlock.view.MenuItem info_menu;
 	private com.actionbarsherlock.view.MenuItem reset;
@@ -687,14 +688,16 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 										adRequest
 												.setGender(AdRequest.Gender.FEMALE);
 								} catch (Exception e) {
-									//
 								}
 							}
 						};
-						Request request = new Request(
-								Session.getActiveSession(), "me", bundle,
-								HttpMethod.GET, callback);
-						request.executeAndWait();
+						if (mPrefs.getString("user_id", "").length() == 0) {
+							Request request = new Request(
+									Session.getActiveSession(), "me", bundle,
+									HttpMethod.GET, callback);
+							request.executeAndWait();
+						}
+
 					}
 
 					bundle.putString("fields", "likes");
@@ -1569,10 +1572,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 											event.event_ID + "/invited/"
 													+ userID, new Bundle(),
 											HttpMethod.GET, callback);
-									request.executeAndWait();
+									//request.executeAndWait();
 
-									eventCollection.getCompleteEventList().add(
-											event);
+									eventCollection.addToCompleteEventList(event);
 									URL img_value = null;
 									img_value = new URL(
 											json.getString("pic_big"));
@@ -1616,6 +1618,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				request.executeAndWait();
 
 				if (newdownloads) {
+					
+					if(!update){
+					getRSVPStatus();	
+					}
+					
 					newDownloads = true;
 					eventCollection.restoreEventList();
 					eventCollection.sortByDate();
@@ -2678,7 +2685,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		seeOnFacebook = menu.findItem(R.id.menu_facebook);
 		rsvp = menu.findItem(R.id.menu_rsvp);
 		viewall = menu.findItem(R.id.menu_viewall);
-		like = menu.findItem(R.id.menu_like);
+		//like = menu.findItem(R.id.menu_like);
 		reset = menu.findItem(R.id.menu_reset);
 		sortEvents = menu.findItem(R.id.menu_sortEvents);
 		sortPages = menu.findItem(R.id.menu_sortPages);
@@ -2752,6 +2759,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				listViewMain.setVisibility(View.GONE);
 				getMyEvents(true);
 			} else {
+				
 				toast("No internet connection", false);
 			}
 			return false;
@@ -2770,20 +2778,14 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			if (isOnline()) {
 				pageCollection.clearPageAroundMe();
 				Intent localIntent = new Intent(FacebookeventsActivity.this,
-						AroundMeActivity.class);
+						DiscoverActivity.class);
 				startActivity(localIntent);
 			} else {
 				toast("No internet connection", false);
 			}
 			return false;
 
-		case R.id.menu_like:
-			if (isOnline()) {
-				dialogUserLikes();
-			} else {
-				toast("No internet connection", false);
-			}
-			return false;
+		
 
 		case R.id.menu_viewall:
 			pageCollection.getModifiedPageList().add(
@@ -4374,7 +4376,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 										Session.getActiveSession(),
 										event.event_ID + "/invited/" + userID,
 										bundle, HttpMethod.GET, callback);
-								request.executeAndWait();
+								//request.executeAndWait();
 
 								isInProgress = false;
 								eventCollection.addToCompleteEventList(event);
@@ -4441,21 +4443,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					downloadImage(currentpage.coverURL, "cover"
 							+ currentpage._ID);
 
-					/*
-					 * try {
-					 * 
-					 * 
-					 * Bitmap icon = BitmapFactory
-					 * .decodeStream(currentpage.picURL
-					 * .openConnection().getInputStream()); Bitmap cover =
-					 * BitmapFactory .decodeStream(currentpage.coverURL
-					 * .openConnection().getInputStream());
-					 * saveImageToDisk(currentpage._ID, icon);
-					 * saveImageToDisk("cover" + currentpage._ID, cover);
-					 * 
-					 * } catch (Exception e) { Log.e("image newdownloadevents",
-					 * e.toString()); }
-					 */
 
 					a += "\""
 							+ my
@@ -4637,9 +4624,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 										Session.getActiveSession(),
 										event.event_ID + "/invited/" + userID,
 										bundle, HttpMethod.GET, callback);
-								request.executeAndWait();
+								//request.executeAndWait();
 
-								eventCollection.addToEventList(event);
+								
 
 								URL img_value = null;
 								Bitmap image = null;
@@ -4647,12 +4634,12 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 									JSONObject j = jsonObject
 											.getJSONObject("pic_cover");
 									img_value = new URL(j.getString("source"));
-									eventCollection
-											.getEventByID(event.event_ID).hasCover = true;
+									event.hasCover = true;
 								} else {
 									img_value = new URL(
 											jsonObject.getString("pic_big"));
 								}
+								
 								if (img_value
 										.toString()
 										.equals("https://fbcdn-profile-a.akamaihd.net/static-ak/rsrc.php/v2/yn/r/5uwzdFmIMKQ.png")) {
@@ -4668,19 +4655,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 								} else {
 									downloadImage(img_value, event.event_ID);
-
-									/*
-									 * image = BitmapFactory
-									 * .decodeStream(img_value .openConnection()
-									 * .getInputStream());
-									 * 
-									 * image = BitmapFactory
-									 * .decodeStream(img_value .openConnection()
-									 * .getInputStream());
-									 * saveImageToDisk(event.event_ID, image);
-									 */
 								}
-
+								
+								eventCollection.addToCompleteEventList(event);
+								
 								n++;
 								final int q = n;
 								FacebookeventsActivity.this
@@ -4725,7 +4703,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					bundle, HttpMethod.GET, callback2);
 			request2.executeAndWait();
 
-			// fine secondo
+			getRSVPStatus();
 
 		}
 		isDoownloading = false;
@@ -4761,9 +4739,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				});
 				// refreshPageAdapter();
 				pageCollection.getPreviousPageList().clear();
-				for (EventData event : eventCollection.getCompleteEventList()) {
-					eventCollection.addToEventList(event);
-				}
+				eventCollection.restoreEventList();
 				eventCollection.sortByDate();
 				eventCollection.saveCompleteEventList();
 				eventCollection.saveToDisk(FacebookeventsActivity.this);
@@ -4927,16 +4903,17 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			}
 		});
 	}
+
 	private void progressWelcomeVisible(final boolean b) {
 		FacebookeventsActivity.this.runOnUiThread(new Runnable() {
 			public void run() {
-				
+
 				if (b) {
 					progressWelcome.setVisibility(View.VISIBLE);
 				} else {
 					progressWelcome.setVisibility(View.GONE);
 				}
-				
+
 			}
 		});
 	}
@@ -5162,7 +5139,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					}
 				}
 
-				updateRSVPstatus();
+				//updateRSVPstatus();
 
 				// see if new events are available
 
@@ -5404,7 +5381,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 															+ userID,
 													new Bundle(),
 													HttpMethod.GET, callback);
-											request.executeAndWait();
+											//request.executeAndWait();
 
 											eventCollection
 													.addToCompleteEventList(event);
@@ -5439,6 +5416,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					Request request2 = new Request(Session.getActiveSession(),
 							"fql", bundle, HttpMethod.GET, callback2);
 					request2.executeAndWait();
+					
+					
+					getRSVPStatus();
 
 				}
 				return mIcon1;
@@ -5888,7 +5868,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			setRefresh(true);
 			setViewAll(false);
 			setRSVP(false);
-			setLike(true);
+			setLike(false);
 			setFacebook(false);
 			setPlaces(true);
 			viewAll();
@@ -5950,7 +5930,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	}
 
 	public void setLike(boolean b) {
-		like.setVisible(b);
 	}
 
 	public void setReset(boolean b) {
@@ -6691,4 +6670,51 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			textPageEmptyVisible(true);
 		}
 	}
+	
+	private void getRSVPStatus() {
+		String rsvpRequest = "{";
+
+		for (EventData event : eventCollection.getCompleteEventList()) {
+			rsvpRequest += "\"" + event.event_ID + "\":"
+					+ "\"SELECT rsvp_status FROM event_member where eid = "
+					+ event.event_ID + "  and uid = me()\",";
+		}
+		rsvpRequest += "}";
+
+		Bundle bundle = new Bundle();
+		bundle.putString("q", rsvpRequest);
+
+		Callback callback = new Callback() {
+			@Override
+			public void onCompleted(Response response) {
+				try {
+					JSONObject jObject = response.getGraphObject()
+							.getInnerJSONObject();
+					JSONArray jArray = jObject.getJSONArray("data");
+					for (int i = 0; i < jArray.length(); i++) {
+						jObject = jArray.getJSONObject(i);
+						String ID = jObject.getString("name");
+
+						JSONArray jj = jObject.getJSONArray("fql_result_set");
+						if (jj.length() == 0) {
+							eventCollection.getCompleteEventByID(ID).status_attending = "Not Invited";
+						} else {
+							jObject = jj.getJSONObject(0);
+							eventCollection.getCompleteEventByID(ID).status_attending = jObject
+									.getString("rsvp_status");
+						}
+
+					}
+				} catch (Exception e) {
+					Log.e("rsvp_request", e.toString());
+				}
+			}
+		};
+		Request request = new Request(Session.getActiveSession(), "fql",
+				bundle, HttpMethod.GET, callback);
+		request.executeAndWait();
+	}
+	
+	
+	
 }

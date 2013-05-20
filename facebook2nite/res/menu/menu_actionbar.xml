@@ -37,7 +37,7 @@
     <item
         android:id="@+id/menu_refresh"
         android:icon="@drawable/ic_menu_refresh"
-        android:showAsAction="always"
+        android:showAsAction="never"
         android:title="Refresh"/>
     <item
         android:id="@+id/menu_calendar"
@@ -51,10 +51,7 @@
         android:id="@+id/menu_info"
         android:showAsAction="never"
         android:title="About current page"/>
-    <item
-        android:id="@+id/menu_like"
-        android:showAsAction="never"
-        android:title="Suggested pages"/>
+   
     <item
         android:id="@+id/menu_reset"
         android:showAsAction="never"

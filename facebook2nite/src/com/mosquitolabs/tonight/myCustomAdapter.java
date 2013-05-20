@@ -28,9 +28,9 @@ public class myCustomAdapter extends BaseAdapter {
 	private LayoutInflater mInflater;
 	private Display display;
 	private Activity context;
-	
+
 	private Bitmap standardImage = null;
-	
+
 	int counter = 0;
 	int counterDownloading = 0;
 
@@ -112,10 +112,9 @@ public class myCustomAdapter extends BaseAdapter {
 						}
 					});
 
-			
-			standardImage =  BitmapFactory.decodeResource(
+			standardImage = BitmapFactory.decodeResource(
 					context.getResources(), R.drawable.standard_image);
-			
+
 			paramView.setTag(localViewHolder);
 		}
 
@@ -173,48 +172,61 @@ public class myCustomAdapter extends BaseAdapter {
 		} else {
 			localViewHolder.page.setText(event.loc);
 		}
-		
-		
-		
-		
+
 		localViewHolder.image.setImageBitmap(standardImage);
-		
-		if(counter <=3||parentActivity.isDownloadingImages()){
-			if(parentActivity.isDownloadingImages()&&counterDownloading==0){
+
+		if (counter <= 3 || parentActivity.isDownloadingImages()) {
+			if (parentActivity.isDownloadingImages() && counterDownloading == 0) {
 				parentActivity.showImageEventList(paramInt);
 				counterDownloading++;
 			}
+			Bitmap image = null;
+
 			try {
-				java.io.FileInputStream in = context.openFileInput(event.event_ID);
-				Bitmap image = BitmapFactory.decodeStream(in);
+				java.io.FileInputStream in = context
+						.openFileInput(event.event_ID);
+				image = BitmapFactory.decodeStream(in);
 				if (image != null) {
 					localViewHolder.image.setImageBitmap(image);
 				}
 			} catch (Exception e) {
 				// TODO: handle exception
 			}
-			counter++;
-			
-		}else{
-			if(counterDownloading>0){
-				counterDownloading=0;
+
+			if (image == null) {
+				try {
+					if(!event.parentPage_ID.equals("1")){
+					java.io.FileInputStream in = context
+							.openFileInput(event.parentPage_ID);
+					image = BitmapFactory.decodeStream(in);
+					}else{
+						image = BitmapFactory.decodeResource(context.getResources(), R.drawable.icon_other_events);
+					}
+					if (image != null) {
+						localViewHolder.image.setImageBitmap(image);
+					}
+				} catch (Exception e) {
+					
+				}
 			}
-		parentActivity.showImageEventList(paramInt);
+
+			counter++;
+
+		} else {
+			if (counterDownloading > 0) {
+				counterDownloading = 0;
+			}
+			parentActivity.showImageEventList(paramInt);
 		}
-		
-		
+
 		/*
 		 * 
 		 * 
-		 * try {
-			java.io.FileInputStream in = context.openFileInput(event.event_ID);
-			Bitmap image = BitmapFactory.decodeStream(in);
-			if (image != null) {
-				localViewHolder.image.setImageBitmap(image);
-			}
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
+		 * try { java.io.FileInputStream in =
+		 * context.openFileInput(event.event_ID); Bitmap image =
+		 * BitmapFactory.decodeStream(in); if (image != null) {
+		 * localViewHolder.image.setImageBitmap(image); } } catch (Exception e)
+		 * { // TODO: handle exception }
 		 * 
 		 * 
 		 * 
@@ -266,7 +278,8 @@ public class myCustomAdapter extends BaseAdapter {
 						&& previousEventIsInProgress && !currentEventIsInProgress)) {
 
 			if (currentEventIsInProgress) {
-			//	localViewHolder.separatorDay.setBackgroundColor(Color.rgb(250,60, 60));
+				// localViewHolder.separatorDay.setBackgroundColor(Color.rgb(250,60,
+				// 60));
 				// -16401681 azzurro
 				localViewHolder.separatorMonth.setText("Now");
 				// localViewHolder.separatorMonth.setTextColor(Color.BLACK);
@@ -289,7 +302,7 @@ public class myCustomAdapter extends BaseAdapter {
 			} else {
 				localViewHolder.logo.setVisibility(View.GONE);
 
-				//localViewHolder.separatorDay.setBackgroundResource(R.color.dark_gray);
+				// localViewHolder.separatorDay.setBackgroundResource(R.color.dark_gray);
 				// (Color.rgb(251,148, 11)); // verde -16001681
 				// localViewHolder.separatorDay.setBackgroundColor(Color.rgb(235,
 				// 163, 91));
@@ -378,9 +391,6 @@ public class myCustomAdapter extends BaseAdapter {
 						.equals("declined"))) {
 			parentActivity.filter();
 		}
-		
-		
-		
 
 		return paramView;
 
@@ -396,18 +406,16 @@ public class myCustomAdapter extends BaseAdapter {
 		}
 	}
 
-	public  void getImage(final View v, final int i) {
+	public void getImage(final View v, final int i) {
 		AsyncTask<Void, Bitmap, Bitmap> task = new AsyncTask<Void, Bitmap, Bitmap>() {
 
 			@Override
 			public Bitmap doInBackground(Void... params) {
 
-				
-				return parentActivity
-						.readImageFromDisk(eventCollection.getEventList()
-								.get(i).event_ID);
+				return parentActivity.readImageFromDisk(eventCollection
+						.getEventList().get(i).event_ID);
 			}
-			
+
 			@Override
 			protected void onPostExecute(Bitmap bmp) {
 				ImageView image = (ImageView) v
@@ -415,7 +423,7 @@ public class myCustomAdapter extends BaseAdapter {
 				if (eventCollection.getEventList().size() > i) {
 					image.setImageBitmap(bmp);
 				}
-				
+
 				super.onPostExecute(null);
 			}
 
