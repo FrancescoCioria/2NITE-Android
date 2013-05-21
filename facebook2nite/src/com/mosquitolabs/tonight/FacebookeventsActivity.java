@@ -700,48 +700,19 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 					}
 
-					bundle.putString("fields", "likes");
-					Request.Callback callback = new Request.Callback() {
-						public void onCompleted(Response response) {
-							json = response.getGraphObject()
-									.getInnerJSONObject();
-						}
-					};
-					Request request = new Request(Session.getActiveSession(),
-							"me", bundle, HttpMethod.GET, callback);
-					request.executeAndWait();
+					
 
 					try {
+						
 						bundle.clear();
-
-						try {
-
-							if (!json.isNull("likes")) {
-								json = json.getJSONObject("likes");
-
-								jDataArray = json.getJSONArray("data");
-								String a = "SELECT pic_square,pic,pic_large,pic_cover,type,checkins,location,phone,fan_count,categories,description,name,page_id FROM page WHERE (page_id=";
-
-								for (int i = 0; i < jDataArray.length(); i++) {
-									json = jDataArray.getJSONObject(i);
-									a += json.getString("id");
-									if (i != jDataArray.length() - 1)
-										a += " or page_id=";
-								}
-								a += ")";
-
-								bundle.clear();
-								bundle.putString("q", a);
-							}
-						} catch (Exception e) {
-							//
-						}
+						String stringPagesLike = "SELECT pic_square,pic,pic_large,pic_cover,type,checkins,location,phone,fan_count,categories,description,name,page_id FROM page WHERE page_id IN ( SELECT page_id FROM page_fan WHERE uid=me())";
+						bundle.putString("q", stringPagesLike);
 
 						Request.Callback callbackbig = new Request.Callback() {
 							public void onCompleted(Response response) {
 
 								try {
-									json = response.getGraphObject()
+									JSONObject json = response.getGraphObject()
 											.getInnerJSONObject();
 
 									jarrayLikes = json.getJSONArray("data");
@@ -779,16 +750,16 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 										try {
 
-											json = response.getGraphObject()
+											JSONObject json = response.getGraphObject()
 													.getInnerJSONObject();
 
-											jDataArray = json
+											JSONArray jDataArray = json
 													.getJSONArray("data");
 											ArrayList<String> s = new ArrayList<String>();
 											int q = 0;
 											while (q < jDataArray.length()) {
 
-												jsonObject = jDataArray
+												JSONObject jsonObject = jDataArray
 														.getJSONObject(q);
 												JSONArray jArray = jsonObject
 														.getJSONArray("fql_result_set");
@@ -1842,7 +1813,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				dayOfWeekStart = "Wednesday";
 				break;
 			case 4:
-				dayOfWeekStart = "Thrusday";
+				dayOfWeekStart = "Thursday";
 				break;
 			case 5:
 				dayOfWeekStart = "Friday";
@@ -1881,7 +1852,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				dayOfWeekEnd = "Wednesday";
 				break;
 			case 4:
-				dayOfWeekEnd = "Thrusday";
+				dayOfWeekEnd = "Thursday";
 				break;
 			case 5:
 				dayOfWeekEnd = "Friday";
@@ -3201,6 +3172,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							}
 						}
 						refreshEventsAdapter();
+						toast("Updating RSVP", false);
 						dialog.dismiss();
 					}
 				});
@@ -3226,6 +3198,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							eventCollection
 									.saveToDisk(FacebookeventsActivity.this);
 							toast("RSVP status updated", false);
+							filter();
 							refreshEventsAdapter();
 						} catch (Exception e) {
 							Log.e("rsvp", e.toString());
@@ -4780,6 +4753,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 				preferences.setisModifiedPageListToClear(true);
 				updateAttendingCount();
+				
+				toast("Images will be downloaded in background", true);
 
 			}
 		}

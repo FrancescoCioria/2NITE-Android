@@ -67,6 +67,8 @@ public class DiscoverActivity extends SherlockActivity {
 	private JSONArray jarrayPlaces;
 	private JSONArray jarrayAround;
 	private JSONArray jarrayLikes;
+	private JSONArray jarrayEventAround;
+	private JSONArray jarrayEventInteresting;
 	private JSONObject jsonObject;
 	private ListView listView;
 	private ListView listViewAroundMe;
@@ -738,7 +740,7 @@ public class DiscoverActivity extends SherlockActivity {
 				dayOfWeekStart = "Wednesday";
 				break;
 			case 4:
-				dayOfWeekStart = "Thrusday";
+				dayOfWeekStart = "Thursday";
 				break;
 			case 5:
 				dayOfWeekStart = "Friday";
@@ -777,7 +779,7 @@ public class DiscoverActivity extends SherlockActivity {
 				dayOfWeekEnd = "Wednesday";
 				break;
 			case 4:
-				dayOfWeekEnd = "Thrusday";
+				dayOfWeekEnd = "Thursday";
 				break;
 			case 5:
 				dayOfWeekEnd = "Friday";
@@ -1027,7 +1029,7 @@ public class DiscoverActivity extends SherlockActivity {
 
 				String fql = "";
 
-				fql = "SELECT eid,name,attending_count,venue,creator,description,location,start_time,end_time,pic_big  FROM event WHERE eid IN (     SELECT eid     FROM event_member     WHERE uid IN (SELECT uid2         FROM friend         WHERE uid1 = me()     ))      AND end_time > "
+				fql = "SELECT eid,name,attending_count,venue,creator,description,location,start_time,end_time,pic_big FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid IN (SELECT uid2 FROM friend WHERE uid1 = me()) or uid = me() ) AND end_time > "
 						+ current_time
 						+ "  AND start_time< "
 						+ Integer
@@ -1224,9 +1226,12 @@ public class DiscoverActivity extends SherlockActivity {
 				pageCollection.getPageAroundMe().clear();
 				eventCollection.getAroundMeEventList().clear();
 				visibilityDialog(true);
-				getEventsAroundMe();
-				getPlacesAroundMe();
-				getPlacesILike();
+
+				discover();
+
+				// getEventsAroundMe();
+				// getPlacesAroundMe();
+				// getPlacesILike();
 			}
 
 		}
@@ -1242,6 +1247,648 @@ public class DiscoverActivity extends SherlockActivity {
 		@Override
 		public void onStatusChanged(String provider, int status, Bundle extras) {
 		}
+	}
+
+	public synchronized void discover() {
+		AsyncTask<Void, Integer, Bitmap> task = new AsyncTask<Void, Integer, Bitmap>() {
+
+			@Override
+			public Bitmap doInBackground(Void... params) {
+
+				String current_time = Long.toString(Calendar.getInstance()
+						.getTimeInMillis());
+				long Hours24 = 86400000;
+				String hours24FromNow = Long.toString(Calendar.getInstance()
+						.getTimeInMillis() + Hours24);
+				current_time = current_time.substring(0, 10);
+				hours24FromNow = hours24FromNow.substring(0, 10);
+				String distance = Integer
+						.toString(mPrefs.getInt("distance", 5) * 1000);
+				String limit = "500";
+				if (mPrefs.getInt("distance", 5) > 25)
+					limit = "1000";
+
+				// BUNDLE
+
+				Bundle bundleEventAround = new Bundle();
+				Bundle bundleEventInteresting = new Bundle();
+				Bundle bundlePlacesAround = new Bundle();
+				Bundle bundlePagesLike = new Bundle();
+
+				String stringPlacesAround = "Select page_id,name,location,fan_count,checkins,phone,description,pic_square,pic,pic_large,categories from page where page_id in (select page_id from place where distance(latitude, longitude,"
+						+ "\""
+						+ Double.toString(latitude)
+						+ "\""
+						+ ","
+						+ "\""
+						+ Double.toString(longitude)
+						+ "\""
+						+ ")<"
+						+ 50000
+						+ " and checkin_count>0"
+						+ " limit "
+						+ 500
+						+ ")"
+						+ "AND (type=\"CONCERT VENUE\" or type=\"ARTS/ENTERTAINMENT/NIGHTLIFE\"  or type=\"CLUB\" or type = \"ATTRACTIONS/THINGS TO DO\" or type =\"BAR\" or type=\"MOVIE THEATER\" or type=\"BOOK STORE\" or type = \"EVENT PLANNING/EVENT SERVICES\" or type=\"RESTAURANT/CAFE\" or type = \"UNIVERSITY\")";
+				bundlePlacesAround.putString("q", stringPlacesAround);
+
+				String stringPagesLike = "SELECT pic_square,pic,pic_large,pic_cover,type,checkins,location,phone,fan_count,categories,description,name,page_id FROM page WHERE page_id IN ( SELECT page_id FROM page_fan WHERE uid=me())";
+				bundlePagesLike.putString("q", stringPagesLike);
+
+				String stringEventAround = "Select eid,name,attending_count,venue,creator,description,location,start_time,end_time,pic_big from event where eid in (SELECT eid from event_member WHERE uid in (Select page_id,name from place where distance(latitude, longitude,"
+						+ "\""
+						+ Double.toString(latitude)
+						+ "\""
+						+ ","
+						+ "\""
+						+ Double.toString(longitude)
+						+ "\""
+						+ ")<"
+						+ distance
+						+ " and checkin_count>0"
+						+ " limit "
+						+ limit
+						+ "))"
+						+ " and end_time>"
+						+ current_time
+						+ " and start_time<"
+						+ Integer
+								.toString(Integer.parseInt(current_time) + 259200);
+				bundleEventAround.putString("q", stringEventAround);
+
+				String stringEventInteresting = "SELECT eid,name,attending_count,venue,creator,description,location,start_time,end_time,pic_big FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid IN (SELECT uid2 FROM friend WHERE uid1 = me()) or uid = me() ) AND end_time > "
+						+ current_time
+						+ "  AND start_time< "
+						+ Integer
+								.toString(Integer.parseInt(current_time) + 259200);
+				bundleEventInteresting.putString("q", stringEventInteresting);
+
+				// REQUESTS
+
+				Request requestPlacesAround = new Request(
+						Session.getActiveSession(), "fql", bundlePlacesAround,
+						HttpMethod.GET, new Request.Callback() {
+							public void onCompleted(Response response) {
+								try {
+									JSONObject json = response.getGraphObject()
+											.getInnerJSONObject();
+									jarrayPlaces = json.getJSONArray("data");
+									int i = 0;
+									while (i < jarrayPlaces.length()) {
+										json = jarrayPlaces.getJSONObject(i);
+
+										PageData page = new PageData();
+										JSONObject jsonObject = json
+												.getJSONObject("location");
+										page._ID = json.getString("page_id");
+										page.name = json.getString("name");
+										page.number_of_likes = json
+												.getInt("fan_count");
+										page.checkins = json.getInt("checkins");
+										page.phone = json.getString("phone");
+										page.desc = json
+												.getString("description");
+										page.picURL = new URL(json
+												.getString("pic_large"));
+
+										String az = "";
+										JSONArray jj = json
+												.optJSONArray("categories");
+										for (int j = 0; j < jj.length(); j++) {
+											json = jj.getJSONObject(j);
+											if (az.length() == 0)
+												az += json.getString("name");
+											else
+												az += ", "
+														+ json.getString("name");
+										}
+
+										page.category = az;
+
+										az = "";
+										az += jsonObject.getString("street");
+										if (az.length() > 0)
+											az += ", ";
+										if (jsonObject.has("city")) {
+											az += jsonObject.getString("city");
+											if (az.length() > 0) {
+												az += ", ";
+											}
+										}
+										if (jsonObject.has("country"))
+											az += jsonObject
+													.getString("country");
+
+										page.address = az;
+										boolean add = true;
+										for (PageData temp : pageCollection
+												.getPageAroundMe()) {
+											if (temp._ID.equals(page._ID)) {
+												add = false;
+												break;
+											}
+										}
+										if (add) {
+											pageCollection.getPageAroundMe()
+													.add(page);
+											Log.i("places", "added place");
+										} else {
+											Log.i("places",
+													"already there. not added");
+										}
+
+										i++;
+
+									}
+
+								} catch (Exception e) {
+									toast("An error occurred");
+									Log.e("getplaces", e.toString());
+								}
+							}
+						});
+
+				Request requestEventInteresting = new Request(
+						Session.getActiveSession(), "fql",
+						bundleEventInteresting, HttpMethod.GET,
+						new Request.Callback() {
+
+							@Override
+							public void onCompleted(Response response) {
+
+								int z = 0;
+								try {
+									JSONObject jsonAround = response
+											.getGraphObject()
+											.getInnerJSONObject();
+
+									// json array separato = immagini non
+									// caricate !? sistemare
+
+									jarrayEventInteresting = jsonAround
+											.getJSONArray("data");
+
+									for (z = 0; z < jarrayEventInteresting.length(); z++) {
+										jsonAround = jarrayEventInteresting
+												.getJSONObject(z);
+										final EventData event = new EventData();
+										event.name = jsonAround
+												.getString("name");
+										event.desc = jsonAround
+												.getString("description");
+										event.event_ID = jsonAround
+												.getString("eid");
+										event.loc = jsonAround
+												.getString("location");
+										event.startMillis = getMillis(jsonAround
+												.getString("start_time"));
+										event.endMillis = getMillis(jsonAround
+												.getString("end_time"));
+										event.attending_count = jsonAround
+												.getInt("attending_count");
+										dayOfWeek(event.startMillis,
+												event.endMillis);
+										event.dateStart = monthNameStart;
+										event.dayStart = dayOfWeekStart;
+										event.timeStart = timeStart;
+										event.dateEnd = monthNameEnd;
+										event.dayEnd = dayOfWeekEnd;
+										event.timeEnd = timeEnd;
+										event.isInProgress = isInProgress;
+										event.parentPageName = event.loc;
+										event.attending_count = jsonAround
+												.getInt("attending_count");
+
+										String b = "";
+										try {
+											if (!json.isNull("venue")) {
+												JSONObject jsonO = json
+														.getJSONObject("venue");
+												if (!jsonO.isNull("street")
+														|| !jsonO
+																.isNull("city")) {
+													b += jsonO
+															.getString("street");
+													if (b.length() > 0)
+														b += ", ";
+													if (jsonO.has("city")) {
+														b += jsonO
+																.getString("city");
+														if (b.length() > 0) {
+															b += ", ";
+														}
+													}
+													if (jsonO.has("country")) {
+														b += json
+																.getString("country");
+													}
+												}
+											}
+										} catch (Exception e) {
+											//
+										}
+										event.venue = b;
+
+										isInProgress = false;
+										boolean add = true;
+										int i = 0;
+										for (EventData temp : eventCollection
+												.getAroundMeEventList()) {
+											if ((event.event_ID
+													.equals(temp.event_ID))
+													|| (event.name
+															.equals(temp.name)
+															&& event.desc
+																	.equals(temp.desc) && event.venue
+																.equals(temp.venue))) {
+
+												if (event.attending_count > temp.attending_count) {
+													add = true;
+													eventCollection
+															.getAroundMeEventList()
+															.remove(i);
+												} else {
+													add = false;
+												}
+												break;
+											}
+											i++;
+										}
+										if (add) {
+											eventCollection
+													.getAroundMeEventList()
+													.add(event);
+										}
+
+									}
+
+								} catch (Exception e) {
+									Log.e("aroundMe", e.toString() + " "
+											+ Integer.toString(z));
+								}
+							}
+
+						});
+
+				Request requestEventAround = new Request(
+						Session.getActiveSession(), "fql", bundleEventAround,
+						HttpMethod.GET, new Request.Callback() {
+							public void onCompleted(Response response) {
+								int z = 0;
+								try {
+									JSONObject jsonAround = response
+											.getGraphObject()
+											.getInnerJSONObject();
+									jarrayEventAround = jsonAround
+											.getJSONArray("data");
+
+									for (z = 0; z < jarrayEventAround.length(); z++) {
+										jsonAround = jarrayEventAround
+												.getJSONObject(z);
+										final EventData event = new EventData();
+										event.name = jsonAround
+												.getString("name");
+										event.desc = jsonAround
+												.getString("description");
+										event.event_ID = jsonAround
+												.getString("eid");
+										event.loc = jsonAround
+												.getString("location");
+										event.startMillis = getMillis(jsonAround
+												.getString("start_time"));
+										event.endMillis = getMillis(jsonAround
+												.getString("end_time"));
+										event.attending_count = jsonAround
+												.getInt("attending_count");
+										dayOfWeek(event.startMillis,
+												event.endMillis);
+										event.dateStart = monthNameStart;
+										event.dayStart = dayOfWeekStart;
+										event.timeStart = timeStart;
+										event.dateEnd = monthNameEnd;
+										event.dayEnd = dayOfWeekEnd;
+										event.timeEnd = timeEnd;
+										event.isInProgress = isInProgress;
+										event.parentPageName = event.loc;
+										event.attending_count = jsonAround
+												.getInt("attending_count");
+
+										String b = "";
+										try {
+											if (!json.isNull("venue")) {
+												JSONObject jsonO = json
+														.getJSONObject("venue");
+												if (!jsonO.isNull("street")
+														|| !jsonO
+																.isNull("city")) {
+													b += jsonO
+															.getString("street");
+													if (b.length() > 0)
+														b += ", ";
+													if (jsonO.has("city")) {
+														b += jsonO
+																.getString("city");
+														if (b.length() > 0) {
+															b += ", ";
+														}
+													}
+													if (jsonO.has("country")) {
+														b += json
+																.getString("country");
+													}
+												}
+											}
+										} catch (Exception e) {
+											//
+										}
+										event.venue = b;
+
+										isInProgress = false;
+										if (eventCollection
+												.getAroundMeEventByID(event.event_ID) == null) {
+											eventCollection
+													.getAroundMeEventList()
+													.add(event);
+										}
+
+									}
+
+								} catch (Exception e) {
+									Log.e("aroundMe", e.toString() + " "
+											+ Integer.toString(z));
+								}
+							}
+						});
+
+				Request requestPagesLike = new Request(
+						Session.getActiveSession(), "fql", bundlePagesLike,
+						HttpMethod.GET, new Request.Callback() {
+							public void onCompleted(Response response) {
+								Bundle bundleEventsLike = new Bundle();
+								try {
+									JSONObject json = response.getGraphObject()
+											.getInnerJSONObject();
+
+									jarrayLikes = json.getJSONArray("data");
+									String a = "";
+									a += "{";
+									int l = jarrayLikes.length();
+									for (int i = 0; i < jarrayLikes.length(); i++) {
+										json = jarrayLikes.getJSONObject(i);
+										PageData currentpage = new PageData();
+										currentpage._ID = json
+												.getString("page_id");
+										String my = Integer.toString(i);
+										a += "\""
+												+ my
+												+ "\""
+												+ ":\"SELECT eid,name,creator,start_time,end_time,description,location,pic_big,update_time FROM event WHERE eid IN (SELECT eid from event_member WHERE uid = "
+												+ currentpage._ID + ")"
+
+												+ "\"";
+										if (i != l - 1) {
+											a += ",";
+										}
+									}
+									a += "}";
+
+									bundleEventsLike.putString("q", a);
+
+								} catch (Exception e) {
+									//
+								}
+
+								new Request(Session.getActiveSession(), "fql",
+										bundleEventsLike, HttpMethod.GET,
+										new Request.Callback() {
+											public void onCompleted(
+													Response response) {
+
+												try {
+
+													JSONObject json = response
+															.getGraphObject()
+															.getInnerJSONObject();
+
+													JSONArray jDataArray = json
+															.getJSONArray("data");
+													ArrayList<String> s = new ArrayList<String>();
+													int q = 0;
+													while (q < jDataArray
+															.length()) {
+
+														JSONObject jsonObject = jDataArray
+																.getJSONObject(q);
+														JSONArray jArray = jsonObject
+																.getJSONArray("fql_result_set");
+														if (!jArray.isNull(0)) {
+															json = jArray
+																	.getJSONObject(0);
+															s.add(json
+																	.getString("creator"));
+														}
+
+														q++;
+													}
+
+													for (int i = 0; i < jarrayLikes
+															.length(); i++) {
+														json = jarrayLikes
+																.getJSONObject(i);
+														boolean add = false;
+
+														for (String r : s) {
+															if (pageCollection
+																	.getPageByID(json
+																			.getString("page_id")) != null)
+																break;
+
+															String type = json
+																	.getString("type");
+															if (r.equals(json
+																	.getString("page_id"))
+																	|| (type.equals("CONCERT VENUE")
+																			|| type.equals("ARTS/ENTERTAINMENT/NIGHTLIFE")
+																			|| type.equals("CLUB")
+																			|| type.equals("BAR")
+																			|| type.equals("ATTRACTIONS/THINGS TO DO")
+																			|| type.equals("MOVIE THEATER")
+																			|| type.equals("BOOK STORE")
+																			|| type.equals("EVENT PLANNING/EVENT SERVICES")
+																			|| type.equals("RESTAURANT/CAFE") || type
+																				.equals("UNIVERSITY"))) {
+																add = true;
+																break;
+															}
+														}
+
+														if (add) {
+															PageData page = new PageData();
+															JSONObject jsonObject = json
+																	.getJSONObject("location");
+															page._ID = json
+																	.getString("page_id");
+															page.name = json
+																	.getString("name");
+															page.number_of_likes = json
+																	.getInt("fan_count");
+															page.checkins = json
+																	.getInt("checkins");
+															page.phone = json
+																	.getString("phone");
+															page.desc = json
+																	.getString("description");
+															page.picURL = new URL(
+																	json.getString("pic_large"));
+															if (!json
+																	.isNull("pic_cover")) {
+																JSONObject js = json
+																		.getJSONObject("pic_cover");
+																page.coverURL = new URL(
+																		js.getString("source"));
+															}
+
+															String a = "";
+															JSONArray jj = json
+																	.optJSONArray("categories");
+															for (int j = 0; j < jj
+																	.length(); j++) {
+																json = jj
+																		.getJSONObject(j);
+																if (a.length() == 0)
+																	a += json
+																			.getString("name");
+																else
+																	a += ", "
+																			+ json.getString("name");
+															}
+
+															page.category = a;
+
+															a = "";
+															a += jsonObject
+																	.getString("street");
+															if (a.length() > 0)
+																a += ", ";
+															if (jsonObject
+																	.has("city")) {
+																a += jsonObject
+																		.getString("city");
+																if (a.length() > 0) {
+																	a += ", ";
+																}
+															}
+															if (jsonObject
+																	.has("country"))
+																a += jsonObject
+																		.getString("country");
+
+															page.address = a;
+															pageCollection
+																	.getPageSearchListRelevant()
+																	.add(page);
+
+														}
+													}
+
+												} catch (Exception e) {
+													//
+												}
+											}
+										}).executeAndWait();
+							}
+						});
+
+				new RequestBatch(requestEventAround, requestEventInteresting,
+						requestPagesLike, requestPlacesAround).executeAndWait();
+
+				// RSVP
+
+				String rsvpRequest = "{";
+				for (EventData event : eventCollection.getAroundMeEventList()) {
+					rsvpRequest += "\""
+							+ event.event_ID
+							+ "\":"
+							+ "\"SELECT rsvp_status FROM event_member where eid = "
+							+ event.event_ID + "  and uid = me()\",";
+				}
+				rsvpRequest += "}";
+
+				Bundle bundleRSVP = new Bundle();
+				bundleRSVP.putString("q", rsvpRequest);
+
+				new Request(Session.getActiveSession(), "fql", bundleRSVP,
+						HttpMethod.GET, new Callback() {
+							@Override
+							public void onCompleted(Response response) {
+								try {
+									JSONObject jObject = response
+											.getGraphObject()
+											.getInnerJSONObject();
+									JSONArray jArray = jObject
+											.getJSONArray("data");
+									for (int i = 0; i < jArray.length(); i++) {
+										jObject = jArray.getJSONObject(i);
+										String ID = jObject.getString("name");
+										JSONArray jj = jObject
+												.getJSONArray("fql_result_set");
+										if (jj.length() == 0) {
+											eventCollection
+													.getAroundMeEventByID(ID).status_attending = "Not Invited";
+										} else {
+											jObject = jj.getJSONObject(0);
+											eventCollection
+													.getAroundMeEventByID(ID).status_attending = jObject
+													.getString("rsvp_status");
+										}
+
+									}
+								} catch (Exception e) {
+									Log.e("rsvp_request", e.toString());
+								}
+							}
+						}).executeAndWait();
+
+				return null;
+			}
+
+			@Override
+			protected void onPostExecute(Bitmap result) {
+				if (!placesSorted) {
+					pageCollection.sortSearchByLikesAroundMeActivity();
+					placesSorted = true;
+				}
+				int counter = 0;
+				ArrayList<Integer> removeList = new ArrayList<Integer>();
+				for (EventData event : eventCollection.getAroundMeEventList()) {
+					if (event.status_attending.equals("declined")) {
+						removeList.add(counter);
+					}
+					counter++;
+				}
+
+				int g = 0;
+				for (int i : removeList) {
+					eventCollection.getAroundMeEventList().remove(i - g);
+					g++;
+				}
+
+				adapter.initializeLike();
+				adapter.getUserLikesImages(0);
+
+				adapter.initializePlaces();
+				adapter.getPlacesImages(0);
+
+				adapter.initializeEvents();
+				adapter.aroundMePicture();
+
+				visibilityDialog(false);
+
+			}
+
+		};
+
+		task.execute();
 	}
 
 	public synchronized void getPlacesAroundMe() {
@@ -1360,9 +2007,7 @@ public class DiscoverActivity extends SherlockActivity {
 				}
 				adapter.initializePlaces();
 
-				int i = 0;
-
-				adapter.getPlacesImages(i);
+				adapter.getPlacesImages(0);
 
 			}
 
@@ -1400,15 +2045,7 @@ public class DiscoverActivity extends SherlockActivity {
 
 								JSONArray jDataArray = json
 										.getJSONArray("data");
-								String a = "SELECT pic_square,pic,pic_large,pic_cover,type,checkins,location,phone,fan_count,categories,description,name,page_id FROM page WHERE (page_id=";
-
-								for (int i = 0; i < jDataArray.length(); i++) {
-									json = jDataArray.getJSONObject(i);
-									a += json.getString("id");
-									if (i != jDataArray.length() - 1)
-										a += " or page_id=";
-								}
-								a += ")";
+								String a = "SELECT pic_square,pic,pic_large,pic_cover,type,checkins,location,phone,fan_count,categories,description,name,page_id FROM page WHERE page_id IN ( SELECT page_id FROM page_fan WHERE uid=me())";
 
 								bundle.clear();
 								bundle.putString("q", a);
@@ -1659,8 +2296,11 @@ public class DiscoverActivity extends SherlockActivity {
 		return jarrayPlaces;
 	}
 
-	public JSONArray getJArrayAround() {
-		return jarrayAround;
+	public JSONArray getJArrayEventAround() {
+		return jarrayEventAround;
+	}
+	public JSONArray getJArrayEventInteresting() {
+		return jarrayEventInteresting;
 	}
 
 	public JSONArray getJArrayLike() {

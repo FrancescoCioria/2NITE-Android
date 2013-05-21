@@ -61,7 +61,7 @@
             android:layout_height="45dp"
             android:layout_weight="1"
             android:background="@color/orange_title"
-            android:text="Places I like"
+            android:text="Suggested pages"
             android:textColor="@color/abs__background_holo_light"
             android:textSize="15sp" />
 
@@ -71,7 +71,7 @@
             android:layout_height="45dp"
             android:layout_weight="1"
             android:background="@color/gray"
-            android:text="Places Around Me"
+            android:text="Around me"
             android:textColor="@color/android_gray"
             android:textSize="15sp" />
     </LinearLayout>

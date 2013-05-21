@@ -116,7 +116,7 @@ public class ServiceUpdate extends Service {
 				}
 			}
 
-		}, 60000, 6 * 3600000);
+		}, 600000, 6 * 3600000);
 
 	}
 

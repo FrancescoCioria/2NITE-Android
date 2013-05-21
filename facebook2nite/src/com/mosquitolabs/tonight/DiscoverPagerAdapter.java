@@ -345,13 +345,14 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 						Log.e("image_userlike", e.toString());
 					}
 				}
-				userLikesInt++;
+				
 				return i;
 			}
 
 			@Override
 			public void onPostExecute(Integer i) {
-				if (i < pageCollection.getPageSearchList().size() && listUserLike!=null) {
+				if (i < pageCollection.getPageSearchList().size()
+						&& listUserLike != null) {
 					{
 						if (listUserLike.getFirstVisiblePosition() <= i
 								&& i <= listUserLike.getLastVisiblePosition()) {
@@ -364,7 +365,8 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 											.getPageSearchList().get(i)._ID));
 						}
 					}
-					if (i < pageCollection.getPageSearchList().size()) {
+					userLikesInt++;
+					if (userLikesInt < pageCollection.getPageSearchList().size()) {
 						getUserLikesImages(userLikesInt);
 					}
 				}
@@ -382,11 +384,16 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 				Bitmap picture = null;
 				try {
 					JSONObject jsonAround = new JSONObject();
-					JSONArray jarrayAround = context.getJArrayAround();
+					JSONArray jarrayAround = context.getJArrayEventAround();
+					JSONArray jarrayInteresting = context
+							.getJArrayEventInteresting();
 					int z = 0;
+					int k = 0;
+
 					boolean b = true;
 					String index_ID = eventCollection.getAroundMeEventList()
 							.get(aroundMePictures).event_ID;
+
 					while (z < jarrayAround.length() && b) {
 						jsonAround = jarrayAround.getJSONObject(z);
 						if (index_ID.equals(jsonAround.getString("eid"))) {
@@ -395,19 +402,36 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 							z++;
 						}
 					}
-					picture = context.readImageFromDisk(jsonAround
-							.getString("eid"));
 
-					if (picture == null) {
-						URL img_value = new URL(jsonAround.getString("pic_big"));
-						picture = BitmapFactory.decodeStream(img_value
-								.openConnection().getInputStream());
-						context.saveImageToDisk(jsonAround.getString("eid"),
-								picture);
+					if (b) {
+
+						while (k < jarrayInteresting.length() && b) {
+							jsonAround = jarrayInteresting.getJSONObject(k);
+							if (index_ID.equals(jsonAround.getString("eid"))) {
+								b = false;
+							} else {
+								k++;
+							}
+						}
+
+					}
+
+					if (!b) {
+						picture = context.readImageFromDisk(jsonAround
+								.getString("eid"));
+						if (picture == null) {
+							URL img_value = new URL(
+									jsonAround.getString("pic_big"));
+							picture = BitmapFactory.decodeStream(img_value
+									.openConnection().getInputStream());
+							context.saveImageToDisk(
+									jsonAround.getString("eid"), picture);
+						}
 					}
 				} catch (Exception e) {
 					Log.e("aroundMePicture", e.toString());
 				}
+
 				final Bitmap pic = picture;
 
 				return pic;
@@ -416,7 +440,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			@Override
 			public void onPostExecute(Bitmap pic) {
 
-				if (pic != null && listViewAroundMe!=null) {
+				if (pic != null && listViewAroundMe != null) {
 					if (listViewAroundMe.getFirstVisiblePosition() <= aroundMePictures
 							&& aroundMePictures <= listViewAroundMe
 									.getLastVisiblePosition()) {

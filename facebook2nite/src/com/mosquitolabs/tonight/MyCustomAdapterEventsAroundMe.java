@@ -122,16 +122,20 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 
 		// localViewHolder.text.setText(event.name);
 		localViewHolder.page.setText(event.parentPageName);
+		Bitmap image = null;
 		try {
 			java.io.FileInputStream in = context.openFileInput(event.event_ID);
-			Bitmap image = BitmapFactory.decodeStream(in);
-			if(image==null){
-				image = BitmapFactory.decodeResource(context.getResources(), R.drawable.standard_image);
-			}
-			localViewHolder.image.setImageBitmap(image);
+			image = BitmapFactory.decodeStream(in);
+
 		} catch (Exception e) {
-			// TODO: handle exception
+			image=null;
 		}
+
+		if (image == null) {
+			image = BitmapFactory.decodeResource(context.getResources(),
+					R.drawable.standard_image);
+		}
+		localViewHolder.image.setImageBitmap(image);
 
 		boolean previousEventIsInProgress = false;
 		boolean currentEventIsInProgress = false;
@@ -195,7 +199,7 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		if (status == null) {
 			status = "";
 		}
-		
+
 		if (status.equals("attending")) {
 			BitmapDrawable triangle = new BitmapDrawable(
 					BitmapFactory.decodeResource(context.getResources(),
