@@ -561,8 +561,8 @@ public class DiscoverActivity extends SherlockActivity {
 						}
 					}
 				};
-				Request request = new Request(Session.getActiveSession(), "fql", bun,
-						HttpMethod.GET, callback);
+				Request request = new Request(Session.getActiveSession(),
+						"fql", bun, HttpMethod.GET, callback);
 				request.executeAndWait();
 
 				return null;
@@ -1066,12 +1066,9 @@ public class DiscoverActivity extends SherlockActivity {
 									}
 
 								} catch (Exception e) {
-									if(!isError){
-										isError = true;
-									}else{
-										toast("An error occurred");
-										isError = false;
-									}
+
+									toast("An error occurred");
+
 									Log.e("getplaces", e.toString());
 								}
 							}
@@ -1524,7 +1521,6 @@ public class DiscoverActivity extends SherlockActivity {
 
 			@Override
 			protected void onPostExecute(Bitmap result) {
-				if(!isError){
 				if (!placesSorted) {
 					pageCollection.sortSearchByLikesAroundMeActivity();
 					placesSorted = true;
@@ -1553,10 +1549,6 @@ public class DiscoverActivity extends SherlockActivity {
 				adapter.getUserLikesImages(0);
 
 				visibilityDialog(false);
-				
-				}else{
-					discover();
-				}
 
 			}
 
@@ -1626,6 +1618,11 @@ public class DiscoverActivity extends SherlockActivity {
 
 	public int getPagerCurrentItem() {
 		return viewPager.getCurrentItem();
+	}
+	
+	public int getCurrentListStyle(){
+		int currentListStyle = mPrefs.getInt("listStyle", 0);
+		return currentListStyle;
 	}
 
 }

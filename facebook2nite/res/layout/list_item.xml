@@ -2,278 +2,360 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/RealativeListEvent"
     android:layout_width="match_parent"
-    android:layout_height="100dp"
-    android:background="@layout/gradient_item"
+    android:layout_height="wrap_content"
     android:orientation="vertical" >
 
-    <TextView
-        android:id="@+id/textGraySeparator"
-        android:layout_width="0.1dp"
-        android:layout_height="100dp"
-        android:layout_below="@+id/LayoutSeparator"
-        android:background="@android:color/transparent" />
-
-    <TextView
-        android:id="@+id/textGraySeparator"
-        android:layout_width="match_parent"
-        android:layout_height="0.1dp"
-        android:layout_below="@+id/LayoutSeparator"
-        android:background="@color/dark_gray"
-        android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/textViewSeparatorMonth234"
-        android:layout_width="127dp"
-        android:layout_height="87dp"
-        android:layout_below="@+id/LayoutSeparator"
-        android:layout_marginBottom="6.5dp"
-        android:layout_marginLeft="6.5dp"
-        android:layout_marginRight="6.5dp"
-        android:layout_marginTop="6.5dp"
-        android:background="@color/gray"
-        android:scaleType="centerCrop" />
-
-    <ImageView
-        android:id="@+id/imageViewList"
-        android:layout_width="126dp"
-        android:layout_height="86dp"
-        android:layout_below="@+id/LayoutSeparator"
-        android:layout_marginBottom="7dp"
-        android:layout_marginLeft="7dp"
-        android:layout_marginRight="7dp"
-        android:layout_marginTop="7dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/standard_image" />
-
-    <ImageView
-        android:id="@+id/imageViewTriangleAttending"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/LayoutSeparator"
-        android:layout_marginLeft="7dp"
-        android:layout_marginTop="7dp"
-        android:src="@drawable/triangle_red"
-        android:visibility="visible" />
-
     <LinearLayout
-        android:id="@+id/LayoutSeparator"
+        android:id="@+id/linearLayoutListItem"
         android:layout_width="match_parent"
-        android:layout_height="25dp"
-        android:layout_below="@+id/LayoutFilter"
-        android:orientation="horizontal"
-        android:visibility="gone" >
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
 
-        <TextView
-            android:id="@+id/textViewSeparatorMonth"
-            android:layout_width="135dp"
-            android:layout_height="25dp"
-            android:background="@android:color/black"
-            android:gravity="center"
-            android:text="11 Jul"
-            android:textColor="@android:color/background_light"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+        <RelativeLayout
+            android:id="@+id/LayoutFilter"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:background="@color/light_gray"
+            android:orientation="vertical"
+            android:visibility="visible" >
 
-        <TextView
-            android:id="@+id/textViewSeparatorDay"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent"
+                android:layout_centerInParent="true"
+                android:orientation="horizontal" >
+
+                <LinearLayout
+                    android:id="@+id/spinnerPagesLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_centerInParent="true"
+                    android:layout_weight="1"
+                    android:background="@layout/imageview_selected"
+                    android:orientation="horizontal" >
+
+                    <TextView
+                        android:id="@+id/spinnerPages"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:layout_centerVertical="true"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:paddingLeft="5dp"
+                        android:text="All Pages"
+                        android:textColor="@color/dark_dark_gray" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="5"
+                        android:gravity="center"
+                        android:orientation="horizontal" >
+
+                        <ImageView
+                            android:id="@+id/imageViewTriangleSpinner2"
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:layout_centerVertical="true"
+                            android:layout_marginTop="1dp"
+                            android:layout_toRightOf="@+id/textViewGrayLine345"
+                            android:layout_weight="1"
+                            android:src="@drawable/triangle_spinner" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/spinnerFilterLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="fill_parent"
+                    android:layout_centerInParent="true"
+                    android:layout_weight="1"
+                    android:background="@layout/imageview_selected"
+                    android:orientation="horizontal" >
+
+                    <TextView
+                        android:id="@+id/spinnerFilter"
+                        android:layout_width="fill_parent"
+                        android:layout_height="fill_parent"
+                        android:layout_centerVertical="true"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:paddingLeft="5dp"
+                        android:text="All Events"
+                        android:textColor="@color/dark_dark_gray" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="5"
+                        android:gravity="center"
+                        android:orientation="horizontal" >
+
+                        <ImageView
+                            android:id="@+id/imageViewTriangleSpinner2"
+                            android:layout_width="8dp"
+                            android:layout_height="8dp"
+                            android:layout_centerVertical="true"
+                            android:layout_marginRight="5dp"
+                            android:layout_marginTop="1dp"
+                            android:layout_toRightOf="@+id/textViewGrayLine345"
+                            android:layout_weight="1"
+                            android:src="@drawable/triangle_spinner" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewGrayLine345"
+                android:layout_width="0.1dp"
+                android:layout_height="fill_parent"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="3dp"
+                android:layout_marginTop="3dp"
+                android:background="@android:color/darker_gray" />
+        </RelativeLayout>
+
+        <View
+            android:id="@+id/controlViewTop"
             android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:background="@android:color/darker_gray"
-            android:gravity="center"
-            android:text="Wednesday"
-            android:textSize="17sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+            android:layout_height="0.1dp"
+            android:background="@color/light_light_gray" />
 
-    <TextView
-        android:id="@+id/textDescription"
-        android:layout_width="match_parent"
-        android:layout_height="60.5dp"
-        android:layout_below="@+id/textViewText"
-        android:layout_toRightOf="@+id/imageViewList"
-        android:maxLines="4"
-        android:orientation="vertical"
-        android:paddingRight="5dp"
-        android:text="Vivir y estudiar en Valencia no es suficiente, hay que aprovechar al máximo esta oportunidad y conocer a fondo la ciudad: Nosotros te lo ponemos fácil! Vamos de paseo por el centro histórico para descubrir su origen y su historia durante 2 horas."
-        android:textColor="@color/dark_gray"
-        android:textSize="11sp" >
-    </TextView>
-
-    <TextView
-        android:id="@+id/textViewPage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textDescription"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/textDescription"
-        android:gravity="right"
-        android:maxLines="1"
-        android:paddingLeft="15dp"
-        android:paddingRight="5dp"
-        android:paddingBottom="1.5dp"
-        android:text="Luogo"
-        android:textColor="@color/dark_dark_gray"
-        android:textSize="10sp"
-        android:textStyle="bold"
-        android:typeface="sans" />
-
-    <ImageView
-        android:id="@+id/imageViewLogoList"
-        android:layout_width="100dp"
-        android:layout_height="25dp"
-        android:padding="5dp"
-        android:paddingLeft="5dp"
-        android:paddingRight="5dp"
-        android:src="@drawable/logo"
-        android:visibility="gone" />
-
-    <RelativeLayout
-        android:id="@+id/LayoutFilter"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@color/light_light_gray"
-        android:orientation="vertical"
-        android:visibility="gone" >
-
-        <ImageView
-            android:id="@+id/imageView1"
+        <RelativeLayout
+            android:id="@+id/LayoutSeparatorTop"
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:scaleType="fitXY"
-            android:src="@android:drawable/editbox_background_normal" />
+            android:background="@color/light_light_gray"
+            android:orientation="horizontal"
+            android:visibility="visible" >
+
+            <TextView
+                android:id="@+id/textViewSeparatorDay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:gravity="left"
+                android:paddingLeft="7dp"
+                android:paddingTop="10dp"
+                android:text="Wednesday"
+                android:textColor="@color/dark_gray"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textViewSeparatorMonth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:gravity="right"
+                android:paddingRight="7dp"
+                android:paddingTop="10dp"
+                android:text="Jul 11"
+                android:textColor="@color/dark_gray"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relativeMain"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/light_light_gray"
+            android:padding="7dp" >
+
+            <LinearLayout
+                android:id="@+id/imageViewListLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/gray"
+                android:orientation="horizontal"
+                android:padding="0.5dp" >
+
+                <ImageView
+                    android:id="@+id/imageViewList"
+                    android:layout_width="126dp"
+                    android:layout_height="86dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/standard_image" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/linearFields"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/imageViewListLayout"
+                android:layout_alignTop="@+id/imageViewListLayout"
+                android:layout_marginLeft="5dp"
+                android:layout_toRightOf="@+id/imageViewListLayout"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:id="@+id/textViewText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="SABADO 19 VISITA AL BIOPARC"
+                    android:textColor="@color/dark_dark_gray"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:typeface="normal"
+                    android:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/textDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/textViewText"
+                    android:layout_toRightOf="@+id/imageViewList"
+                    android:ellipsize="end"
+                    android:maxLines="4"
+                    android:minLines="4"
+                    android:orientation="vertical"
+                    android:text="Vivir y estudiar en Valencia no es suficiente, hay que aprovechar al máximo esta oportunidad y conocer a fondo la ciudad: Nosotros te lo ponemos fácil! Vamos de paseo por el centro histórico para descubrir su origen y su historia durante 2 horas."
+                    android:textColor="@color/dark_gray"
+                    android:textSize="11sp" >
+                </TextView>
+
+                <RelativeLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content" >
+
+                    <TextView
+                        android:id="@+id/textViewAttending"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:paddingTop="1.5dp"
+                        android:text="Going: "
+                        android:textColor="@color/dark_dark_gray"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:typeface="sans" />
+
+                    <TextView
+                        android:id="@+id/textViewPage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:layout_toRightOf="@+id/textViewAttending"
+                        android:gravity="right"
+                        android:maxLines="1"
+                        android:paddingLeft="15dp"
+                        android:paddingTop="1.5dp"
+                        android:text="Luogo"
+                        android:textColor="@color/dark_dark_gray"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:typeface="sans" />
+                </RelativeLayout>
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/imageViewTriangleAttending"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_alignLeft="@+id/imageViewListLayout"
+                android:layout_alignTop="@+id/imageViewListLayout"
+                android:layout_margin="0.5dp"
+                android:src="@drawable/triangle_red"
+                android:visibility="visible" />
+
+            <ImageView
+                android:id="@+id/imageViewParentPage"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+        </RelativeLayout>
+
+        <ImageView
+            android:id="@+id/imageViewLogoList"
+            android:layout_width="100dp"
+            android:layout_height="25dp"
+            android:padding="5dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:src="@drawable/logo"
+            android:visibility="gone" />
 
         <TextView
-            android:id="@+id/textViewGrayLine345"
-            android:layout_width="1dp"
-            android:layout_height="33dp"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="3dp"
-            android:background="@android:color/darker_gray" />
-
-        <LinearLayout
-            android:id="@+id/relativeblabla"
+            android:id="@+id/textGraySeparator"
             android:layout_width="match_parent"
-            android:layout_height="30dp"
-            android:layout_centerInParent="true"
-            android:orientation="horizontal" >
+            android:layout_height="0.1dp"
+            android:background="@color/dark_gray"
+            android:visibility="gone" />
+    </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/relativeblabla"
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:layout_centerInParent="true"
-                android:layout_weight="1"
-                android:orientation="horizontal" >
+    <RelativeLayout
+        android:id="@+id/LayoutSeparatorBottom"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_alignBottom="@+id/linearLayoutListItem"
+        android:background="@color/light_light_gray_alpha"
+        android:orientation="horizontal"
+        android:paddingTop="5dp"
+        android:visibility="gone" >
 
-                <TextView
-                    android:id="@+id/spinnerPages"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_centerVertical="true"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:maxLines="1"
-                    android:paddingLeft="5dp"
-                    android:text="All Pages"
-                    android:textColor="@color/dark_dark_gray" />
+        <TextView
+            android:id="@+id/textViewSeparatorDayBottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:gravity="left"
+            android:paddingLeft="7dp"
+            android:paddingTop="10dp"
+            android:text="Wednesday"
+            android:textColor="@color/dark_gray"
+            android:textSize="15sp"
+            android:textStyle="bold" />
 
-                <LinearLayout
-                    android:id="@+id/relativeblabla"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="5"
-                    android:gravity="center"
-                    android:orientation="horizontal" >
-
-                    <ImageView
-                        android:id="@+id/imageViewTriangleSpinner2"
-                        android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:layout_centerVertical="true"
-                        android:layout_marginTop="1dp"
-                        android:layout_toRightOf="@+id/textViewGrayLine345"
-                        android:layout_weight="1"
-                        android:src="@drawable/triangle_spinner" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/relativeblabla"
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:layout_centerInParent="true"
-                android:layout_weight="1"
-                android:orientation="horizontal" >
-
-                <TextView
-                    android:id="@+id/spinnerFilter"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_centerVertical="true"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:maxLines="1"
-                    android:paddingLeft="5dp"
-                    android:text="All Events"
-                    android:textColor="@color/dark_dark_gray" />
-
-                <LinearLayout
-                    android:id="@+id/relativeblabla"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="5"
-                    android:gravity="center"
-                    android:orientation="horizontal" >
-
-                    <ImageView
-                        android:id="@+id/imageViewTriangleSpinner2"
-                        android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:layout_centerVertical="true"
-                        android:layout_marginRight="5dp"
-                        android:layout_marginTop="1dp"
-                        android:layout_toRightOf="@+id/textViewGrayLine345"
-                        android:layout_weight="1"
-                        android:src="@drawable/triangle_spinner" />
-                </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
+        <TextView
+            android:id="@+id/textViewSeparatorMonthBottom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:gravity="right"
+            android:paddingRight="7dp"
+            android:paddingTop="10dp"
+            android:text="Jul 11"
+            android:textColor="@color/dark_gray"
+            android:textSize="15sp"
+            android:textStyle="bold" />
     </RelativeLayout>
 
-    <TextView
-        android:id="@+id/textGraySeparator"
+    <View
+        android:id="@+id/controlViewBottom"
         android:layout_width="match_parent"
         android:layout_height="0.1dp"
-        android:background="@color/dark_gray"
-        android:visibility="gone" />
+        android:layout_alignBottom="@+id/linearLayoutListItem"
+        android:layout_marginBottom="40dp" />
 
-    <TextView
-        android:id="@+id/textViewText"
+    <View
         android:layout_width="match_parent"
-        android:layout_height="19.5dp"
-        android:layout_below="@+id/LayoutSeparator"
-        android:layout_marginTop="3.5dp"
-        android:layout_toRightOf="@+id/imageViewList"
-        android:gravity="center_vertical"
-        android:maxLines="1"
-        android:paddingRight="5dp"
-    	android:ellipsize="end"
-        android:text="SABADO 19 VISITA AL BIOPARC"
-        android:textColor="@color/dark_dark_gray"
-        android:textSize="13sp"
-        android:textStyle="bold"
-        android:typeface="normal"
+        android:layout_height="0.5dp"
+        android:layout_marginBottom="0.1dp"
+        android:layout_alignBottom="@+id/linearLayoutListItem"
+        android:background="@color/gray" />
+
+    <View
+        android:id="@+id/listItemSelector"
+        android:layout_width="fill_parent"
+        android:layout_height="100dp"
+        android:layout_alignBottom="@+id/linearLayoutListItem"
+        android:background="@layout/imageview_selected"
         android:visibility="visible" />
 
 </RelativeLayout>

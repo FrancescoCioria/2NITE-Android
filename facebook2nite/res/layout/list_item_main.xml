@@ -169,7 +169,7 @@
         <RelativeLayout
             android:id="@+id/RealativeListEvent"
             android:layout_width="match_parent"
-            android:layout_height="127dp"
+            android:layout_height="135dp"
             android:background="@color/light_light_gray"
             android:orientation="vertical" >
 
@@ -179,72 +179,47 @@
                 android:layout_height="100dp"
                 android:background="@android:color/transparent" />
 
-            <ImageView
-                android:id="@+id/imageViewList"
+            <LinearLayout
+                android:id="@+id/imageViewListLayout"
                 android:layout_width="fill_parent"
-                android:layout_height="120dp"
+                android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
                 android:layout_marginBottom="2dp"
                 android:layout_marginLeft="7dp"
                 android:layout_marginRight="7dp"
                 android:background="@color/gray"
-                android:padding="0.5dip"
-                android:scaleType="centerCrop"
-                android:src="@drawable/standard_image" />
+                android:orientation="vertical"
+                android:padding="0.5dp" >
+
+                <ImageView
+                    android:id="@+id/imageViewList"
+                    android:layout_width="fill_parent"
+                    android:layout_height="125dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/standard_image" />
+            </LinearLayout>
 
             <View
+                android:id="@+id/viewShadow"
                 android:layout_width="fill_parent"
                 android:layout_height="70dp"
                 android:layout_alignParentBottom="true"
                 android:layout_marginBottom="2dp"
                 android:layout_marginLeft="7dp"
                 android:layout_marginRight="7dp"
-                android:background="@drawable/gradient_shadow_temp" />
+                android:background="@drawable/gradient_shadow"
+                android:visibility="gone" />
 
             <ImageView
                 android:id="@+id/imageViewTriangleAttending"
                 android:layout_width="35dp"
                 android:layout_height="35dp"
                 android:layout_alignParentLeft="true"
-                android:layout_alignTop="@+id/imageViewList"
-                android:layout_marginLeft="7dp"
+                android:layout_alignTop="@+id/imageViewListLayout"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="0.5dp"
                 android:src="@drawable/triangle_red"
                 android:visibility="visible" />
-
-            <TextView
-                android:id="@+id/textViewText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_above="@+id/textViewAttending"
-                android:layout_alignLeft="@+id/imageViewList"
-                android:layout_alignRight="@+id/imageViewList"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:orientation="vertical"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp"
-                android:text="MOSTRA FOTOGRAFICA - THE RING: SOLO COMBATTENDO CONOSCI TE STESSO @ ACROPOLIS"
-                android:textColor="@android:color/background_light"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/textViewAttending"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentLeft="true"
-                android:layout_marginBottom="2dp"
-                android:layout_marginLeft="7dp"
-                android:gravity="left"
-                android:maxLines="1"
-                android:paddingBottom="1.5dp"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp"
-                android:text="Going: "
-                android:textColor="@android:color/background_light"
-                android:textSize="12sp"
-                android:typeface="sans" />
 
             <View
                 android:id="@+id/controlViewBottom"
@@ -253,55 +228,105 @@
                 android:layout_alignParentBottom="true"
                 android:layout_marginBottom="40dp" />
 
-            <TextView
-                android:id="@+id/textDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_above="@+id/textViewAttending"
-                android:layout_alignLeft="@+id/imageViewList"
-                android:layout_alignRight="@+id/imageViewList"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:orientation="vertical"
-                android:paddingBottom="2dp"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp"
-                android:text="Vivir y estudiar en Valencia no es suficiente, hay que aprovechar al máximo esta oportunidad y conocer a fondo la ciudad: Nosotros te lo ponemos fácil! Vamos de paseo por el centro histórico para descubrir su origen y su historia durante 2 horas."
-                android:textColor="@android:color/background_light"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:visibility="gone" />
-
-            <ImageView
-                android:id="@+id/imageViewParentPage"
-                android:layout_width="35dp"
-                android:layout_height="35dp"
-                android:layout_alignLeft="@+id/imageViewList"
-                android:layout_alignTop="@+id/imageViewList"
-                android:layout_marginLeft="7dp"
-                android:layout_marginTop="7dp"
-                android:background="@color/gray"
-                android:padding="0.5dp"
-                android:src="@drawable/icon_transparent_zk"
-                android:visibility="visible" />
-
-            <TextView
-                android:id="@+id/textViewPage"
+            <LinearLayout
+                android:id="@+id/layoutPicturePage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignBottom="@+id/imageViewList"
-                android:layout_alignRight="@+id/imageViewList"
-                android:layout_toRightOf="@+id/textViewAttending"
-                android:gravity="right"
-                android:maxLines="1"
+                android:layout_alignLeft="@+id/imageViewListLayout"
+                android:layout_alignTop="@+id/imageViewListLayout"
+                android:layout_marginLeft="7dp"
+                android:layout_marginTop="7dp"
+                android:background="@color/android_gray"
+                android:orientation="vertical"
+                android:padding="0.1dp" >
+
+                <ImageView
+                    android:id="@+id/imageViewParentPage"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:background="@android:color/background_light"
+                    android:contentDescription="@android:drawable/alert_light_frame"
+                    android:maxWidth="100dp"
+                    android:padding="1dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/icon_other_events" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/imageViewListLayout"
+                android:layout_alignLeft="@+id/imageViewListLayout"
+                android:layout_alignRight="@+id/imageViewListLayout"
+                android:background="#c6000000"
+                android:layout_margin="0.5dp"
+                android:orientation="vertical"
                 android:paddingBottom="1.5dp"
-                android:paddingRight="5dp"
-                android:paddingLeft="20dp"
-                android:text="Luogo"
-                android:textColor="@android:color/background_light"
-                android:textSize="12sp"
-                android:textStyle="italic"
-                android:typeface="sans" />
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp" >
+
+                <TextView
+                    android:id="@+id/textViewText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:maxLines="1"
+                    android:orientation="vertical"
+                    android:text="MOSTRA   @ ACROPOLIS"
+                    android:textColor="@android:color/background_light"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/textDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="1.5dp"
+                    android:ellipsize="end"
+                    android:maxLines="2"
+                    android:orientation="vertical"
+                    android:text="Vivir y estudiar en Valencia no es suficiente, hay que aprovechar al máximo esta oportunidad y conocer a fondo la ciudad: Nosotros te lo ponemos fácil! Vamos de paseo por el centro histórico para descubrir su origen y su historia durante 2 horas."
+                    android:textColor="@color/light_gray"
+                    android:textSize="11sp"
+                    android:typeface="sans"
+                    android:visibility="visible" />
+
+                <RelativeLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content" >
+
+                    <TextView
+                        android:id="@+id/textViewAttending"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentLeft="true"
+                        android:gravity="left"
+                        android:maxLines="1"
+                        android:paddingRight="5dp"
+                        android:text="Going: "
+                        android:textColor="@android:color/background_light"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:typeface="sans" />
+
+                    <TextView
+                        android:id="@+id/textViewPage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentRight="true"
+                        android:layout_toRightOf="@+id/textViewAttending"
+                        android:gravity="right"
+                        android:maxLines="1"
+                        android:paddingLeft="20dp"
+                        android:text="Luogo"
+                        android:textColor="@android:color/background_light"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:typeface="sans"
+                        android:visibility="visible" />
+                </RelativeLayout>
+            </LinearLayout>
 
             <RelativeLayout
                 android:id="@+id/LayoutSeparatorBottom"
@@ -347,7 +372,7 @@
     <View
         android:id="@+id/listItemSelector"
         android:layout_width="fill_parent"
-        android:layout_height="157dp"
+        android:layout_height="135dp"
         android:layout_alignBottom="@+id/linearLayoutListItem"
         android:background="@layout/imageview_selected"
         android:visibility="visible" />

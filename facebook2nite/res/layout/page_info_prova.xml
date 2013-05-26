@@ -105,8 +105,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@android:color/background_light"
-                        android:orientation="vertical"
                         android:gravity="center_vertical"
+                        android:orientation="vertical"
                         android:paddingLeft="5dp"
                         android:paddingRight="3dp" >
 
@@ -238,7 +238,6 @@
                         android:id="@+id/textViewTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_alignBottom="@+id/imageViewPageInfoCover"
                         android:layout_alignParentRight="true"
                         android:alpha="110"
                         android:background="@android:color/background_dark"

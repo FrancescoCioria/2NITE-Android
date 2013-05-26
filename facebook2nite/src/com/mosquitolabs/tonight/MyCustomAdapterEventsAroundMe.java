@@ -53,7 +53,14 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		ViewHolder localViewHolder;
 
 		if (paramView == null) {
-			paramView = mInflater.inflate(R.layout.list_item_temp, null);
+			switch (context.getCurrentListStyle()) {
+			case 0:
+				paramView = mInflater.inflate(R.layout.list_item_main, null);
+				break;
+			case 1:
+				paramView = mInflater.inflate(R.layout.list_item, null);
+				break;
+			}
 			localViewHolder = new ViewHolder();
 			localViewHolder.text = (TextView) paramView
 					.findViewById(R.id.textViewText);
@@ -89,8 +96,7 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 
 			standardImage = BitmapFactory.decodeResource(
 					context.getResources(), R.drawable.standard_image);
-			standardImagePage = BitmapFactory.decodeResource(
-					context.getResources(), R.drawable.icon_discover);
+			
 			triangleGreen = BitmapFactory.decodeResource(
 					context.getResources(), R.drawable.triangle_green);
 			triangleYellow = BitmapFactory.decodeResource(
@@ -131,7 +137,7 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		}
 
 		localViewHolder.image.setImageBitmap(standardImage);
-		localViewHolder.image_page.setImageBitmap(standardImagePage);
+		
 
 		Bitmap image = null;
 		Bitmap imagePage = null;
@@ -145,7 +151,7 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		} catch (Exception e) {
 		}
 
-		try {
+		/*try {
 			if (!event.parentPage_ID.equals("1")) {
 				java.io.FileInputStream in = context
 						.openFileInput(event.parentPage_ID);
@@ -155,7 +161,9 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 
 		} catch (Exception e) {
 
-		}
+		}*/
+		
+		localViewHolder.image_page.setVisibility(View.GONE);
 
 		boolean previousEventIsInProgress = false;
 		boolean currentEventIsInProgress = false;

@@ -10,6 +10,11 @@
         android:showAsAction="never"
         android:title="Filter events"/>
     <item
+        android:id="@+id/menu_listStyle"
+        android:icon="@drawable/ic_action_icon_list_style"
+        android:showAsAction="always"
+        android:title="Change list style"/>
+    <item
         android:id="@+id/menu_places"
         android:icon="@drawable/ic_action_location"
         android:showAsAction="always"
@@ -51,7 +56,6 @@
         android:id="@+id/menu_info"
         android:showAsAction="never"
         android:title="About current page"/>
-   
     <item
         android:id="@+id/menu_reset"
         android:showAsAction="never"

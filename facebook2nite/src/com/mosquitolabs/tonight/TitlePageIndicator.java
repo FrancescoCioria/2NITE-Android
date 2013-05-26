@@ -370,10 +370,10 @@ public class TitlePageIndicator extends View implements PageIndicator {
 		}
 
 		final int countMinusOne = count - 1;
-		final float halfWidth = (getWidth()+15) / 2f;
+		final float halfWidth = (getWidth() + 15) / 2f;
 		final int left = getLeft();
 		final float leftClip = left + mClipPadding;
-		final int width = getWidth()+15;
+		final int width = getWidth() + 15;
 		final int height = getHeight();
 		final int right = left + width;
 		final float rightClip = right - mClipPadding;
@@ -458,10 +458,10 @@ public class TitlePageIndicator extends View implements PageIndicator {
 				// Draw text as unselected
 				mPaintText.setColor(mColorText);
 				if (currentPage && currentSelected) {
-					
-					if(selectedPercent==1){
-						String t="";
-						String a=t;
+
+					if (selectedPercent == 1) {
+						String t = "";
+						String a = t;
 					}
 					// Fade out/in unselected text as the selected text fades
 					// in/out
@@ -478,19 +478,23 @@ public class TitlePageIndicator extends View implements PageIndicator {
 					mPaintText.setColor(mColorSelected);
 					mPaintText
 							.setAlpha((int) ((mColorSelected >>> 24) * selectedPercent));
-					String string = mTitleProvider.getTitle(i).toUpperCase(); //modificato con .touupercase
-					//double x = (string.length() - 1) * (1.45);
+					String string = mTitleProvider.getTitle(i).toUpperCase(); // modificato
+																				// con
+																				// .touupercase
+					// double x = (string.length() - 1) * (1.45);
 					DisplayMetrics displaymetrics = new DisplayMetrics();
-					parentActivity.getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+					parentActivity.getWindowManager().getDefaultDisplay()
+							.getMetrics(displaymetrics);
 
-					
-					double x = string.length()*4.5*displaymetrics.density;
+					double x = string.length() * 4.5 * displaymetrics.density;
 					int m = (int) x;
-					int n = getWidth()/2;
-					/*canvas.drawText(string, bound.left - m, bound.bottom
-							+ mTopPadding, mPaintText);*/
-					canvas.drawText(string, n - m, bound.bottom
-							+ mTopPadding, mPaintText);
+					int n = getWidth() / 2;
+					/*
+					 * canvas.drawText(string, bound.left - m, bound.bottom +
+					 * mTopPadding, mPaintText);
+					 */
+					canvas.drawText(string, n - m, bound.bottom + mTopPadding,
+							mPaintText);
 
 				}
 			}
@@ -818,6 +822,7 @@ public class TitlePageIndicator extends View implements PageIndicator {
 				parentActivity.filterAll();
 				parentActivity.setInfo2NITE(true);
 				parentActivity.setCalendar(false);
+				parentActivity.setlistStyle(false);
 
 				break;
 
@@ -836,7 +841,7 @@ public class TitlePageIndicator extends View implements PageIndicator {
 				parentActivity.setSortPages(true);
 				parentActivity.setInfo2NITE(true);
 				parentActivity.setCalendar(false);
-
+				parentActivity.setlistStyle(true);
 
 				if (parentActivity.isPageSelected()
 						|| !parentActivity.filter.equals("all")) {
@@ -852,6 +857,8 @@ public class TitlePageIndicator extends View implements PageIndicator {
 			case 2:
 				parentActivity.setShareIntent();
 				parentActivity.setPlaces(false);
+				parentActivity.setlistStyle(false);
+
 				if (parentActivity.isEventPageFilled()) {
 					parentActivity.setInfoPageName(parentActivity
 							.getCurrentPageName());
@@ -888,7 +895,6 @@ public class TitlePageIndicator extends View implements PageIndicator {
 					parentActivity.setRefresh(false);
 					parentActivity.setReset(false);
 					parentActivity.setCalendar(false);
-
 
 				}
 				break;

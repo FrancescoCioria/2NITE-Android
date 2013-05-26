@@ -349,6 +349,7 @@
         android:layout_width="fill_parent"
         android:layout_height="157dp"
         android:layout_alignBottom="@+id/linearLayoutListItem"
-        android:background="@layout/imageview_selected" />
+        android:background="@layout/imageview_selected"
+        android:visibility="gone" />
 
 </RelativeLayout>

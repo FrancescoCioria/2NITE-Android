@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.PackageInfo;
 import android.graphics.Bitmap;
@@ -108,6 +109,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private int counterEnter = 0;
 	private int counterExit = 0;
 	private int currentFirstVisibleItem = -1;
+	private int currentListStyle = 0;
 
 	private View now;
 	private View next;
@@ -168,6 +170,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private com.actionbarsherlock.view.MenuItem sortPages;
 	private com.actionbarsherlock.view.MenuItem places;
 	private com.actionbarsherlock.view.MenuItem calendar;
+	private com.actionbarsherlock.view.MenuItem listStyle;
 
 	private long counterStart;
 	private RelativeLayout relativeFilter;
@@ -240,6 +243,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private static final int PAGES = 0;
 	private static final int EVENTS = 1;
 	private static final int DESCRIPTION = 2;
+	
+	private static final int BIG = 0;
+	private static final int SMALL = 1;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -2162,6 +2168,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					@Override
 					public void onScrollStateChanged(AbsListView view,
 							int scrollState) {
+						
+						
 
 					}
 
@@ -2514,16 +2522,15 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 			if (isEventsJustOpened) {
 				read();
-				
-				//refreshPageAdapter();
-				/*if (!pageCollection.getPageList().isEmpty()) {
 
-					newFeature();
-				}
-				SharedPreferences.Editor editor = mPrefs.edit();
-				editor.putBoolean("newFeature", false);
-				editor.commit();
-				*/
+				// refreshPageAdapter();
+				/*
+				 * if (!pageCollection.getPageList().isEmpty()) {
+				 * 
+				 * newFeature(); } SharedPreferences.Editor editor =
+				 * mPrefs.edit(); editor.putBoolean("newFeature", false);
+				 * editor.commit();
+				 */
 
 			}
 			criticalUpdate();
@@ -2720,6 +2727,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		sortPages = menu.findItem(R.id.menu_sortPages);
 		places = menu.findItem(R.id.menu_places);
 		calendar = menu.findItem(R.id.menu_calendar);
+		listStyle = menu.findItem(R.id.menu_listStyle);
 		MenuItem sort = menu.findItem(R.id.menu_sort);
 		MenuItem distance = menu.findItem(R.id.menu_distance);
 		sort.setVisible(false);
@@ -2739,6 +2747,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		setInfo2NITE(false);
 		setInfo(false);
 		setCalendar(false);
+		setlistStyle(false);
 		// }
 		isActionbarAvailable = true;
 
@@ -2963,11 +2972,52 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		case R.id.menu_calendar:
 			addToCalendar();
 			return false;
+		case R.id.menu_listStyle:
+			changeListStyle();
+			return false;
 
 		default:
 			return super.onOptionsItemSelected(item);
 
 		}
+	}
+
+	private void changeListStyle() {
+
+		currentListStyle = mPrefs.getInt("listStyle", BIG);
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		final CharSequence[] items = { "Big images", "Small images" };
+
+		builder.setTitle("Change list style");
+		builder.setSingleChoiceItems(items, currentListStyle,
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int item) {
+						if (item != currentListStyle) {
+
+							SharedPreferences.Editor editor = mPrefs.edit();
+							switch (item) {
+							case BIG:
+								editor.putInt("listStyle", BIG);
+								break;
+							case SMALL:
+								editor.putInt("listStyle", SMALL);
+
+								break;
+
+							}
+							editor.commit();
+							eventArrayAdapter = new myCustomAdapter(FacebookeventsActivity.this, FacebookeventsActivity.this);
+							listViewMain.setAdapter(eventArrayAdapter);
+							refreshEventsAdapter();
+						}
+
+						dialog.dismiss();
+					}
+				});
+
+		AlertDialog alert = builder.create();
+		alert.show();
+
 	}
 
 	private void addToCalendar() {
@@ -5781,6 +5831,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			setLike(false);
 			setFacebook(false);
 			setPlaces(true);
+			setlistStyle(false);
 			viewAll();
 		} catch (Exception e) {
 			EasyTracker.getTracker().sendException(
@@ -5801,6 +5852,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			setRSVP(false);
 			setLike(false);
 			setFacebook(false);
+			setlistStyle(true);
 		} catch (Exception e) {
 			EasyTracker.getTracker().sendException(
 					"setPageTwo() - " + e.toString(), false);
@@ -5860,6 +5912,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 	public void setCalendar(boolean b) {
 		calendar.setVisible(b);
+	}
+
+	public void setlistStyle(boolean b) {
+		listStyle.setVisible(b);
 	}
 
 	public String getCurrentPageName() {
@@ -6402,7 +6458,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 			@Override
 			public Bitmap doInBackground(Void... params) {
-
+				android.os.Process
+						.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND
+								+ android.os.Process.THREAD_PRIORITY_MORE_FAVORABLE);
 				Bitmap bmp = null;
 
 				if (eventCollection.getEventList().size() > i) {
@@ -6683,5 +6741,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		outRect.top = mScrollY;
 		outRect.right = mScrollX + (mRight - mLeft);
 		outRect.bottom = mScrollY + (mBottom - mTop);
+	}
+	
+	public int getCurrentListStyle(){
+		currentListStyle = mPrefs.getInt("listStyle", BIG);
+		return currentListStyle;
 	}
 }

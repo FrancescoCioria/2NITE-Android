@@ -63,7 +63,15 @@ public class myCustomAdapter extends BaseAdapter {
 		ViewHolder localViewHolder;
 
 		if (paramView == null) {
-			paramView = mInflater.inflate(R.layout.list_item_temp2, null);
+			switch (parentActivity.getCurrentListStyle()) {
+			case 0:
+				paramView = mInflater.inflate(R.layout.list_item_main, null);
+				break;
+			case 1:
+				paramView = mInflater.inflate(R.layout.list_item, null);
+				break;
+			}
+			//paramView = mInflater.inflate(R.layout.list_item, null);
 			localViewHolder = new ViewHolder();
 			localViewHolder.text = (TextView) paramView
 					.findViewById(R.id.textViewText);
@@ -124,7 +132,7 @@ public class myCustomAdapter extends BaseAdapter {
 			standardImage = BitmapFactory.decodeResource(
 					context.getResources(), R.drawable.icon_gray);
 			standardImagePage = BitmapFactory.decodeResource(
-					context.getResources(),  R.drawable.icon_gray);
+					context.getResources(), R.drawable.icon_gray);
 			triangleGreen = BitmapFactory.decodeResource(
 					context.getResources(), R.drawable.triangle_green);
 			triangleYellow = BitmapFactory.decodeResource(
@@ -200,8 +208,10 @@ public class myCustomAdapter extends BaseAdapter {
 							.openFileInput(event.parentPage_ID);
 					imagePage = BitmapFactory.decodeStream(in);
 					localViewHolder.image_page.setImageBitmap(imagePage);
-				}else{
-					localViewHolder.image_page.setImageBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.icon_other_events));
+				} else {
+					localViewHolder.image_page.setImageBitmap(BitmapFactory
+							.decodeResource(context.getResources(),
+									R.drawable.icon_other_events));
 				}
 
 			} catch (Exception e) {
