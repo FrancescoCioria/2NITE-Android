@@ -85,7 +85,11 @@ public class AroundMePagerAdapter extends PagerAdapter {
 		case EVENTS:
 			v = inflater.inflate(R.layout.main_activity, null);
 			listViewAroundMe = (ListView) v.findViewById(R.id.listViewMain);
-			eventArrayAdapter = new MyCustomAdapterEventsAroundMe(context);
+
+			// ho messo null
+			eventArrayAdapter = new MyCustomAdapterEventsAroundMe(null);
+			//
+
 			listViewAroundMe.setAdapter(eventArrayAdapter);
 			textEventEmpty = (TextView) v.findViewById(R.id.textViewEventEmpty);
 

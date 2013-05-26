@@ -20,43 +20,25 @@
 
         <RelativeLayout
             android:id="@+id/LayoutFilter"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/light_light_gray"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:background="@color/light_gray"
             android:orientation="vertical"
             android:visibility="gone" >
 
-            <ImageView
-                android:id="@+id/imageView1"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:layout_alignParentTop="true"
-                android:layout_centerHorizontal="true"
-                android:scaleType="fitXY"
-                android:src="@android:drawable/editbox_background_normal" />
-
-            <TextView
-                android:id="@+id/textViewGrayLine345"
-                android:layout_width="1dp"
-                android:layout_height="33dp"
-                android:layout_alignParentTop="true"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="3dp"
-                android:background="@android:color/darker_gray" />
-
             <LinearLayout
-                android:id="@+id/relativeblabla"
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
+                android:layout_height="fill_parent"
                 android:layout_centerInParent="true"
                 android:orientation="horizontal" >
 
                 <LinearLayout
-                    android:id="@+id/relativeblabla"
+                    android:id="@+id/spinnerPagesLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="30dp"
+                    android:layout_height="fill_parent"
                     android:layout_centerInParent="true"
                     android:layout_weight="1"
+                    android:background="@layout/imageview_selected"
                     android:orientation="horizontal" >
 
                     <TextView
@@ -73,7 +55,6 @@
                         android:textColor="@color/dark_dark_gray" />
 
                     <LinearLayout
-                        android:id="@+id/relativeblabla"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
@@ -95,11 +76,12 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/relativeblabla"
+                    android:id="@+id/spinnerFilterLayout"
                     android:layout_width="match_parent"
-                    android:layout_height="30dp"
+                    android:layout_height="fill_parent"
                     android:layout_centerInParent="true"
                     android:layout_weight="1"
+                    android:background="@layout/imageview_selected"
                     android:orientation="horizontal" >
 
                     <TextView
@@ -116,7 +98,6 @@
                         android:textColor="@color/dark_dark_gray" />
 
                     <LinearLayout
-                        android:id="@+id/relativeblabla"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_centerInParent="true"
@@ -138,6 +119,16 @@
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewGrayLine345"
+                android:layout_width="0.1dp"
+                android:layout_height="fill_parent"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="3dp"
+                android:layout_marginTop="3dp"
+                android:background="@android:color/darker_gray" />
         </RelativeLayout>
 
         <TextView
@@ -155,8 +146,8 @@
             android:id="@+id/listViewMain"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:divider="@color/gray"
-            android:dividerHeight="0.1dp"
+            android:divider="@color/light_light_gray"
+            android:dividerHeight="0dp"
             android:footerDividersEnabled="false" >
         </ListView>
     </LinearLayout>
@@ -171,5 +162,43 @@
         android:text="View All"
         android:textColor="@color/dark_gray"
         android:visibility="gone" />
+
+    <RelativeLayout
+        android:id="@+id/LayoutSeparatorFake"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="@color/light_light_gray_alpha"
+        android:orientation="horizontal"
+        android:paddingTop="5dp"
+        android:visibility="gone" >
+
+        <TextView
+            android:id="@+id/textViewSeparatorDay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:gravity="left"
+            android:paddingLeft="7dp"
+            android:paddingTop="10dp"
+            android:text="Wednesday"
+            android:textColor="@color/dark_gray"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textViewSeparatorMonth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:gravity="right"
+            android:paddingRight="7dp"
+            android:paddingTop="10dp"
+            android:text="Jul 11"
+            android:textColor="@color/dark_gray"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
 
 </RelativeLayout>

@@ -8,7 +8,18 @@ import java.util.Calendar;
 import java.util.Formatter;
 import java.util.TimeZone;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import com.facebook.HttpMethod;
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.Session;
+import com.facebook.Request.Callback;
+
 import android.content.Context;
+import android.os.Bundle;
+import android.util.Log;
 
 public class EventCollection {
 	private static EventCollection instance = new EventCollection();
@@ -25,6 +36,7 @@ public class EventCollection {
 	public ArrayList<EventData> getEventList() {
 		return this.eventList;
 	}
+
 	public ArrayList<EventData> getAroundMeEventList() {
 		return this.AroundMeEventList;
 	}
@@ -32,6 +44,7 @@ public class EventCollection {
 	public ArrayList<EventData> getCompleteEventList() {
 		return completeEventList;
 	}
+
 	public ArrayList<EventData> getUpdateEventList() {
 		return updateEventList;
 	}
@@ -51,45 +64,57 @@ public class EventCollection {
 
 		}
 	}
-	
+
 	public void restoreEventListFromUpdate() {
 		eventList.clear();
 		for (EventData currentEvent : updateEventList) {
-			
+
 			addToEventList(currentEvent);
-			
+
 		}
 	}
-	
-	
+
 	public void restoreUpdateEventList() {
 		updateEventList.clear();
 		for (EventData currentEvent : completeEventList) {
-			
+
 			updateEventList.add(currentEvent);
-			
+
 		}
 	}
 
 	public void cleanEventListDeclined() {
+		Log.i("cleanEventListDeclined", "cleanEventListDeclined");
+
 		ArrayList<String> remove = new ArrayList<String>();
 		int i = 0;
+		boolean rsvp = false;
 		for (EventData currentEvent : eventList) {
+			if(currentEvent.status_attending==null){
+				currentEvent.status_attending="Not Invited";
+				rsvp = true;
+			}
 			if (currentEvent.status_attending.equals("declined")) {
 				remove.add(Integer.toString(i));
 			}
 			i++;
 		}
-		int g=0;
-		for(String index : remove){
-			eventList.remove(Integer.parseInt(index)-g);
+		int g = 0;
+		for (String index : remove) {
+			eventList.remove(Integer.parseInt(index) - g);
 			g++;
 		}
+		if (rsvp) {
+			getRsvp();
+		}
 		
+		Log.i("cleanEventListDeclined", "cleanEventListDeclined");
+
+
 	}
 
 	public EventData getEventByID(String _ID) {
-		if(_ID==null){
+		if (_ID == null) {
 			return null;
 		}
 		for (EventData event : eventList) {
@@ -98,8 +123,9 @@ public class EventCollection {
 		}
 		return null;
 	}
+
 	public EventData getAroundMeEventByID(String _ID) {
-		if(_ID==null){
+		if (_ID == null) {
 			return null;
 		}
 		for (EventData event : AroundMeEventList) {
@@ -110,7 +136,7 @@ public class EventCollection {
 	}
 
 	public EventData getCompleteEventByID(String _ID) {
-		if(_ID==null){
+		if (_ID == null) {
 			return null;
 		}
 		for (EventData event : completeEventList) {
@@ -119,8 +145,9 @@ public class EventCollection {
 		}
 		return null;
 	}
+
 	public EventData getUpdateEventByID(String _ID) {
-		if(_ID==null){
+		if (_ID == null) {
 			return null;
 		}
 		for (EventData event : updateEventList) {
@@ -145,6 +172,7 @@ public class EventCollection {
 			localClassNotFoundException.printStackTrace();
 		}
 	}
+
 	public void readUpdateFromDisk(Context paramActivity) {
 		try {
 			ObjectInputStream localObjectInputStream = new ObjectInputStream(
@@ -175,6 +203,7 @@ public class EventCollection {
 			localIOException.printStackTrace();
 		}
 	}
+
 	public void saveUpdateToDisk(Context paramActivity) {
 		try {
 			ObjectOutputStream localObjectOutputStream = new ObjectOutputStream(
@@ -186,19 +215,14 @@ public class EventCollection {
 			localIOException.printStackTrace();
 		}
 	}
-	
-	
 
-	
-	
-	
 	public void cleanCompleteEventList() {
 		ArrayList<String> removeEvent = new ArrayList<String>();
 		int i = 0;
 		Calendar localCalendar = Calendar.getInstance();
 
-		//Calendar eventCalendar = Calendar.getInstance(TimeZone
-			//	.getTimeZone("America/Los_Angeles"));
+		// Calendar eventCalendar = Calendar.getInstance(TimeZone
+		// .getTimeZone("America/Los_Angeles"));
 		Calendar eventCalendar = Calendar.getInstance();
 
 		Formatter localFormatter = new Formatter();
@@ -213,9 +237,9 @@ public class EventCollection {
 				localCalendar.get(Calendar.HOUR_OF_DAY),
 				localCalendar.get(Calendar.MINUTE));
 		String currentHour = formatterTime.toString();
-		//String currentHour = new String(Integer.toString(localCalendar
-			//	.get(Calendar.HOUR_OF_DAY))
-				//+ Integer.toString(localCalendar.get(Calendar.MINUTE)));
+		// String currentHour = new String(Integer.toString(localCalendar
+		// .get(Calendar.HOUR_OF_DAY))
+		// + Integer.toString(localCalendar.get(Calendar.MINUTE)));
 
 		for (EventData event : completeEventList) {
 			eventCalendar.setTimeInMillis(Long.parseLong(event.endMillis
@@ -247,81 +271,53 @@ public class EventCollection {
 			g++;
 		}
 	}
-		
-		
-		
-		public void cleanUpdateEventList() {
-			ArrayList<String> removeEvent = new ArrayList<String>();
-			int i = 0;
-			Calendar localCalendar = Calendar.getInstance();
-			
-			Calendar eventCalendar = Calendar.getInstance(TimeZone
-					.getTimeZone("America/Los_Angeles"));
-			
-			Formatter localFormatter = new Formatter();
-			Object[] arrayOfObject = new Object[3];
-			arrayOfObject[0] = Integer.valueOf(localCalendar.get(1));
-			arrayOfObject[1] = Integer.valueOf(1 + localCalendar.get(2));
-			arrayOfObject[2] = Integer.valueOf(localCalendar.get(5));
-			localFormatter.format("%s-%02d-%02d", arrayOfObject);
-			String currentTime = localFormatter.toString();
-			String currentHour = new String(Integer.toString(localCalendar
-					.get(Calendar.HOUR_OF_DAY))
-					+ Integer.toString(localCalendar.get(Calendar.MINUTE)));
-			
-			for (EventData event : updateEventList) {
-				eventCalendar.setTimeInMillis(Long.parseLong(event.endMillis
-						+ "000"));
-				Formatter formatter = new Formatter();
-				Object[] arrayOfObject2 = new Object[3];
-				arrayOfObject2[0] = Integer.valueOf(eventCalendar.get(1));
-				arrayOfObject2[1] = Integer.valueOf(1 + eventCalendar.get(2));
-				arrayOfObject2[2] = Integer.valueOf(eventCalendar.get(5));
-				formatter.format("%s-%02d-%02d", arrayOfObject2);
-				String endTime = formatter.toString();
-				if (endTime.compareTo(currentTime) < 0)
+
+	public void cleanUpdateEventList() {
+		ArrayList<String> removeEvent = new ArrayList<String>();
+		int i = 0;
+		Calendar localCalendar = Calendar.getInstance();
+		Calendar eventCalendar = Calendar.getInstance();
+
+		Formatter localFormatter = new Formatter();
+		Formatter formatterTime = new Formatter();
+		Object[] arrayOfObject = new Object[3];
+		arrayOfObject[0] = Integer.valueOf(localCalendar.get(1));
+		arrayOfObject[1] = Integer.valueOf(1 + localCalendar.get(2));
+		arrayOfObject[2] = Integer.valueOf(localCalendar.get(5));
+		localFormatter.format("%s-%02d-%02d", arrayOfObject);
+		String currentTime = localFormatter.toString();
+		formatterTime.format("%02d%02d",
+				localCalendar.get(Calendar.HOUR_OF_DAY),
+				localCalendar.get(Calendar.MINUTE));
+		String currentHour = formatterTime.toString();
+		for (EventData event : updateEventList) {
+			eventCalendar.setTimeInMillis(Long.parseLong(event.endMillis
+					+ "000"));
+			Formatter formatter = new Formatter();
+			Object[] arrayOfObject2 = new Object[3];
+			arrayOfObject2[0] = Integer.valueOf(eventCalendar.get(1));
+			arrayOfObject2[1] = Integer.valueOf(1 + eventCalendar.get(2));
+			arrayOfObject2[2] = Integer.valueOf(eventCalendar.get(5));
+			formatter.format("%s-%02d-%02d", arrayOfObject2);
+			String endTime = formatter.toString();
+			if (endTime.compareTo(currentTime) < 0)
+				removeEvent.add(Integer.toString(i));
+			if (endTime.compareTo(currentTime) == 0) {
+				formatter = new Formatter();
+				formatter.format("%02d%02d",
+						eventCalendar.get(Calendar.HOUR_OF_DAY),
+						eventCalendar.get(Calendar.MINUTE));
+				if (formatter.toString().compareTo(currentHour) < 0)
 					removeEvent.add(Integer.toString(i));
-				if (endTime.compareTo(currentTime) == 0) {
-					formatter = new Formatter();
-					formatter.format("%02d%02d",
-							eventCalendar.get(Calendar.HOUR_OF_DAY),
-							eventCalendar.get(Calendar.MINUTE));
-					if (formatter.toString().compareTo(currentHour) < 0)
-						removeEvent.add(Integer.toString(i));
-				}
-				
-				i++;
 			}
-			
-			int g = 0;
-			for (String s : removeEvent) {
-				updateEventList.remove(Integer.parseInt(s) - g);
-				g++;
-			}
+			i++;
+		}
 
-		/*
-		 * Calendar cal = Calendar.getInstance(); Calendar caly =
-		 * Calendar.getInstance(); caly.add(Calendar.DAY_OF_YEAR, -1); for
-		 * (EventData event : completeEventList) { Formatter form = new
-		 * Formatter(); form.format("%d-%02d-%02dT%02d:%02d:00",
-		 * cal.get(Calendar
-		 * .YEAR),cal.get(Calendar.MONTH)+1,cal.get(Calendar.DAY_OF_MONTH
-		 * ),cal.get(Calendar.HOUR_OF_DAY),cal.get(Calendar.MINUTE)); String
-		 * current_time = form.toString(); form = new Formatter();
-		 * form.format("%d-%02d-%02d",
-		 * caly.get(Calendar.YEAR),caly.get(Calendar.
-		 * MONTH)+1,caly.get(Calendar.DAY_OF_MONTH)); String yesterday_time =
-		 * form.toString();
-		 * 
-		 * if(!event.endString.equals("null")){
-		 * if(event.endString.compareTo(current_time)<0){
-		 * removeEvent.add(Integer .toString(i)); } }else{
-		 * if(event.startString.compareTo(yesterday_time)<0){
-		 * removeEvent.add(Integer .toString(i)); } } i++; } int g=0; for
-		 * (String s : removeEvent) { completeEventList .remove(Integer
-		 * .parseInt(s) - g); g++; }
-		 */
-
+		int g = 0;
+		for (String s : removeEvent) {
+			updateEventList.remove(Integer.parseInt(s) - g);
+			g++;
+		}
 	}
 
 	public void sortByDate() {
@@ -355,6 +351,7 @@ public class EventCollection {
 		}
 
 	}
+
 	public void aroundMeSortByDate() {
 		ArrayList<EventData> currentList = new ArrayList<EventData>();
 		int i = 0;
@@ -368,23 +365,23 @@ public class EventCollection {
 						&& currentEvent.startMillis.compareTo(currentList
 								.get(j).startMillis) > 0) {
 					j++;
-					
+
 				}
 				if (j == currentList.size()) {
 					currentList.add(currentEvent);
 				} else {
-					
+
 					currentList.add(j, currentEvent);
 				}
-				
+
 			}
 		}
-		
+
 		AroundMeEventList.clear();
 		for (EventData currentEvent : currentList) {
 			AroundMeEventList.add(currentEvent);
 		}
-		
+
 	}
 
 	public void sortByAttendingCount() {
@@ -418,6 +415,7 @@ public class EventCollection {
 		}
 
 	}
+
 	public void aroundMeSortByAttendingCount() {
 		ArrayList<EventData> currentList = new ArrayList<EventData>();
 		int i = 0;
@@ -426,28 +424,28 @@ public class EventCollection {
 				currentList.add(currentEvent);
 				i++;
 			} else {
-				
+
 				int j = 0;
 				while (j != currentList.size()
 						&& currentEvent.attending_count < currentList.get(j).attending_count) {
 					j++;
-					
+
 				}
 				if (j == currentList.size()) {
 					currentList.add(currentEvent);
 				} else {
-					
+
 					currentList.add(j, currentEvent);
 				}
-				
+
 			}
 		}
-		
+
 		AroundMeEventList.clear();
 		for (EventData currentEvent : currentList) {
 			AroundMeEventList.add(currentEvent);
 		}
-		
+
 	}
 
 	public boolean addToEventList(EventData event) {
@@ -459,6 +457,7 @@ public class EventCollection {
 		eventList.add(event);
 		return true;
 	}
+
 	public boolean addToAroundMeEventList(EventData event) {
 		for (EventData current : AroundMeEventList) {
 			if (event.event_ID.equals(current.event_ID)) {
@@ -478,23 +477,23 @@ public class EventCollection {
 		completeEventList.add(event);
 		return true;
 	}
-	
-	
-	public void removeEventsByParentPageID(FacebookeventsActivity context , String pageID){
-		
+
+	public void removeEventsByParentPageID(FacebookeventsActivity context,
+			String pageID) {
+
 		ArrayList<String> remove = new ArrayList<String>();
 		final int ATTENDING = 0;
 		final int ATTENDING_UNSURE = 1;
 		final int NOT_DECLINED = 2;
 		final int ALL = 3;
-		
+
 		String container = "";
-		
-		switch (1){
+
+		switch (1) {
 		case ATTENDING:
 			container = "attending";
 			break;
-			
+
 		case ATTENDING_UNSURE:
 			container = "attending,unsure";
 
@@ -507,38 +506,84 @@ public class EventCollection {
 			container = "attending,unsure,Not Invited,not_replied,declined";
 
 			break;
-			
+
 		}
-		
-		for(EventData event : completeEventList){
-			if(event.parentPage_ID.equals(pageID)&&container.contains(event.status_attending)){
-				event.parentPage_ID="1";
-				event.parentPageName="My Events";
+
+		for (EventData event : completeEventList) {
+			if (event.parentPage_ID.equals(pageID)
+					&& container.contains(event.status_attending)) {
+				event.parentPage_ID = "1";
+				event.parentPageName = "My Events";
 			}
 		}
-		int q=0;
-		for(EventData event : completeEventList){
-			if(event.parentPage_ID.equals(pageID)){
+		int q = 0;
+		for (EventData event : completeEventList) {
+			if (event.parentPage_ID.equals(pageID)) {
 				remove.add(Integer.toString(q));
 			}
 			q++;
 		}
-		q=0;
-		for(String s : remove){
-			completeEventList.remove(Integer.parseInt(s)-q);
+		q = 0;
+		for (String s : remove) {
+			completeEventList.remove(Integer.parseInt(s) - q);
 			q++;
 		}
-		
-		if(context.isViewAllVisible()){
+
+		if (context.isViewAllVisible()) {
 			context.viewAll();
-		}else{
-		restoreEventList();
-		context.refreshEventsAdapter();
+		} else {
+			restoreEventList();
+			context.refreshEventsAdapter();
 		}
-		
+
 	}
-	
-	
-	
+
+	private void getRsvp() {
+		/*Log.i("getRSVP", "getRSVP");
+
+		String rsvpRequest = "{";
+
+		for (EventData event : completeEventList) {
+			rsvpRequest += "\"" + event.event_ID + "\":"
+					+ "\"SELECT rsvp_status FROM event_member where eid = "
+					+ event.event_ID + "  and uid = me()\",";
+		}
+		rsvpRequest += "}";
+
+		Bundle bundle = new Bundle();
+		bundle.putString("q", rsvpRequest);
+
+		Callback callback = new Callback() {
+			@Override
+			public void onCompleted(Response response) {
+				try {
+					JSONObject jObject = response.getGraphObject()
+							.getInnerJSONObject();
+					JSONArray jArray = jObject.getJSONArray("data");
+					for (int i = 0; i < jArray.length(); i++) {
+						jObject = jArray.getJSONObject(i);
+						String ID = jObject.getString("name");
+
+						JSONArray jj = jObject.getJSONArray("fql_result_set");
+						if (jj.length() == 0) {
+							getCompleteEventByID(ID).status_attending = "Not Invited";
+						} else {
+							jObject = jj.getJSONObject(0);
+							getCompleteEventByID(ID).status_attending = jObject
+									.getString("rsvp_status");
+						}
+
+					}
+				} catch (Exception e) {
+					Log.e("rsvp_request", e.toString());
+				}
+			}
+		};
+		Request request = new Request(Session.getActiveSession(), "fql",
+				bundle, HttpMethod.GET, callback);
+		request.executeAsync();
+		*/
+
+	}
 
 }

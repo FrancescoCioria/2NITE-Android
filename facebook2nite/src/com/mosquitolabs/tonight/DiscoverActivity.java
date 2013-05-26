@@ -32,14 +32,11 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -65,36 +62,24 @@ public class DiscoverActivity extends SherlockActivity {
 	private EventCollection eventCollection = EventCollection.getInstance();
 	private JSONObject json = new JSONObject();
 	private JSONArray jarrayPlaces;
-	private JSONArray jarrayAround;
 	private JSONArray jarrayLikes;
 	private JSONArray jarrayEventAround;
 	private JSONArray jarrayEventInteresting;
-	private JSONObject jsonObject;
-	private ListView listView;
-	private ListView listViewAroundMe;
+	// private ListView listViewAroundMe;
 	private double latitude;
 	private double longitude;
-	private MenuItem sort;
-	private MenuItem distance;
-	private MenuItem info;
-	private MenuItem share;
-	private MenuItem seeOnFacebook;
-	private MenuItem sortsearch;
+
 	private PageCollection pageCollection = PageCollection.getInstance();
 
-	private String currentPageID = null;
-	private String attendingCount;
 	private SharedPreferences mPrefs;
 	private Preferences preferences = Preferences.getInstance();
 	private boolean firstLocation = true;
 	private boolean placesSorted = false;
 	private com.actionbarsherlock.app.ActionBar actionbar;
 	private ViewPager viewPager;
-	private int page = 0;
+
 	private DiscoverPagerAdapter adapter;
-	private TextView textEventEmpty;
-	private TextView textAttending;
-	private String status;
+
 	private String timeStart;
 	private String timeEnd;
 	private String dayOfWeekStart;
@@ -102,7 +87,8 @@ public class DiscoverActivity extends SherlockActivity {
 	private String monthNameStart = "";
 	private String monthNameEnd = "";
 	private boolean isInProgress = false;
-	private int searchSortChecked;
+	private boolean isDiscover = true;
+	private boolean isError = false;
 
 	private RelativeLayout dialog;
 
@@ -187,7 +173,7 @@ public class DiscoverActivity extends SherlockActivity {
 	}
 
 	public void getLocation() {
-		Log.e("location", "getting location");
+		Log.i("location", "getting location");
 		LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 		LocationListener ll = new mylocationlistener();
 		lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 10000,
@@ -196,13 +182,10 @@ public class DiscoverActivity extends SherlockActivity {
 
 	@Override
 	protected void onResume() {
-		pageCollection.readFromDisk(this);
-		if (listView != null) {
-			adapter.refreshPageAdapter();
-		}
-		if (listViewAroundMe != null) {
-			adapter.refreshEventsAround();
-		}
+		// pageCollection.readFromDisk(this);
+		adapter.refreshPageAdapter();
+		adapter.refreshEventsAround();
+		adapter.refreshEventsAround();
 
 		super.onResume();
 	}
@@ -288,7 +271,6 @@ public class DiscoverActivity extends SherlockActivity {
 				localIntent.putExtra("item", 0);
 				localIntent.putExtra("ID", paramPageData._ID);
 				startActivity(localIntent);
-				// photoStream(paramPageData._ID,0);
 			}
 		});
 		image2.setOnClickListener(new OnClickListener() {
@@ -579,7 +561,7 @@ public class DiscoverActivity extends SherlockActivity {
 						}
 					}
 				};
-				Request request = new Request(session, "fql", bun,
+				Request request = new Request(Session.getActiveSession(), "fql", bun,
 						HttpMethod.GET, callback);
 				request.executeAndWait();
 
@@ -608,6 +590,7 @@ public class DiscoverActivity extends SherlockActivity {
 		}
 		pageCollection.saveToDisk(this);
 		eventCollection.restoreEventList();
+		isDiscover = false;
 		super.onBackPressed();
 
 	}
@@ -615,7 +598,6 @@ public class DiscoverActivity extends SherlockActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getSupportMenuInflater();
 		inflater.inflate(R.menu.menu_discover, menu);
-		info = menu.findItem(R.id.menu_info);
 
 		return true;
 	}
@@ -693,10 +675,12 @@ public class DiscoverActivity extends SherlockActivity {
 		form.format("%02d", startCal.get(Calendar.MINUTE));
 		timeStart = Integer.toString(startCal.get(Calendar.HOUR_OF_DAY)) + ":"
 				+ form.toString();
+		form.close();
 		form = new Formatter();
 		form.format("%02d", endCal.get(Calendar.MINUTE));
 		timeEnd = Integer.toString(endCal.get(Calendar.HOUR_OF_DAY)) + ":"
 				+ form.toString();
+		form.close();
 		dayOfWeekStart = "vuoto";
 		dayOfWeekEnd = "vuoto";
 		monthNameStart = "";
@@ -896,324 +880,6 @@ public class DiscoverActivity extends SherlockActivity {
 		}
 	}
 
-	public synchronized void getEventsAroundMe() {
-		AsyncTask<Void, Void, Bitmap> task = new AsyncTask<Void, Void, Bitmap>() {
-
-			@Override
-			public Bitmap doInBackground(Void... params) {
-				eventCollection.getAroundMeEventList().clear();
-				Calendar cal = Calendar.getInstance();
-
-				String current_time = Long.toString(cal.getTimeInMillis());
-				long Hours24 = 86400000;
-
-				String hours24FromNow = Long.toString(cal.getTimeInMillis()
-						+ Hours24);
-				current_time = current_time.substring(0, 10);
-				hours24FromNow = hours24FromNow.substring(0, 10);
-				String distance = Integer
-						.toString(mPrefs.getInt("distance", 5) * 1000);
-				String limit = "500";
-				if (mPrefs.getInt("distance", 5) > 25)
-					limit = "1000";
-				String a = "Select eid,name,attending_count,venue,creator,description,location,start_time,end_time,pic_big from event where eid in (SELECT eid from event_member WHERE uid in (Select page_id,name from place where distance(latitude, longitude,"
-						+ "\""
-						+ Double.toString(latitude)
-						+ "\""
-						+ ","
-						+ "\""
-						+ Double.toString(longitude)
-						+ "\""
-						+ ")<"
-						+ distance
-						+ " and checkin_count>0"
-						+ " limit "
-						+ limit
-						+ "))"
-						+ " and end_time>"
-						+ current_time
-						+ " and start_time<"
-						+ Integer
-								.toString(Integer.parseInt(current_time) + 259200);
-				Bundle bundle = new Bundle();
-				bundle.putString("q", a);
-
-				Request requestA = new Request(Session.getActiveSession(),
-						"fql", bundle, HttpMethod.GET, new Request.Callback() {
-							public void onCompleted(Response response) {
-								int z = 0;
-								try {
-									JSONObject jsonAround = response
-											.getGraphObject()
-											.getInnerJSONObject();
-									jarrayAround = jsonAround
-											.getJSONArray("data");
-
-									for (z = 0; z < jarrayAround.length(); z++) {
-										jsonAround = jarrayAround
-												.getJSONObject(z);
-										final EventData event = new EventData();
-										event.name = jsonAround
-												.getString("name");
-										event.desc = jsonAround
-												.getString("description");
-										event.event_ID = jsonAround
-												.getString("eid");
-										event.loc = jsonAround
-												.getString("location");
-										event.startMillis = getMillis(jsonAround
-												.getString("start_time"));
-										event.endMillis = getMillis(jsonAround
-												.getString("end_time"));
-										event.attending_count = jsonAround
-												.getInt("attending_count");
-										dayOfWeek(event.startMillis,
-												event.endMillis);
-										event.dateStart = monthNameStart;
-										event.dayStart = dayOfWeekStart;
-										event.timeStart = timeStart;
-										event.dateEnd = monthNameEnd;
-										event.dayEnd = dayOfWeekEnd;
-										event.timeEnd = timeEnd;
-										event.isInProgress = isInProgress;
-										event.parentPageName = event.loc;
-										event.attending_count = jsonAround
-												.getInt("attending_count");
-
-										String b = "";
-										try {
-											if (!json.isNull("venue")) {
-												JSONObject jsonO = json
-														.getJSONObject("venue");
-												if (!jsonO.isNull("street")
-														|| !jsonO
-																.isNull("city")) {
-													b += jsonO
-															.getString("street");
-													if (b.length() > 0)
-														b += ", ";
-													if (jsonO.has("city")) {
-														b += jsonO
-																.getString("city");
-														if (b.length() > 0) {
-															b += ", ";
-														}
-													}
-													if (jsonO.has("country")) {
-														b += json
-																.getString("country");
-													}
-												}
-											}
-										} catch (Exception e) {
-											//
-										}
-										event.venue = b;
-
-										isInProgress = false;
-										if (eventCollection
-												.getAroundMeEventByID(event.event_ID) == null) {
-											eventCollection
-													.getAroundMeEventList()
-													.add(event);
-										}
-
-									}
-
-								} catch (Exception e) {
-									Log.e("aroundMe", e.toString() + " "
-											+ Integer.toString(z));
-								}
-							}
-						});
-
-				String fql = "";
-
-				fql = "SELECT eid,name,attending_count,venue,creator,description,location,start_time,end_time,pic_big FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid IN (SELECT uid2 FROM friend WHERE uid1 = me()) or uid = me() ) AND end_time > "
-						+ current_time
-						+ "  AND start_time< "
-						+ Integer
-								.toString(Integer.parseInt(current_time) + 259200);
-
-				bundle = new Bundle();
-				bundle.putString("q", fql);
-				Request requestB = new Request(Session.getActiveSession(),
-						"fql", bundle, HttpMethod.GET, new Request.Callback() {
-
-							@Override
-							public void onCompleted(Response response) {
-
-								int z = 0;
-								try {
-									JSONObject jsonAround = response
-											.getGraphObject()
-											.getInnerJSONObject();
-									jarrayAround = jsonAround
-											.getJSONArray("data");
-
-									for (z = 0; z < jarrayAround.length(); z++) {
-										jsonAround = jarrayAround
-												.getJSONObject(z);
-										final EventData event = new EventData();
-										event.name = jsonAround
-												.getString("name");
-										event.desc = jsonAround
-												.getString("description");
-										event.event_ID = jsonAround
-												.getString("eid");
-										event.loc = jsonAround
-												.getString("location");
-										event.startMillis = getMillis(jsonAround
-												.getString("start_time"));
-										event.endMillis = getMillis(jsonAround
-												.getString("end_time"));
-										event.attending_count = jsonAround
-												.getInt("attending_count");
-										dayOfWeek(event.startMillis,
-												event.endMillis);
-										event.dateStart = monthNameStart;
-										event.dayStart = dayOfWeekStart;
-										event.timeStart = timeStart;
-										event.dateEnd = monthNameEnd;
-										event.dayEnd = dayOfWeekEnd;
-										event.timeEnd = timeEnd;
-										event.isInProgress = isInProgress;
-										event.parentPageName = event.loc;
-										event.attending_count = jsonAround
-												.getInt("attending_count");
-
-										String b = "";
-										try {
-											if (!json.isNull("venue")) {
-												JSONObject jsonO = json
-														.getJSONObject("venue");
-												if (!jsonO.isNull("street")
-														|| !jsonO
-																.isNull("city")) {
-													b += jsonO
-															.getString("street");
-													if (b.length() > 0)
-														b += ", ";
-													if (jsonO.has("city")) {
-														b += jsonO
-																.getString("city");
-														if (b.length() > 0) {
-															b += ", ";
-														}
-													}
-													if (jsonO.has("country")) {
-														b += json
-																.getString("country");
-													}
-												}
-											}
-										} catch (Exception e) {
-											//
-										}
-										event.venue = b;
-
-										isInProgress = false;
-										boolean add = true;
-										int i = 0;
-										for (EventData temp : eventCollection
-												.getAroundMeEventList()) {
-											if ((event.event_ID
-													.equals(temp.event_ID))
-													|| (event.name
-															.equals(temp.name)
-															&& event.desc
-																	.equals(temp.desc) && event.venue
-																.equals(temp.venue))) {
-
-												if (event.attending_count > temp.attending_count) {
-													add = true;
-													eventCollection
-															.getAroundMeEventList()
-															.remove(i);
-												} else {
-													add = false;
-												}
-												break;
-											}
-											i++;
-										}
-										if (add) {
-											eventCollection
-													.getAroundMeEventList()
-													.add(event);
-										}
-
-									}
-
-								} catch (Exception e) {
-									Log.e("aroundMe", e.toString() + " "
-											+ Integer.toString(z));
-								}
-							}
-
-						});
-
-				new RequestBatch(requestA, requestB).executeAndWait();
-
-				String rsvpRequest = "{";
-
-				for (EventData event : eventCollection.getAroundMeEventList()) {
-					rsvpRequest += "\""
-							+ event.event_ID
-							+ "\":"
-							+ "\"SELECT rsvp_status FROM event_member where eid = "
-							+ event.event_ID + "  and uid = me()\",";
-				}
-				rsvpRequest += "}";
-
-				bundle = new Bundle();
-				bundle.putString("q", rsvpRequest);
-
-				Callback callback = new Callback() {
-					@Override
-					public void onCompleted(Response response) {
-						try {
-							JSONObject jObject = response.getGraphObject()
-									.getInnerJSONObject();
-							JSONArray jArray = jObject.getJSONArray("data");
-							for (int i = 0; i < jArray.length(); i++) {
-								jObject = jArray.getJSONObject(i);
-								String ID = jObject.getString("name");
-								JSONArray jj = jObject
-										.getJSONArray("fql_result_set");
-								if (jj.length() == 0) {
-									eventCollection.getAroundMeEventByID(ID).status_attending = "Not Invited";
-								} else {
-									jObject = jj.getJSONObject(0);
-									eventCollection.getAroundMeEventByID(ID).status_attending = jObject
-											.getString("rsvp_status");
-								}
-
-							}
-						} catch (Exception e) {
-							Log.e("rsvp_request", e.toString());
-						}
-					}
-				};
-				Request request = new Request(Session.getActiveSession(),
-						"fql", bundle, HttpMethod.GET, callback);
-				request.executeAndWait();
-
-				DiscoverActivity.this.runOnUiThread(new Runnable() {
-					public void run() {
-						adapter.initializeEvents();
-						adapter.aroundMePicture();
-					}
-				});
-
-				return null;
-			}
-
-		};
-		task.execute();
-
-	}
-
 	private class mylocationlistener implements LocationListener {
 
 		@Override
@@ -1229,9 +895,6 @@ public class DiscoverActivity extends SherlockActivity {
 
 				discover();
 
-				// getEventsAroundMe();
-				// getPlacesAroundMe();
-				// getPlacesILike();
 			}
 
 		}
@@ -1320,7 +983,8 @@ public class DiscoverActivity extends SherlockActivity {
 						+ current_time
 						+ "  AND start_time< "
 						+ Integer
-								.toString(Integer.parseInt(current_time) + 259200);
+								.toString(Integer.parseInt(current_time) + 259200)
+						+ " AND attending_count>0";
 				bundleEventInteresting.putString("q", stringEventInteresting);
 
 				// REQUESTS
@@ -1402,7 +1066,12 @@ public class DiscoverActivity extends SherlockActivity {
 									}
 
 								} catch (Exception e) {
-									toast("An error occurred");
+									if(!isError){
+										isError = true;
+									}else{
+										toast("An error occurred");
+										isError = false;
+									}
 									Log.e("getplaces", e.toString());
 								}
 							}
@@ -1428,7 +1097,8 @@ public class DiscoverActivity extends SherlockActivity {
 									jarrayEventInteresting = jsonAround
 											.getJSONArray("data");
 
-									for (z = 0; z < jarrayEventInteresting.length(); z++) {
+									for (z = 0; z < jarrayEventInteresting
+											.length(); z++) {
 										jsonAround = jarrayEventInteresting
 												.getJSONObject(z);
 										final EventData event = new EventData();
@@ -1523,7 +1193,7 @@ public class DiscoverActivity extends SherlockActivity {
 									}
 
 								} catch (Exception e) {
-									Log.e("aroundMe", e.toString() + " "
+									Log.e("interesting", e.toString() + " "
 											+ Integer.toString(z));
 								}
 							}
@@ -1854,6 +1524,7 @@ public class DiscoverActivity extends SherlockActivity {
 
 			@Override
 			protected void onPostExecute(Bitmap result) {
+				if(!isError){
 				if (!placesSorted) {
 					pageCollection.sortSearchByLikesAroundMeActivity();
 					placesSorted = true;
@@ -1874,392 +1545,19 @@ public class DiscoverActivity extends SherlockActivity {
 				}
 
 				adapter.initializeLike();
-				adapter.getUserLikesImages(0);
-
 				adapter.initializePlaces();
-				adapter.getPlacesImages(0);
-
 				adapter.initializeEvents();
+
 				adapter.aroundMePicture();
-
-				visibilityDialog(false);
-
-			}
-
-		};
-
-		task.execute();
-	}
-
-	public synchronized void getPlacesAroundMe() {
-		AsyncTask<Void, Integer, Bitmap> task = new AsyncTask<Void, Integer, Bitmap>() {
-
-			@Override
-			public Bitmap doInBackground(Void... params) {
-
-				Bundle bundle = new Bundle();
-
-				String az = "Select page_id,name,location,fan_count,checkins,phone,description,pic_square,pic,pic_large,categories from page where page_id in (select page_id from place where distance(latitude, longitude,"
-						+ "\""
-						+ Double.toString(latitude)
-						+ "\""
-						+ ","
-						+ "\""
-						+ Double.toString(longitude)
-						+ "\""
-						+ ")<"
-						+ 50000
-						+ " and checkin_count>0"
-
-						+ " limit "
-						+ 500
-						+ ")"
-
-						+ "AND (type=\"CONCERT VENUE\" or type=\"ARTS/ENTERTAINMENT/NIGHTLIFE\"  or type=\"CLUB\" or type = \"ATTRACTIONS/THINGS TO DO\" or type =\"BAR\" or type=\"MOVIE THEATER\" or type=\"BOOK STORE\" or type = \"EVENT PLANNING/EVENT SERVICES\" or type=\"RESTAURANT/CAFE\" or type = \"UNIVERSITY\")";
-
-				bundle = new Bundle();
-				bundle.putString("q", az);
-				// String result_events = mFacebook.request("fql", bundle);
-				Request.Callback callback = new Request.Callback() {
-					public void onCompleted(Response response) {
-						try {
-							json = response.getGraphObject()
-									.getInnerJSONObject();
-							jarrayPlaces = json.getJSONArray("data");
-							int i = 0;
-							while (i < jarrayPlaces.length()) {
-								json = jarrayPlaces.getJSONObject(i);
-
-								PageData page = new PageData();
-								jsonObject = json.getJSONObject("location");
-								page._ID = json.getString("page_id");
-								page.name = json.getString("name");
-								page.number_of_likes = json.getInt("fan_count");
-								page.checkins = json.getInt("checkins");
-								page.phone = json.getString("phone");
-								page.desc = json.getString("description");
-								page.picURL = new URL(
-										json.getString("pic_large"));
-
-								String az = "";
-								JSONArray jj = json.optJSONArray("categories");
-								for (int j = 0; j < jj.length(); j++) {
-									json = jj.getJSONObject(j);
-									if (az.length() == 0)
-										az += json.getString("name");
-									else
-										az += ", " + json.getString("name");
-								}
-
-								page.category = az;
-
-								az = "";
-								az += jsonObject.getString("street");
-								if (az.length() > 0)
-									az += ", ";
-								if (jsonObject.has("city")) {
-									az += jsonObject.getString("city");
-									if (az.length() > 0) {
-										az += ", ";
-									}
-								}
-								if (jsonObject.has("country"))
-									az += jsonObject.getString("country");
-
-								page.address = az;
-								boolean add = true;
-								for (PageData temp : pageCollection
-										.getPageAroundMe()) {
-									if (temp._ID.equals(page._ID)) {
-										add = false;
-										break;
-									}
-								}
-								if (add) {
-									pageCollection.getPageAroundMe().add(page);
-									Log.i("places", "added place");
-								} else {
-									Log.i("places", "already there. not added");
-								}
-
-								i++;
-
-							}
-
-						} catch (Exception e) {
-							toast("An error occurred");
-							Log.e("getplaces", e.toString());
-						}
-					}
-				};
-
-				Request request = new Request(Session.getActiveSession(),
-						"fql", bundle, HttpMethod.GET, callback);
-				request.executeAndWait();
-				return null;
-			}
-
-			@Override
-			protected void onPostExecute(Bitmap result) {
-				if (!placesSorted) {
-					pageCollection.sortSearchByLikesAroundMeActivity();
-					placesSorted = true;
-				}
-				adapter.initializePlaces();
-
 				adapter.getPlacesImages(0);
-
-			}
-
-		};
-
-		task.execute();
-	}
-
-	public synchronized void getPlacesILike() {
-		AsyncTask<Void, Integer, Bitmap> task = new AsyncTask<Void, Integer, Bitmap>() {
-
-			@Override
-			public Bitmap doInBackground(Void... params) {
-				if (pageCollection.getPageSearchListRelevant().isEmpty()) {
-					final Bundle bundle = new Bundle();
-
-					bundle.putString("fields", "likes");
-					Request.Callback callback = new Request.Callback() {
-						public void onCompleted(Response response) {
-							json = response.getGraphObject()
-									.getInnerJSONObject();
-						}
-					};
-					Request request = new Request(Session.getActiveSession(),
-							"me", bundle, HttpMethod.GET, callback);
-					request.executeAndWait();
-
-					try {
-						bundle.clear();
-
-						try {
-
-							if (!json.isNull("likes")) {
-								json = json.getJSONObject("likes");
-
-								JSONArray jDataArray = json
-										.getJSONArray("data");
-								String a = "SELECT pic_square,pic,pic_large,pic_cover,type,checkins,location,phone,fan_count,categories,description,name,page_id FROM page WHERE page_id IN ( SELECT page_id FROM page_fan WHERE uid=me())";
-
-								bundle.clear();
-								bundle.putString("q", a);
-							}
-						} catch (Exception e) {
-							//
-						}
-
-						Request.Callback callbackbig = new Request.Callback() {
-							public void onCompleted(Response response) {
-
-								try {
-									json = response.getGraphObject()
-											.getInnerJSONObject();
-
-									jarrayLikes = json.getJSONArray("data");
-									String a = "";
-									a += "{";
-									int l = jarrayLikes.length();
-									for (int i = 0; i < jarrayLikes.length(); i++) {
-										json = jarrayLikes.getJSONObject(i);
-										PageData currentpage = new PageData();
-										currentpage._ID = json
-												.getString("page_id");
-										String my = Integer.toString(i);
-										a += "\""
-												+ my
-												+ "\""
-												+ ":\"SELECT eid,name,creator,start_time,end_time,description,location,pic_big,update_time FROM event WHERE eid IN (SELECT eid from event_member WHERE uid = "
-												+ currentpage._ID + ")"
-
-												+ "\"";
-										if (i != l - 1) {
-											a += ",";
-										}
-									}
-									a += "}";
-
-									bundle.clear();
-									bundle.putString("q", a);
-
-								} catch (Exception e) {
-									//
-								}
-
-								Request.Callback callback2 = new Request.Callback() {
-									public void onCompleted(Response response) {
-
-										try {
-
-											json = response.getGraphObject()
-													.getInnerJSONObject();
-
-											JSONArray jDataArray = json
-													.getJSONArray("data");
-											ArrayList<String> s = new ArrayList<String>();
-											int q = 0;
-											while (q < jDataArray.length()) {
-
-												jsonObject = jDataArray
-														.getJSONObject(q);
-												JSONArray jArray = jsonObject
-														.getJSONArray("fql_result_set");
-												if (!jArray.isNull(0)) {
-													json = jArray
-															.getJSONObject(0);
-													s.add(json
-															.getString("creator"));
-												}
-
-												q++;
-											}
-
-											for (int i = 0; i < jarrayLikes
-													.length(); i++) {
-												json = jarrayLikes
-														.getJSONObject(i);
-												boolean add = false;
-
-												for (String r : s) {
-													if (pageCollection
-															.getPageByID(json
-																	.getString("page_id")) != null)
-														break;
-
-													String type = json
-															.getString("type");
-													if (r.equals(json
-															.getString("page_id"))
-															|| (type.equals("CONCERT VENUE")
-																	|| type.equals("ARTS/ENTERTAINMENT/NIGHTLIFE")
-																	|| type.equals("CLUB")
-																	|| type.equals("BAR")
-																	|| type.equals("ATTRACTIONS/THINGS TO DO")
-																	|| type.equals("MOVIE THEATER")
-																	|| type.equals("BOOK STORE")
-																	|| type.equals("EVENT PLANNING/EVENT SERVICES")
-																	|| type.equals("RESTAURANT/CAFE") || type
-																		.equals("UNIVERSITY"))) {
-														add = true;
-														break;
-													}
-												}
-
-												if (add) {
-													PageData page = new PageData();
-													jsonObject = json
-															.getJSONObject("location");
-													page._ID = json
-															.getString("page_id");
-													page.name = json
-															.getString("name");
-													page.number_of_likes = json
-															.getInt("fan_count");
-													page.checkins = json
-															.getInt("checkins");
-													page.phone = json
-															.getString("phone");
-													page.desc = json
-															.getString("description");
-													page.picURL = new URL(
-															json.getString("pic_large"));
-													if (!json
-															.isNull("pic_cover")) {
-														JSONObject js = json
-																.getJSONObject("pic_cover");
-														page.coverURL = new URL(
-																js.getString("source"));
-													}
-
-													String a = "";
-													JSONArray jj = json
-															.optJSONArray("categories");
-													for (int j = 0; j < jj
-															.length(); j++) {
-														json = jj
-																.getJSONObject(j);
-														if (a.length() == 0)
-															a += json
-																	.getString("name");
-														else
-															a += ", "
-																	+ json.getString("name");
-													}
-
-													page.category = a;
-
-													a = "";
-													a += jsonObject
-															.getString("street");
-													if (a.length() > 0)
-														a += ", ";
-													if (jsonObject.has("city")) {
-														a += jsonObject
-																.getString("city");
-														if (a.length() > 0) {
-															a += ", ";
-														}
-													}
-													if (jsonObject
-															.has("country"))
-														a += jsonObject
-																.getString("country");
-
-													page.address = a;
-													pageCollection
-															.getPageSearchListRelevant()
-															.add(page);
-
-												}
-											}
-
-										} catch (Exception e) {
-											//
-										}
-									}
-								};
-
-								Request request2 = new Request(
-										Session.getActiveSession(), "fql",
-										bundle, HttpMethod.GET, callback2);
-								request2.executeAndWait();
-
-							}
-						};
-
-						Request requestbig = new Request(
-								Session.getActiveSession(), "fql", bundle,
-								HttpMethod.GET, callbackbig);
-						requestbig.executeAndWait();
-
-					} catch (Exception e) {
-						Log.e("facebook_me", e.toString());
-
-						if (!isOnline()) {
-							toast("Internet connection lost. Try again later from the \"Suggested Pages\" menu");
-
-						} else {
-							toast("An unkwown error occurred. Please try again later from the menu \"Suggested Pages\".");
-						}
-					}
-
-				}
-
-				return null;
-			}
-
-			@Override
-			protected void onPostExecute(Bitmap result) {
-
-				adapter.initializeLike();
 				adapter.getUserLikesImages(0);
 
 				visibilityDialog(false);
+				
+				}else{
+					discover();
+				}
+
 			}
 
 		};
@@ -2299,6 +1597,7 @@ public class DiscoverActivity extends SherlockActivity {
 	public JSONArray getJArrayEventAround() {
 		return jarrayEventAround;
 	}
+
 	public JSONArray getJArrayEventInteresting() {
 		return jarrayEventInteresting;
 	}
@@ -2315,6 +1614,18 @@ public class DiscoverActivity extends SherlockActivity {
 			dialog.setVisibility(View.GONE);
 			viewPager.setVisibility(View.VISIBLE);
 		}
+	}
+
+	public boolean isDiscover() {
+		return isDiscover;
+	}
+
+	public void listAroundItemClick(int paramInt) {
+		adapter.listAroundItemClick(paramInt);
+	}
+
+	public int getPagerCurrentItem() {
+		return viewPager.getCurrentItem();
 	}
 
 }

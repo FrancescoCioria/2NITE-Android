@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/menu_info"
-        android:icon="@drawable/icon_action_about"
+        android:icon="@drawable/ic_action_icon_info"
         android:showAsAction="always"
         android:title="About DISCOVER"/>
 

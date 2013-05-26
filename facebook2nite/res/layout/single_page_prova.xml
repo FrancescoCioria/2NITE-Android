@@ -70,7 +70,8 @@
 
                 <View
                     android:layout_width="fill_parent"
-                    android:layout_height="110dp"
+                    android:layout_height="80dp"
+                    android:layout_alignBottom="@+id/imageViewEventCover"
                     android:background="@drawable/gradient_shadow" />
 
                 <LinearLayout
@@ -102,6 +103,8 @@
                         android:textColor="@android:color/background_light"
                         android:textSize="12sp"
                          />
+                    
+                    
                 </LinearLayout>
             </RelativeLayout>
 
@@ -408,6 +411,8 @@ DEUM: I Deum suonano insieme dal 2009, inizialmente come duo e successivamente i
             android:textColor="@color/dark_gray"
             android:textSize="14sp" />
     </LinearLayout>
+    
+    
 
     <com.google.ads.AdView
         android:id="@+id/adView35"

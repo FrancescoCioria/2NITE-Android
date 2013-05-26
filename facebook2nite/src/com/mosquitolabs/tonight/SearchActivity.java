@@ -81,7 +81,7 @@ public class SearchActivity extends SherlockActivity {
 	private Preferences preferences = Preferences.getInstance();
 	private ProgressBar progressSearch;
 	private boolean isFirstTime = false;
-	private boolean isInsidePreview = false;
+	//private boolean isInsidePreview = false;
 	private TextView textNoResult;
 	private com.actionbarsherlock.app.ActionBar actionbar;
 	private Button tab1;
@@ -518,13 +518,7 @@ public class SearchActivity extends SherlockActivity {
 
 	@Override
 	public void onBackPressed() {
-		if (isInsidePreview) {
-
-			tab2.setVisibility(View.VISIBLE);
-			tab1.setVisibility(View.VISIBLE);
-			tab2.performClick();
-			isInsidePreview = false;
-		} else {
+		
 			if (!pageCollection.getModifiedPageList().isEmpty()) {
 				pageCollection.restoreSelectedPageList();
 				preferences.setisModifiedPageListToClear(false);
@@ -533,7 +527,7 @@ public class SearchActivity extends SherlockActivity {
 			eventCollection.restoreEventList();
 			// facebookeventsActivity.read();
 			super.onBackPressed();
-		}
+		
 
 	}
 

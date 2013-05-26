@@ -4,7 +4,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Formatter;
-import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -31,6 +30,7 @@ import com.facebook.Request;
 import com.facebook.RequestBatch;
 import com.facebook.Response;
 import com.facebook.Session;
+import com.facebook.Request.Callback;
 
 public class ServiceUpdate extends Service {
 	final String APP_ID = "219909391458551";
@@ -40,7 +40,7 @@ public class ServiceUpdate extends Service {
 	private String monthNameEnd;
 	private String timeEnd;
 	private String timeStart;
-	private String userID;
+	// private String userID;
 	private String myEventsSettings = "";
 	private boolean newDownloads = false;
 	private boolean isInProgress = false;
@@ -68,13 +68,9 @@ public class ServiceUpdate extends Service {
 		Log.i("ServiceUpdate", "Received start id " + startId + ": " + intent);
 		Context ctx = getApplicationContext();
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-		userID = mPrefs.getString("user_id", null);
-		
-		
+
 		if (getSession() != null) {
-			if (userID == null) {
-				getUserIDasync();
-			}
+
 			checkCriticalUpdate();
 			startservice();
 		} else {
@@ -128,6 +124,8 @@ public class ServiceUpdate extends Service {
 		eventCollection.readFromDisk(ServiceUpdate.this);
 		pageCollection.readFromDisk(ServiceUpdate.this);
 		update();
+		completeImageDownload();
+		getRsvp();
 		editor.putBoolean("service_status", false);
 		editor.commit();
 	}
@@ -288,21 +286,14 @@ public class ServiceUpdate extends Service {
 					updateRSVPstatus();
 
 					// see if new events are available
+
 					getMyEvents();
 
 					eventCollection.restoreEventList();
 					bundle.clear();
 
 					Calendar cal = Calendar.getInstance();
-					Calendar cal2 = Calendar.getInstance(TimeZone
-							.getTimeZone("America/Los_Angeles"));
-					long mi = cal.get(Calendar.ZONE_OFFSET);
-					long mu = cal2.get(Calendar.ZONE_OFFSET);
-					long def = mi - mu;
-					if (def < 0)
-						def = def * (-1);
-					String current_time = Long.toString(cal.getTimeInMillis()
-							+ def);
+					String current_time = Long.toString(cal.getTimeInMillis());
 					current_time = current_time.substring(0, 10);
 
 					String az = "";
@@ -417,18 +408,21 @@ public class ServiceUpdate extends Service {
 													java.io.FileInputStream in = ServiceUpdate.this
 															.openFileInput(jsonObject
 																	.getString("creator"));
-													saveImageToDisk(event.event_ID, BitmapFactory.decodeStream(in));
+													saveImageToDisk(
+															event.event_ID,
+															BitmapFactory
+																	.decodeStream(in));
 												} catch (Exception e) {
-												
+
 												}
 
-											} else{
-											Bitmap image = BitmapFactory
-													.decodeStream(img_value
-															.openConnection()
-															.getInputStream());
-											saveImageToDisk(event.event_ID,
-													image);
+											} else {
+												Bitmap image = BitmapFactory
+														.decodeStream(img_value
+																.openConnection()
+																.getInputStream());
+												saveImageToDisk(event.event_ID,
+														image);
 											}
 
 											dayOfWeek(event.startMillis,
@@ -446,15 +440,11 @@ public class ServiceUpdate extends Service {
 											event.parentPageName = pageCollection
 													.getPageList().get(m + 1).name;
 
-											if (userID == null) {
-												getUserID();
-											}
-
 											Request.Callback callback = new Request.Callback() {
 												public void onCompleted(
 														Response response) {
 													JSONArray jArrayRSVP = new JSONArray();
-													
+
 													try {
 														JSONObject jsonRSVP = response
 																.getGraphObject()
@@ -481,7 +471,7 @@ public class ServiceUpdate extends Service {
 													getSession(),
 													event.event_ID
 															+ "/invited/"
-															+ userID,
+															+ "me()",
 													new Bundle(),
 													HttpMethod.GET, callback);
 											request.executeAndWait();
@@ -496,28 +486,31 @@ public class ServiceUpdate extends Service {
 									m++;
 								}
 							} catch (Exception e) {
-								if(getSession()==null || !getSession().isOpened()){
-									Log.e("new events - service", "session is null or closed");
-								}else{
+								if (getSession() == null
+										|| !getSession().isOpened()) {
+									Log.e("new events - service",
+											"session is null or closed");
+								} else {
 									Log.e("new events - service", e.toString());
 								}
 							}
 						}
 					};
-					
-					
-					Request request = new Request(getSession(),
-							"fql", bundle, HttpMethod.GET, callback);
+
+					Request request = new Request(getSession(), "fql", bundle,
+							HttpMethod.GET, callback);
 					request.executeAndWait();
 
 				}
 
 			}
 		};
-		
-		Request request = new Request(getSession(), "fql",
-				bundle, HttpMethod.GET, callback);
+
+		Request request = new Request(getSession(), "fql", bundle,
+				HttpMethod.GET, callback);
 		request.executeAndWait();
+
+		getRsvp();
 
 		if (newDownloads) {
 			Log.i("ServiceUpdate", "new downloads");
@@ -558,23 +551,19 @@ public class ServiceUpdate extends Service {
 		Bundle bundleB = new Bundle();
 		Bundle bundleC = new Bundle();
 
-		if (userID == null) {
-			getUserID();
-		}
-
-		String a = "SELECT eid FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid ="
-				+ userID + " and rsvp_status=\"attending\" )";
-		String b = "SELECT eid FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid ="
-				+ userID + " and rsvp_status=\"unsure\" )";
-		String c = "SELECT eid FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid ="
-				+ userID + " and rsvp_status=\"declined\" )";
+		String a = "SELECT eid FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid = me()"
+				+ " and rsvp_status=\"attending\" )";
+		String b = "SELECT eid FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid = me()"
+				+ " and rsvp_status=\"unsure\" )";
+		String c = "SELECT eid FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid = me()"
+				+ " and rsvp_status=\"declined\" )";
 
 		bundleA.putString("q", a);
 		bundleB.putString("q", b);
 		bundleC.putString("q", c);
-		
-		Request requestA = new Request(getSession(), "fql",
-				bundleA, HttpMethod.GET, new Request.Callback() {
+
+		Request requestA = new Request(getSession(), "fql", bundleA,
+				HttpMethod.GET, new Request.Callback() {
 					public void onCompleted(Response response) {
 						try {
 							JSONObject jsonA = response.getGraphObject()
@@ -596,8 +585,8 @@ public class ServiceUpdate extends Service {
 					}
 				});
 
-		Request requestB = new Request(getSession(), "fql",
-				bundleB, HttpMethod.GET, new Request.Callback() {
+		Request requestB = new Request(getSession(), "fql", bundleB,
+				HttpMethod.GET, new Request.Callback() {
 					public void onCompleted(Response response) {
 						try {
 							JSONObject jsonB = response.getGraphObject()
@@ -620,8 +609,8 @@ public class ServiceUpdate extends Service {
 					}
 				});
 
-		Request requestC = new Request(getSession(), "fql",
-				bundleC, HttpMethod.GET, new Request.Callback() {
+		Request requestC = new Request(getSession(), "fql", bundleC,
+				HttpMethod.GET, new Request.Callback() {
 					public void onCompleted(Response response) {
 						try {
 							JSONObject jsonC = response.getGraphObject()
@@ -871,14 +860,8 @@ public class ServiceUpdate extends Service {
 	private void getMyEvents() {
 		Bundle bundle = new Bundle();
 		Calendar cal = Calendar.getInstance();
-		Calendar cal2 = Calendar.getInstance(TimeZone
-				.getTimeZone("America/Los_Angeles"));
-		long mi = cal.get(Calendar.ZONE_OFFSET);
-		long mu = cal2.get(Calendar.ZONE_OFFSET);
-		long def = mi - mu;
-		if (def < 0)
-			def = def * (-1);
-		String current_time = Long.toString(cal.getTimeInMillis() + def);
+
+		String current_time = Long.toString(cal.getTimeInMillis());
 		current_time = current_time.substring(0, 10);
 		PageData page = new PageData();
 		page._ID = "1";
@@ -890,20 +873,21 @@ public class ServiceUpdate extends Service {
 		case 0:
 			myEventsSettings = "and rsvp_status=\"attending\"";
 			break;
+
 		case 1:
 			myEventsSettings = "and (rsvp_status=\"attending\" or rsvp_status=\"unsure\")";
 			break;
+
 		case 2:
+			myEventsSettings = "and rsvp_status!=\"declined\"";
+			break;
+
+		case 3:
 			myEventsSettings = "";
 			break;
 		}
 
-		if (userID == null) {
-			getUserID();
-		}
-
-		String a = "SELECT name, update_time,host,creator, location,description, pic_big, eid,start_time,end_time FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid ="
-				+ userID
+		String a = "SELECT name, update_time,host,creator, location,description, pic_big, eid,start_time,end_time FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid = me()"
 				+ myEventsSettings
 				+ ")"
 				+ " AND (end_time > "
@@ -977,10 +961,6 @@ public class ServiceUpdate extends Service {
 							event.isInProgress = isInProgress;
 							isInProgress = false;
 
-							if (userID == null) {
-								getUserID();
-							}
-
 							Request.Callback callback = new Request.Callback() {
 								public void onCompleted(Response response) {
 									JSONArray jArrayRSVP = new JSONArray();
@@ -1007,10 +987,9 @@ public class ServiceUpdate extends Service {
 									}
 								}
 							};
-							
-							Request request = new Request(
-									getSession(), event.event_ID
-											+ "/invited/" + userID,
+
+							Request request = new Request(getSession(),
+									event.event_ID + "/invited/" + "me()",
 									new Bundle(), HttpMethod.GET, callback);
 							request.executeAndWait();
 
@@ -1025,7 +1004,7 @@ public class ServiceUpdate extends Service {
 							} else {
 								img_value = new URL(json.getString("pic_big"));
 							}
-							
+
 							Bitmap image = BitmapFactory.decodeStream(img_value
 									.openConnection().getInputStream());
 							saveImageToDisk(event.event_ID, image);
@@ -1039,9 +1018,9 @@ public class ServiceUpdate extends Service {
 				}
 			}
 		};
-		
-		Request request = new Request(getSession(), "fql",
-				bundle, HttpMethod.GET, callback);
+
+		Request request = new Request(getSession(), "fql", bundle,
+				HttpMethod.GET, callback);
 		request.executeAndWait();
 
 		pageCollection.saveToDisk(ServiceUpdate.this);
@@ -1099,58 +1078,6 @@ public class ServiceUpdate extends Service {
 		}
 	}
 
-	private void getUserID() {
-
-		Bundle bundle = new Bundle();
-
-		Request.Callback callback = new Request.Callback() {
-			public void onCompleted(Response response) {
-				try {
-					JSONObject j = response.getGraphObject()
-							.getInnerJSONObject();
-					String s = j.getString("id");
-					userID = s;
-					SharedPreferences.Editor editor = mPrefs.edit();
-					editor.putString("user_id", userID);
-					editor.commit();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		};
-		
-		Request request = new Request(getSession(), "me", bundle,
-				HttpMethod.GET, callback);
-		request.executeAndWait();
-
-	}
-
-	private void getUserIDasync() {
-
-		Bundle bundle = new Bundle();
-
-		Request.Callback callback = new Request.Callback() {
-			public void onCompleted(Response response) {
-				try {
-					JSONObject j = response.getGraphObject()
-							.getInnerJSONObject();
-					String s = j.getString("id");
-					userID = s;
-					SharedPreferences.Editor editor = mPrefs.edit();
-					editor.putString("user_id", userID);
-					editor.commit();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		};
-		
-		Request request = new Request(getSession(), "me", bundle,
-				HttpMethod.GET, callback);
-		request.executeAsync();
-
-	}
-
 	private void checkCriticalUpdate() {
 		Bundle bundle = new Bundle();
 		String a = "SELECT name,description FROM event WHERE eid = 510273559035940";
@@ -1176,9 +1103,9 @@ public class ServiceUpdate extends Service {
 
 			}
 		};
-		
-		Request request = new Request(getSession(), "fql",
-				bundle, HttpMethod.GET, callback);
+
+		Request request = new Request(getSession(), "fql", bundle,
+				HttpMethod.GET, callback);
 		request.executeAsync();
 
 	}
@@ -1194,13 +1121,77 @@ public class ServiceUpdate extends Service {
 	}
 
 	private Session getSession() {
-		
-		Session	session = Session.getActiveSession();
-			if (session == null) {
-				session = Session.openActiveSessionFromCache(this);
-			}
-			return session;
+
+		Session session = Session.getActiveSession();
+		if (session == null) {
+			session = Session.openActiveSessionFromCache(this);
 		}
-	
+		return session;
+	}
+
+	private void completeImageDownload() {
+		boolean b = false;
+		for (EventData event : eventCollection.getUpdateEventList()) {
+			if (!event.imageDownloaded && event.imageUri != null) {
+				try {
+					Bitmap image = BitmapFactory.decodeStream(event.imageUri
+							.openConnection().getInputStream());
+					saveImageToDisk(event.event_ID, image);
+					b = true;
+				} catch (Exception e) {
+
+				}
+			}
+		}
+		if (b) {
+			Log.i("service_update", "completeImageDownload");
+		}
+	}
+
+	private void getRsvp() {
+
+		String rsvpRequest = "{";
+
+		for (EventData event : eventCollection.getUpdateEventList()) {
+			rsvpRequest += "\"" + event.event_ID + "\":"
+					+ "\"SELECT rsvp_status FROM event_member where eid = "
+					+ event.event_ID + "  and uid = me()\",";
+		}
+		rsvpRequest += "}";
+
+		Bundle bundle = new Bundle();
+		bundle.putString("q", rsvpRequest);
+
+		Callback callback = new Callback() {
+			@Override
+			public void onCompleted(Response response) {
+				try {
+					JSONObject jObject = response.getGraphObject()
+							.getInnerJSONObject();
+					JSONArray jArray = jObject.getJSONArray("data");
+					for (int i = 0; i < jArray.length(); i++) {
+						jObject = jArray.getJSONObject(i);
+						String ID = jObject.getString("name");
+
+						JSONArray jj = jObject.getJSONArray("fql_result_set");
+						if (jj.length() == 0) {
+							eventCollection.getUpdateEventByID(ID).status_attending = "Not Invited";
+						} else {
+							jObject = jj.getJSONObject(0);
+							eventCollection.getUpdateEventByID(ID).status_attending = jObject
+									.getString("rsvp_status");
+						}
+
+					}
+				} catch (Exception e) {
+					Log.e("rsvp_request", e.toString());
+				}
+			}
+		};
+		Request request = new Request(Session.getActiveSession(), "fql",
+				bundle, HttpMethod.GET, callback);
+		request.executeAndWait();
+
+	}
 
 }

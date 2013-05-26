@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -19,6 +20,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
@@ -36,6 +39,14 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 	private static final int PLACES_I_LIKE = 2;
 
 	private ListView listPlaces;
+
+	private int currentFirstVisibleItem = -1;
+	private RelativeLayout separatorFake;
+	private View now;
+	private View next;
+	private TextView dayFake;
+	private TextView dateFake;
+	private Rect rectList = new Rect();
 
 	private int userLikesInt = 0;
 	private int placesInt = 0;
@@ -108,6 +119,10 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			listViewAroundMe = (ListView) v.findViewById(R.id.listViewMain);
 			listViewAroundMe.setAdapter(eventArrayAdapter);
 			textEventEmpty = (TextView) v.findViewById(R.id.textViewEventEmpty);
+			separatorFake = (RelativeLayout) v
+					.findViewById(R.id.LayoutSeparatorFake);
+			dayFake = (TextView) v.findViewById(R.id.textViewSeparatorDay);
+			dateFake = (TextView) v.findViewById(R.id.textViewSeparatorMonth);
 
 			if (eventCollection.getAroundMeEventList().size() == 0) {
 				textEventEmpty.setVisibility(View.VISIBLE);
@@ -117,22 +132,116 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			textEventEmpty
 					.setText("Please wait..\nLooking for events nearby \nwithin three days.\nThis may take a while.");
 
-			listViewAroundMe
-					.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-						public void onItemClick(
-								AdapterView<?> paramAdapterView,
-								View paramView, int paramInt, long paramLong) {
-							Intent localIntent = new Intent(context,
-									DescriptionEventActivity.class);
-							localIntent.putExtra(
-									"currentPageID",
-									eventCollection.getAroundMeEventList().get(
-											paramInt).event_ID);
+			listViewAroundMe.setOnScrollListener(new OnScrollListener() {
 
-							context.startActivity(localIntent);
+				@Override
+				public void onScrollStateChanged(AbsListView view,
+						int scrollState) {
+
+				}
+
+				@Override
+				public void onScroll(AbsListView view, int firstVisibleItem,
+						int visibleItemCount, int totalItemCount) {
+
+					if (currentFirstVisibleItem != firstVisibleItem) {
+
+						now = listViewAroundMe.getChildAt(0);
+						next = listViewAroundMe.getChildAt(1);
+						if (now != null && next != null) {
+							currentFirstVisibleItem = firstVisibleItem;
+							Log.i("scroll", Integer.toString(firstVisibleItem));
+						}
+
+					}
+
+					boolean isSeparatorTopVisible = false;
+					boolean isSeparatorBottomVisible = false;
+					boolean isSeparatorEnabled = false;
+
+					if (rectList.isEmpty() && listViewAroundMe != null) {
+						listViewAroundMe.getHitRect(rectList);
+					}
+
+					if (now != null && next != null
+							&& context.getPagerCurrentItem() == EVENTS) {
+
+						View separatorBottom = now
+								.findViewById(R.id.LayoutSeparatorBottom);
+
+						if (now.findViewById(R.id.controlViewTop)
+								.getLocalVisibleRect(rectList)) {
+							isSeparatorTopVisible = true;
+						}
+						if (now.findViewById(R.id.controlViewBottom)
+								.getLocalVisibleRect(rectList)) {
+							isSeparatorBottomVisible = true;
+						}
+
+						isSeparatorEnabled = next.findViewById(
+								R.id.LayoutSeparatorTop).isEnabled();
+
+						boolean isSeparatorFakeVisible = separatorFake
+								.isShown();
+
+						if (firstVisibleItem == 0
+								&& isSeparatorTopVisible
+								&& (isSeparatorFakeVisible || separatorBottom
+										.isShown())) {
+							separatorFake.setVisibility(View.GONE);
+							separatorBottom.setVisibility(View.GONE);
+						} else {
+							if ((!isSeparatorFakeVisible || separatorBottom
+									.isShown())
+									&& !isSeparatorTopVisible
+									&& isSeparatorBottomVisible) {
+								if (!eventCollection.getAroundMeEventList().get(
+										listViewAroundMe
+												.getFirstVisiblePosition()).isInProgress) {
+									dayFake.setText(eventCollection
+											.getAroundMeEventList()
+											.get(listViewAroundMe
+													.getFirstVisiblePosition()).dayStart);
+									dateFake.setText(eventCollection
+											.getAroundMeEventList()
+											.get(listViewAroundMe
+													.getFirstVisiblePosition()).dateStart);
+								} else {
+									dayFake.setText("Right Now");
+									dateFake.setText("");
+								}
+
+								separatorFake.setVisibility(View.VISIBLE);
+								separatorBottom.setVisibility(View.GONE);
+							}
+
+							if ((isSeparatorFakeVisible || !separatorBottom
+									.isShown())
+									&& isSeparatorEnabled
+									&& !isSeparatorTopVisible
+									&& !isSeparatorBottomVisible) {
+								separatorFake.setVisibility(View.GONE);
+								separatorBottom.setVisibility(View.VISIBLE);
+							}
 
 						}
-					});
+					}
+				}
+			});
+
+			/*
+			 * listViewAroundMe .setOnItemClickListener(new
+			 * AdapterView.OnItemClickListener() { public void onItemClick(
+			 * AdapterView<?> paramAdapterView, View paramView, int paramInt,
+			 * long paramLong) { Intent localIntent = new Intent(context,
+			 * DescriptionEventActivity.class); localIntent.putExtra(
+			 * "currentPageID", eventCollection.getAroundMeEventList().get(
+			 * paramInt).event_ID);
+			 * 
+			 * context.startActivity(localIntent);
+			 * 
+			 * } });
+			 */
 
 			context.getLocation();
 
@@ -228,7 +337,6 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 
 			if (isFirstTimeLike) {
 				isFirstTimeLike = false;
-				context.getPlacesILike();
 			}
 			break;
 
@@ -272,7 +380,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 					}
 
 				} catch (Exception e) {
-					Log.e("image_userlike", e.toString());
+					Log.e("around_picture", e.toString());
 				}
 
 				placesInt++;
@@ -282,21 +390,22 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			@Override
 			public void onPostExecute(Integer i) {
 
-				{
-					if (listPlaces.getFirstVisiblePosition() <= i
-							&& i <= listPlaces.getLastVisiblePosition()) {
-						View v = listPlaces.getChildAt(i
-								- listPlaces.getFirstVisiblePosition());
-						ImageView image = (ImageView) v
-								.findViewById(R.id.imageViewPage);
-						if (pageCollection.getPageAroundMe().size() > i) {
-							image.setImageBitmap(context
-									.readImageFromDisk(pageCollection
-											.getPageAroundMe().get(i)._ID));
-						}
+				if (listPlaces != null
+						&& listPlaces.getFirstVisiblePosition() <= i
+						&& i <= listPlaces.getLastVisiblePosition()) {
+					View v = listPlaces.getChildAt(i
+							- listPlaces.getFirstVisiblePosition());
+					ImageView image = (ImageView) v
+							.findViewById(R.id.imageViewPage);
+					if (pageCollection.getPageAroundMe().size() > i) {
+						image.setImageBitmap(context
+								.readImageFromDisk(pageCollection
+										.getPageAroundMe().get(i)._ID));
 					}
 				}
-				if (i < pageCollection.getPageAroundMe().size()) {
+
+				if (i < pageCollection.getPageAroundMe().size()
+						&& context.isDiscover()) {
 					getPlacesImages(placesInt);
 				}
 			}
@@ -345,7 +454,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 						Log.e("image_userlike", e.toString());
 					}
 				}
-				
+
 				return i;
 			}
 
@@ -353,24 +462,25 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			public void onPostExecute(Integer i) {
 				if (i < pageCollection.getPageSearchList().size()
 						&& listUserLike != null) {
-					{
-						if (listUserLike.getFirstVisiblePosition() <= i
-								&& i <= listUserLike.getLastVisiblePosition()) {
-							View v = listUserLike.getChildAt(i
-									- listUserLike.getFirstVisiblePosition());
-							ImageView image = (ImageView) v
-									.findViewById(R.id.imageViewPage);
-							image.setImageBitmap(context
-									.readImageFromDisk(pageCollection
-											.getPageSearchList().get(i)._ID));
-						}
-					}
-					userLikesInt++;
-					if (userLikesInt < pageCollection.getPageSearchList().size()) {
-						getUserLikesImages(userLikesInt);
+
+					if (listUserLike.getFirstVisiblePosition() <= i
+							&& i <= listUserLike.getLastVisiblePosition()) {
+						View v = listUserLike.getChildAt(i
+								- listUserLike.getFirstVisiblePosition());
+						ImageView image = (ImageView) v
+								.findViewById(R.id.imageViewPage);
+						image.setImageBitmap(context
+								.readImageFromDisk(pageCollection
+										.getPageSearchList().get(i)._ID));
 					}
 				}
+				userLikesInt++;
+				if (userLikesInt < pageCollection.getPageSearchList().size()
+						&& context.isDiscover()) {
+					getUserLikesImages(userLikesInt);
+				}
 			}
+
 		};
 		task.execute();
 	}
@@ -456,7 +566,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 
 				aroundMePictures++;
 				if (aroundMePictures < eventCollection.getAroundMeEventList()
-						.size()) {
+						.size() && context.isDiscover()) {
 					aroundMePicture();
 				}
 
@@ -754,6 +864,14 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 
 		Toast.makeText(context, paramString, Toast.LENGTH_SHORT).show();
 
+	}
+
+	public void listAroundItemClick(int paramInt) {
+		Intent localIntent = new Intent(context, DescriptionEventActivity.class);
+		localIntent.putExtra("currentPageID", eventCollection
+				.getAroundMeEventList().get(paramInt).event_ID);
+
+		context.startActivity(localIntent);
 	}
 
 }

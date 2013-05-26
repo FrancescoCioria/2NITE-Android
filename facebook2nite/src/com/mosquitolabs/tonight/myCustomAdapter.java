@@ -3,15 +3,13 @@ package com.mosquitolabs.tonight;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
-import android.util.DisplayMetrics;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
@@ -26,13 +24,18 @@ public class myCustomAdapter extends BaseAdapter {
 	Preferences preferences = Preferences.getInstance();
 
 	private LayoutInflater mInflater;
-	private Display display;
+	// private Display display;
 	private Activity context;
-
-	private Bitmap standardImage = null;
 
 	int counter = 0;
 	int counterDownloading = 0;
+
+	private Bitmap standardImage = null;
+	private Bitmap standardImagePage = null;
+
+	private Bitmap triangleYellow = null;
+	private Bitmap triangleRed = null;
+	private Bitmap triangleGreen = null;
 
 	private FacebookeventsActivity parentActivity;
 
@@ -55,11 +58,12 @@ public class myCustomAdapter extends BaseAdapter {
 		return paramInt;
 	}
 
-	public View getView(int paramInt, View paramView, ViewGroup paramViewGroup) {
+	public View getView(final int paramInt, View paramView,
+			ViewGroup paramViewGroup) {
 		ViewHolder localViewHolder;
 
 		if (paramView == null) {
-			paramView = mInflater.inflate(R.layout.list_item, null);
+			paramView = mInflater.inflate(R.layout.list_item_temp2, null);
 			localViewHolder = new ViewHolder();
 			localViewHolder.text = (TextView) paramView
 					.findViewById(R.id.textViewText);
@@ -69,24 +73,37 @@ public class myCustomAdapter extends BaseAdapter {
 					.findViewById(R.id.textViewSeparatorMonth);
 			localViewHolder.separatorDay = (TextView) paramView
 					.findViewById(R.id.textViewSeparatorDay);
+			localViewHolder.separatorMonthBottom = (TextView) paramView
+					.findViewById(R.id.textViewSeparatorMonthBottom);
+			localViewHolder.separatorDayBottom = (TextView) paramView
+					.findViewById(R.id.textViewSeparatorDayBottom);
 			localViewHolder.page = (TextView) paramView
 					.findViewById(R.id.textViewPage);
-
-			localViewHolder.page = (TextView) paramView
-					.findViewById(R.id.textViewPage);
+			localViewHolder.attendingCount = (TextView) paramView
+					.findViewById(R.id.textViewAttending);
 			localViewHolder.image = (ImageView) paramView
 					.findViewById(R.id.imageViewList);
+			localViewHolder.image_page = (ImageView) paramView
+					.findViewById(R.id.imageViewParentPage);
 			localViewHolder.filterEvents = (TextView) paramView
 					.findViewById(R.id.spinnerFilter);
 			localViewHolder.filterPages = (TextView) paramView
 					.findViewById(R.id.spinnerPages);
+			localViewHolder.filterEventsLayout = (LinearLayout) paramView
+					.findViewById(R.id.spinnerFilterLayout);
+			localViewHolder.filterPagesLayout = (LinearLayout) paramView
+					.findViewById(R.id.spinnerPagesLayout);
 			localViewHolder.relativeFilter = (RelativeLayout) paramView
 					.findViewById(R.id.LayoutFilter);
-			localViewHolder.layout_separator = (LinearLayout) paramView
-					.findViewById(R.id.LayoutSeparator);
+			localViewHolder.selector = (View) paramView
+					.findViewById(R.id.listItemSelector);
+			localViewHolder.layout_separator_top = (RelativeLayout) paramView
+					.findViewById(R.id.LayoutSeparatorTop);
+			localViewHolder.layout_separator_bottom = (RelativeLayout) paramView
+					.findViewById(R.id.LayoutSeparatorBottom);
 			localViewHolder.triangle_attending = (ImageView) paramView
 					.findViewById(R.id.imageViewTriangleAttending);
-			localViewHolder.filterEvents
+			localViewHolder.filterEventsLayout
 					.setOnClickListener(new OnClickListener() {
 
 						@Override
@@ -94,7 +111,7 @@ public class myCustomAdapter extends BaseAdapter {
 							parentActivity.spinnerEvent();
 						}
 					});
-			localViewHolder.filterPages
+			localViewHolder.filterPagesLayout
 					.setOnClickListener(new OnClickListener() {
 
 						@Override
@@ -104,61 +121,44 @@ public class myCustomAdapter extends BaseAdapter {
 						}
 					});
 
-			localViewHolder.relativeFilter
-					.setOnClickListener(new OnClickListener() {
-
-						@Override
-						public void onClick(View v) {
-						}
-					});
-
 			standardImage = BitmapFactory.decodeResource(
-					context.getResources(), R.drawable.standard_image);
+					context.getResources(), R.drawable.icon_gray);
+			standardImagePage = BitmapFactory.decodeResource(
+					context.getResources(),  R.drawable.icon_gray);
+			triangleGreen = BitmapFactory.decodeResource(
+					context.getResources(), R.drawable.triangle_green);
+			triangleYellow = BitmapFactory.decodeResource(
+					context.getResources(), R.drawable.triangle_yellow);
+			triangleRed = BitmapFactory.decodeResource(context.getResources(),
+					R.drawable.triangle_red);
 
 			paramView.setTag(localViewHolder);
 		}
 
 		localViewHolder = (ViewHolder) paramView.getTag();
-		/*
-		 * if(paramInt%2!=0){
-		 * localViewHolder.relative.setBackgroundColor(Color.rgb(135, 206,
-		 * 250)); localViewHolder.page.setTextColor(Color.WHITE); }else{
-		 * localViewHolder.relative.setBackgroundColor(Color.WHITE);
-		 * localViewHolder.page.setTextColor(Color.GRAY); }
-		 */
+
+		localViewHolder.selector.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				parentActivity.listViewMainItemClick(paramInt);
+			}
+		});
+
+		localViewHolder.selector
+				.setOnLongClickListener(new OnLongClickListener() {
+
+					@Override
+					public boolean onLongClick(View v) {
+						parentActivity.listViewMainItemLongClick(paramInt);
+						return true;
+					}
+				});
 
 		final EventData event = eventCollection.getEventList().get(paramInt);
 
-		display = context.getWindowManager().getDefaultDisplay();
-
-		localViewHolder.logo = (ImageView) paramView
-				.findViewById(R.id.imageViewLogoList);
-
-		DisplayMetrics displaymetrics = new DisplayMetrics();
-		parentActivity.getWindowManager().getDefaultDisplay()
-				.getMetrics(displaymetrics);
-		int wwidth = displaymetrics.widthPixels;
-		float dp = 0;
-		dp = wwidth - (145 * displaymetrics.density);
-
 		String name = event.name;
 		localViewHolder.text.setText(name);
-
-		/*
-		 * int i = event.name.length() - 1;
-		 * 
-		 * float currentTextWidth =
-		 * localViewHolder.text.getPaint().measureText(name); while
-		 * (dp<=currentTextWidth && i>=1) { name = event.name.substring(0, i) +
-		 * "..."; i--; currentTextWidth =
-		 * localViewHolder.text.getPaint().measureText(name); }
-		 * 
-		 * String lastChar = name.substring(name.length()-4,name.length()-3);
-		 * if(lastChar.equals(" ")){ name = name.substring(0,
-		 * name.length()-4)+"..."; }
-		 * 
-		 * localViewHolder.text.setText(name);
-		 */
 
 		if (event.desc.length() > 0) {
 			String desc = event.desc.replaceAll("(?m)^[ \t]*\r?\n", "");
@@ -174,6 +174,7 @@ public class myCustomAdapter extends BaseAdapter {
 		}
 
 		localViewHolder.image.setImageBitmap(standardImage);
+		localViewHolder.image_page.setImageBitmap(standardImagePage);
 
 		if (counter <= 3 || parentActivity.isDownloadingImages()) {
 			if (parentActivity.isDownloadingImages() && counterDownloading == 0) {
@@ -181,6 +182,7 @@ public class myCustomAdapter extends BaseAdapter {
 				counterDownloading++;
 			}
 			Bitmap image = null;
+			Bitmap imagePage = null;
 
 			try {
 				java.io.FileInputStream in = context
@@ -190,24 +192,20 @@ public class myCustomAdapter extends BaseAdapter {
 					localViewHolder.image.setImageBitmap(image);
 				}
 			} catch (Exception e) {
-				// TODO: handle exception
 			}
 
-			if (image == null) {
-				try {
-					if(!event.parentPage_ID.equals("1")){
+			try {
+				if (!event.parentPage_ID.equals("1")) {
 					java.io.FileInputStream in = context
 							.openFileInput(event.parentPage_ID);
-					image = BitmapFactory.decodeStream(in);
-					}else{
-						image = BitmapFactory.decodeResource(context.getResources(), R.drawable.icon_other_events);
-					}
-					if (image != null) {
-						localViewHolder.image.setImageBitmap(image);
-					}
-				} catch (Exception e) {
-					
+					imagePage = BitmapFactory.decodeStream(in);
+					localViewHolder.image_page.setImageBitmap(imagePage);
+				}else{
+					localViewHolder.image_page.setImageBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.icon_other_events));
 				}
+
+			} catch (Exception e) {
+
 			}
 
 			counter++;
@@ -219,29 +217,6 @@ public class myCustomAdapter extends BaseAdapter {
 			parentActivity.showImageEventList(paramInt);
 		}
 
-		/*
-		 * 
-		 * 
-		 * try { java.io.FileInputStream in =
-		 * context.openFileInput(event.event_ID); Bitmap image =
-		 * BitmapFactory.decodeStream(in); if (image != null) {
-		 * localViewHolder.image.setImageBitmap(image); } } catch (Exception e)
-		 * { // TODO: handle exception }
-		 * 
-		 * 
-		 * 
-		 * 
-		 * 
-		 * if (!singlePageCollection.getImageList().isEmpty() &&
-		 * singlePageCollection.getImageByID(eventCollection
-		 * .getEventList().get(paramInt).event_ID) != null) {
-		 * localViewHolder.image .setImageBitmap(singlePageCollection
-		 * .getImageByID(eventCollection.getEventList().get(
-		 * paramInt).event_ID).image);
-		 * 
-		 * }
-		 */
-
 		boolean previousEventIsInProgress = false;
 		boolean currentEventIsInProgress = false;
 		String previousEventDay = "";
@@ -252,25 +227,6 @@ public class myCustomAdapter extends BaseAdapter {
 		}
 		currentEventIsInProgress = event.isInProgress;
 		String currentEventDay = event.dateStart;
-		/*
-		 * Calendar cal = Calendar.getInstance(); Formatter form = new
-		 * Formatter(); form.format("%d-%02d-%02dT%02d:%02d:00",
-		 * cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1,
-		 * cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.HOUR_OF_DAY),
-		 * cal.get(Calendar.MINUTE)); String current_time = form.toString();
-		 * 
-		 * String previousEventDay = ""; String currentEventDay =
-		 * eventCollection.getEventList().get(paramInt).startString
-		 * .substring(0, 10); if
-		 * (eventCollection.getEventList().get(paramInt).startString
-		 * .compareTo(current_time) < 0) { currentEventIsInProgress = true; }
-		 * 
-		 * if (paramInt != 0) { previousEventDay =
-		 * eventCollection.getEventList().get(paramInt - 1).startString
-		 * .substring(0, 10); if (eventCollection.getEventList().get(paramInt -
-		 * 1).startString .compareTo(current_time) < 0) {
-		 * previousEventIsInProgress = true; } }
-		 */
 
 		if ((paramInt == 0)
 				|| (!previousEventDay.equals(currentEventDay) && !currentEventIsInProgress)
@@ -278,17 +234,6 @@ public class myCustomAdapter extends BaseAdapter {
 						&& previousEventIsInProgress && !currentEventIsInProgress)) {
 
 			if (currentEventIsInProgress) {
-				// localViewHolder.separatorDay.setBackgroundColor(Color.rgb(250,60,
-				// 60));
-				// -16401681 azzurro
-				localViewHolder.separatorMonth.setText("Now");
-				// localViewHolder.separatorMonth.setTextColor(Color.BLACK);
-				// localViewHolder.separatorDay.setTextColor(Color.BLACK);
-				//
-				// localViewHolder.logo.setVisibility(View.VISIBLE);
-				// localViewHolder.separatorMonth.setTextColor(Color.rgb(250,
-				// 60,
-				// 60));
 
 				Bitmap bmp = BitmapFactory.decodeResource(
 						context.getResources(), R.drawable.stripes_redd);
@@ -296,16 +241,12 @@ public class myCustomAdapter extends BaseAdapter {
 						context.getResources(), bmp);
 				background.setTileModeXY(Shader.TileMode.REPEAT,
 						Shader.TileMode.REPEAT);
-				localViewHolder.separatorDay.setBackgroundDrawable(background);
-				localViewHolder.separatorDay.setText("In Progress");
-				localViewHolder.separatorDay.setTextColor(Color.WHITE);
-			} else {
-				localViewHolder.logo.setVisibility(View.GONE);
+				// localViewHolder.separatorDay.setBackgroundDrawable(background);
+				localViewHolder.separatorMonth.setText("");
+				localViewHolder.separatorDay.setText("Right Now");
 
-				// localViewHolder.separatorDay.setBackgroundResource(R.color.dark_gray);
-				// (Color.rgb(251,148, 11)); // verde -16001681
-				// localViewHolder.separatorDay.setBackgroundColor(Color.rgb(235,
-				// 163, 91));
+				// localViewHolder.separatorDay.setTextColor(Color.WHITE);
+			} else {
 
 				Bitmap bmp = BitmapFactory.decodeResource(
 						context.getResources(), R.drawable.stripe_darkk);
@@ -313,18 +254,24 @@ public class myCustomAdapter extends BaseAdapter {
 						context.getResources(), bmp);
 				background.setTileModeXY(Shader.TileMode.REPEAT,
 						Shader.TileMode.REPEAT);
-				localViewHolder.separatorDay.setBackgroundDrawable(background);
+				// localViewHolder.separatorDay.setBackgroundDrawable(background);
 
 				localViewHolder.separatorMonth.setText(eventCollection
 						.getEventList().get(paramInt).dateStart);
 				localViewHolder.separatorDay.setText(eventCollection
 						.getEventList().get(paramInt).dayStart);
-				// localViewHolder.separatorDay.setTextColor(Color.DKGRAY);
-				localViewHolder.separatorDay.setTextColor(Color.WHITE);
+
+				// localViewHolder.separatorDay.setTextColor(Color.WHITE);
 			}
-			localViewHolder.layout_separator.setVisibility(View.VISIBLE);
+			localViewHolder.layout_separator_top.setVisibility(View.VISIBLE);
+			localViewHolder.layout_separator_top.setEnabled(true);
+
+			// localViewHolder.controlSeparator.setVisibility(View.VISIBLE);
 		} else {
-			localViewHolder.layout_separator.setVisibility(View.GONE);
+			localViewHolder.layout_separator_top.setVisibility(View.GONE);
+			localViewHolder.layout_separator_top.setEnabled(false);
+
+			// localViewHolder.controlSeparator.setVisibility(View.GONE);
 
 		}
 		if (preferences.getIsSelectedPage()) {
@@ -349,35 +296,17 @@ public class myCustomAdapter extends BaseAdapter {
 		if (parentActivity.filter.equals("not answered"))
 			localViewHolder.filterEvents.setText("Not Answered");
 
-		/*
-		 * if(paramInt%2==0)
-		 * localViewHolder.relative.setBackgroundResource(R.layout.gray_item);
-		 * else
-		 * localViewHolder.relative.setBackgroundResource(R.layout.gradient_item
-		 * );
-		 */
-		// localViewHolder.separatorMonth.setBackgroundColor(Color.WHITE);
-		// localViewHolder.separatorMonth.setTextColor(Color.BLACK);
 		String status = eventCollection.getEventList().get(paramInt).status_attending;
 		if (status.equals("attending")) {
-			BitmapDrawable triangle = new BitmapDrawable(
-					BitmapFactory.decodeResource(context.getResources(),
-							R.drawable.triangle_green));
-			localViewHolder.triangle_attending.setImageDrawable(triangle);
+			localViewHolder.triangle_attending.setImageBitmap(triangleGreen);
 			localViewHolder.triangle_attending.setVisibility(View.VISIBLE);
 		}
 		if (status.equals("unsure")) {
-			BitmapDrawable triangle = new BitmapDrawable(
-					BitmapFactory.decodeResource(context.getResources(),
-							R.drawable.triangle_yellow));
-			localViewHolder.triangle_attending.setImageDrawable(triangle);
+			localViewHolder.triangle_attending.setImageBitmap(triangleYellow);
 			localViewHolder.triangle_attending.setVisibility(View.VISIBLE);
 		}
 		if (status.equals("declined")) {
-			BitmapDrawable triangle = new BitmapDrawable(
-					BitmapFactory.decodeResource(context.getResources(),
-							R.drawable.triangle_red));
-			localViewHolder.triangle_attending.setImageDrawable(triangle);
+			localViewHolder.triangle_attending.setImageBitmap(triangleRed);
 			localViewHolder.triangle_attending.setVisibility(View.VISIBLE);
 		}
 		if (!status.equals("attending") && !status.equals("unsure")
@@ -392,18 +321,25 @@ public class myCustomAdapter extends BaseAdapter {
 			parentActivity.filter();
 		}
 
+		localViewHolder.layout_separator_bottom.setVisibility(View.GONE);
+
+		if (event.isInProgress) {
+			localViewHolder.separatorMonthBottom.setText("");
+			localViewHolder.separatorDayBottom.setText("Right Now");
+		} else {
+			localViewHolder.separatorMonthBottom.setText(event.dateStart);
+			localViewHolder.separatorDayBottom.setText(event.dayStart);
+		}
+
+		localViewHolder.attendingCount.setText("Going: "
+				+ Integer.toString(event.attending_count));
+
+		// localViewHolder.layout_separator.isShown()
+
+		// parentActivity.isFirstView(paramInt, paramView);
+
 		return paramView;
 
-	}
-
-	private boolean isPerfectLenght(TextView text, String newText) {
-		float textWidth = text.getPaint().measureText(newText);
-		float myTextWidth = text.getMeasuredWidth();
-		if (textWidth <= myTextWidth) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 	public void getImage(final View v, final int i) {
@@ -432,18 +368,25 @@ public class myCustomAdapter extends BaseAdapter {
 	}
 
 	static class ViewHolder {
-		LinearLayout layout_separator;
+		RelativeLayout layout_separator_top;
+		RelativeLayout layout_separator_bottom;
+		RelativeLayout relativeFilter;
 		TextView separatorMonth;
 		TextView separatorDay;
+		TextView separatorMonthBottom;
+		TextView separatorDayBottom;
 		TextView text;
 		TextView desc;
 		TextView page;
 		TextView filterPages;
+		TextView attendingCount;
+		LinearLayout filterPagesLayout;
 		TextView filterEvents;
+		LinearLayout filterEventsLayout;
 		ImageView image;
 		ImageView triangle_attending;
-		ImageView logo;
-		RelativeLayout relativeFilter;
+		ImageView image_page;
+		View selector;
 	}
 
 }
