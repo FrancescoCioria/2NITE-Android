@@ -14,13 +14,17 @@
     <color name="blue">#0B64D9</color>
     <color name="light_light_blue">#D0E1F7</color>
     <color name="light_gray">#E8EAED</color>
+    <color name="light_gray_alpha">#E6E8EAED</color>
     <color name="light_light_gray">#F7F7F7</color>
     <color name="light_light_gray_alpha">#E6F7F7F7</color>
+    <color name="white_alpha_soft">#3CFFFFFF</color>
+    <color name="white_alpha_strong">#78FFFFFF</color>
     <color name="android_gray">#ABABAB</color>
     <color name="orange_logo">#D97500</color>
     <color name="dark_dark_gray">#2E2B2C</color>
     <color name="dark_logo">#080808</color>
     <color name="sfondo">#E3E2E0</color>
+    <color name="sfondo_alpha">#E6E3E2E0</color>
     <color name="orange_shit">#EBA35B</color>
     <color name="orange_title">#FB940B</color>
     <color name="actionbar_gray">#DDDDDD</color>

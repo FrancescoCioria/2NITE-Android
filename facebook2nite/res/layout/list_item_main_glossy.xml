@@ -14,7 +14,7 @@
             android:id="@+id/LayoutFilter"
             android:layout_width="wrap_content"
             android:layout_height="35dp"
-            android:background="@color/sfondo"
+            android:background="@color/white_alpha_soft"
             android:orientation="vertical"
             android:visibility="visible" >
 
@@ -28,6 +28,7 @@
                     android:id="@+id/spinnerPagesLayout"
                     android:layout_width="match_parent"
                     android:layout_height="fill_parent"
+                    android:layout_centerInParent="true"
                     android:layout_weight="1"
                     android:background="@layout/imageview_selected"
                     android:orientation="horizontal" >
@@ -36,17 +37,19 @@
                         android:id="@+id/spinnerPages"
                         android:layout_width="fill_parent"
                         android:layout_height="fill_parent"
+                        android:layout_centerVertical="true"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:maxLines="1"
                         android:paddingLeft="5dp"
                         android:text="All Pages"
-                        android:textColor="@color/dark_gray" />
+                        android:textColor="@color/light_light_gray" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="5"
                         android:gravity="center"
@@ -56,6 +59,9 @@
                             android:id="@+id/imageViewTriangleSpinner2"
                             android:layout_width="8dp"
                             android:layout_height="8dp"
+                            android:layout_centerVertical="true"
+                            android:layout_marginTop="1dp"
+                            android:layout_toRightOf="@+id/textViewGrayLine345"
                             android:layout_weight="1"
                             android:src="@drawable/triangle_spinner" />
                     </LinearLayout>
@@ -65,6 +71,7 @@
                     android:id="@+id/spinnerFilterLayout"
                     android:layout_width="match_parent"
                     android:layout_height="fill_parent"
+                    android:layout_centerInParent="true"
                     android:layout_weight="1"
                     android:background="@layout/imageview_selected"
                     android:orientation="horizontal" >
@@ -73,17 +80,19 @@
                         android:id="@+id/spinnerFilter"
                         android:layout_width="fill_parent"
                         android:layout_height="fill_parent"
+                        android:layout_centerVertical="true"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:maxLines="1"
                         android:paddingLeft="5dp"
                         android:text="All Events"
-                        android:textColor="@color/dark_gray" />
+                        android:textColor="@color/light_light_gray" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_centerInParent="true"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="5"
                         android:gravity="center"
@@ -93,8 +102,10 @@
                             android:id="@+id/imageViewTriangleSpinner2"
                             android:layout_width="8dp"
                             android:layout_height="8dp"
+                            android:layout_centerVertical="true"
                             android:layout_marginRight="5dp"
                             android:layout_marginTop="1dp"
+                            android:layout_toRightOf="@+id/textViewGrayLine345"
                             android:layout_weight="1"
                             android:src="@drawable/triangle_spinner" />
                     </LinearLayout>
@@ -110,25 +121,19 @@
                 android:layout_marginBottom="3dp"
                 android:layout_marginTop="3dp"
                 android:background="@android:color/darker_gray" />
-
-            <View
-                android:id="@+id/bottomLineFilter"
-                android:layout_width="match_parent"
-                android:layout_height="0.1dp"
-                android:layout_alignParentBottom="true"
-                android:background="@android:color/darker_gray" />
         </RelativeLayout>
 
         <View
             android:id="@+id/controlViewTop"
             android:layout_width="match_parent"
-            android:layout_height="0.1dp" />
+            android:layout_height="0.1dp"
+            android:background="@color/white_alpha_strong" />
 
         <RelativeLayout
             android:id="@+id/LayoutSeparatorTop"
             android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:background="@color/sfondo"
+            android:background="@color/white_alpha_soft"
             android:orientation="horizontal"
             android:visibility="visible" >
 
@@ -171,10 +176,8 @@
             android:id="@+id/RealativeListEvent"
             android:layout_width="match_parent"
             android:layout_height="191dp"
-            android:background="@color/sfondo"
-            android:orientation="vertical"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp" >
+            android:background="@color/white_alpha_strong"
+            android:orientation="vertical" >
 
             <TextView
                 android:id="@+id/textGraySeparator"
@@ -192,6 +195,17 @@
                 android:layout_marginRight="7dp"
                 android:background="@drawable/gradient_shadow"
                 android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/imageViewTriangleAttending"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_alignParentLeft="true"
+                android:layout_alignTop="@+id/imageViewListLayout"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="0.5dp"
+                android:src="@drawable/triangle_red"
+                android:visibility="visible" />
 
             <View
                 android:id="@+id/controlViewBottom"
@@ -219,7 +233,6 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
                 android:layout_centerHorizontal="true"
-                android:background="@android:color/background_light"
                 android:orientation="vertical"
                 android:padding="0dp" >
 
@@ -229,11 +242,6 @@
                     android:layout_height="125dp"
                     android:scaleType="centerCrop"
                     android:src="@drawable/standard_image" />
-
-                <View
-                    android:layout_width="fill_parent"
-                    android:layout_height="0.1dp"
-                    android:background="@color/light_gray" />
 
                 <LinearLayout
                     android:layout_width="fill_parent"
@@ -253,7 +261,7 @@
                         android:maxLines="1"
                         android:orientation="vertical"
                         android:text="MOSTRA   @ ACROPOLIS"
-                        android:textColor="@color/dark_gray"
+                        android:textColor="@android:color/white"
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
@@ -266,7 +274,7 @@
                         android:maxLines="2"
                         android:orientation="vertical"
                         android:text="Vivir y estudiar en Valencia no es suficiente, hay que aprovechar al máximo esta oportunidad y conocer a fondo la ciudad: Nosotros te lo ponemos fácil! Vamos de paseo por el centro histórico para descubrir su origen y su historia durante 2 horas."
-                        android:textColor="@color/dark_gray"
+                        android:textColor="@android:color/white"
                         android:textSize="11sp"
                         android:typeface="sans"
                         android:visibility="visible" />
@@ -284,7 +292,7 @@
                             android:maxLines="1"
                             android:paddingRight="5dp"
                             android:text="Going: "
-                            android:textColor="@color/dark_gray"
+                            android:textColor="@android:color/white"
                             android:textSize="10sp"
                             android:textStyle="bold"
                             android:typeface="sans" />
@@ -298,8 +306,8 @@
                             android:gravity="right"
                             android:maxLines="1"
                             android:paddingLeft="20dp"
-                            android:text="Luogo magico"
-                            android:textColor="@color/dark_gray"
+                            android:text="Luogo"
+                            android:textColor="@android:color/white"
                             android:textSize="10sp"
                             android:textStyle="bold"
                             android:typeface="sans"
@@ -307,35 +315,24 @@
                     </RelativeLayout>
                 </LinearLayout>
             </LinearLayout>
-
-            <ImageView
-                android:id="@+id/imageViewTriangleAttending"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_alignParentLeft="true"
-                android:layout_alignTop="@+id/imageViewListLayout"
-                android:src="@drawable/triangle_red"
-                android:visibility="visible" />
         </RelativeLayout>
 
         <View
             android:id="@+id/bottomGray"
             android:layout_width="fill_parent"
             android:layout_height="10dp"
-            android:background="@color/sfondo"
+            android:background="@color/white_alpha_soft"
             android:visibility="visible" />
     </LinearLayout>
 
     <View
         android:id="@+id/listItemSelector"
         android:layout_width="fill_parent"
-        android:layout_height="191dp"
+        android:layout_height="190dp"
         android:layout_alignBottom="@+id/linearLayoutListItem"
         android:layout_marginBottom="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
         android:background="@layout/imageview_selected"
-        android:visibility="visible" />
+        android:visibility="gone" />
 
     <RelativeLayout
         android:id="@+id/LayoutSeparatorBottom"
@@ -343,7 +340,7 @@
         android:layout_height="40dp"
         android:layout_alignBottom="@+id/listItemSelector"
         android:layout_alignParentLeft="true"
-        android:background="@color/sfondo_alpha"
+        android:background="@color/light_gray_alpha"
         android:orientation="horizontal"
         android:paddingTop="5dp"
         android:visibility="gone" >

@@ -4,7 +4,7 @@
     android:id="@+id/relativeSinglePage"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_light_gray"
+    android:background="@color/sfondo"
     android:gravity="center_horizontal"
     android:stretchColumns="1" >
 
@@ -61,7 +61,7 @@
                 <ImageView
                     android:id="@+id/imageViewEventCover"
                     android:layout_width="fill_parent"
-                    android:layout_height="110dp"
+                    android:layout_height="130dp"
                     android:layout_centerHorizontal="true"
                     android:adjustViewBounds="true"
                     android:contentDescription="@android:drawable/alert_light_frame"
@@ -70,29 +70,28 @@
 
                 <View
                     android:layout_width="fill_parent"
-                    android:layout_height="80dp"
+                    android:layout_height="100dp"
                     android:layout_alignBottom="@+id/imageViewEventCover"
                     android:background="@drawable/gradient_shadow" />
 
                 <LinearLayout
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentBottom="true" 
-                    android:paddingLeft="10dp"
-                    android:paddingBottom="5dp"
+                    android:layout_alignParentBottom="true"
                     android:orientation="vertical"
-                    >
+                    android:paddingBottom="5dp"
+                    android:paddingLeft="10dp" >
 
                     <TextView
                         android:id="@+id/textViewNameSinglePage"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Event Name"
                         android:layout_marginRight="20dp"
-                        android:textColor="@android:color/background_light"
-                        android:textSize="16sp"
                         android:ellipsize="end"
                         android:maxLines="2"
+                        android:text="Event Name"
+                        android:textColor="@android:color/background_light"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -101,10 +100,7 @@
                         android:layout_height="wrap_content"
                         android:text="Going: 132"
                         android:textColor="@android:color/background_light"
-                        android:textSize="12sp"
-                         />
-                    
-                    
+                        android:textSize="12sp" />
                 </LinearLayout>
             </RelativeLayout>
 
@@ -285,7 +281,6 @@
                 android:id="@+id/textViewS"
                 android:layout_width="match_parent"
                 android:layout_height="10dp"
-                android:background="@color/light_light_gray"
                 android:textColor="@color/facebook_dark_blue"
                 android:textSize="12sp" />
 
@@ -294,13 +289,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
-                android:background="@color/android_gray"
                 android:orientation="vertical" >
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@color/light_light_gray"
                     android:orientation="vertical" >
 
                     <TextView
@@ -344,7 +337,6 @@ DEUM: I Deum suonano insieme dal 2009, inizialmente come duo e successivamente i
                 android:id="@+id/textViewS"
                 android:layout_width="match_parent"
                 android:layout_height="10dp"
-                android:background="@color/light_light_gray"
                 android:textColor="@color/facebook_dark_blue"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -411,8 +403,6 @@ DEUM: I Deum suonano insieme dal 2009, inizialmente come duo e successivamente i
             android:textColor="@color/dark_gray"
             android:textSize="14sp" />
     </LinearLayout>
-    
-    
 
     <com.google.ads.AdView
         android:id="@+id/adView35"
@@ -428,10 +418,10 @@ DEUM: I Deum suonano insieme dal 2009, inizialmente come duo e successivamente i
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/progressBarLayout"
-        android:background="@color/light_light_gray"
+        android:background="@color/sfondo"
         android:gravity="center"
         android:text="Select an event"
-        android:textColor="@color/android_gray"
+        android:textColor="@color/dark_gray"
         android:textSize="15sp"
         android:visibility="gone" />
 

@@ -41,7 +41,11 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 	private ListView listPlaces;
 
 	private int currentFirstVisibleItem = -1;
+
+	private RelativeLayout separatorFakeBig;
+	private RelativeLayout separatorFakeSmall;
 	private RelativeLayout separatorFake;
+
 	private View now;
 	private View next;
 	private TextView dayFake;
@@ -79,6 +83,9 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 	private boolean likesSorted = false;
 	private boolean aroundSorted = false;
 	private boolean isFirstTimeLike = true;
+
+	private final static int BIG = 0;
+	private final static int SMALL = 1;
 
 	private myCustomAdapterUserLikes customAdapterUserLikes;
 
@@ -119,10 +126,28 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			listViewAroundMe = (ListView) v.findViewById(R.id.listViewMain);
 			listViewAroundMe.setAdapter(eventArrayAdapter);
 			textEventEmpty = (TextView) v.findViewById(R.id.textViewEventEmpty);
-			separatorFake = (RelativeLayout) v
-					.findViewById(R.id.LayoutSeparatorFake);
-			dayFake = (TextView) v.findViewById(R.id.textViewSeparatorDay);
-			dateFake = (TextView) v.findViewById(R.id.textViewSeparatorMonth);
+
+			switch (context.getCurrentListStyle()) {
+			case BIG:
+				separatorFake = (RelativeLayout) v
+						.findViewById(R.id.LayoutSeparatorFakeBig);
+				dayFake = (TextView) v
+						.findViewById(R.id.textViewSeparatorDayBig);
+				dateFake = (TextView) v
+						.findViewById(R.id.textViewSeparatorMonthBig);
+
+				break;
+			case SMALL:
+				separatorFake = (RelativeLayout) v
+						.findViewById(R.id.LayoutSeparatorFakeSmall);
+				dayFake = (TextView) v
+						.findViewById(R.id.textViewSeparatorDaySmall);
+				dateFake = (TextView) v
+						.findViewById(R.id.textViewSeparatorMonthSmall);
+
+				break;
+
+			}
 
 			if (eventCollection.getAroundMeEventList().size() == 0) {
 				textEventEmpty.setVisibility(View.VISIBLE);
@@ -195,8 +220,8 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 									.isShown())
 									&& !isSeparatorTopVisible
 									&& isSeparatorBottomVisible) {
-								if (!eventCollection.getAroundMeEventList().get(
-										listViewAroundMe
+								if (!eventCollection.getAroundMeEventList()
+										.get(listViewAroundMe
 												.getFirstVisiblePosition()).isInProgress) {
 									dayFake.setText(eventCollection
 											.getAroundMeEventList()

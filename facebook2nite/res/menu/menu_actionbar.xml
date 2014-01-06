@@ -35,7 +35,7 @@
     <item
         android:id="@+id/menu_share"
         android:icon="@drawable/ic_menu_share"
-        android:showAsAction="always"
+        android:showAsAction="ifRoom"
         android:title="Share with friends"/>
     <!-- android:actionProviderClass="com_actionbarsherlock.widget.ShareActionProvider" -->
 

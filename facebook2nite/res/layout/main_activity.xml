@@ -22,7 +22,7 @@
             android:id="@+id/LayoutFilter"
             android:layout_width="wrap_content"
             android:layout_height="35dp"
-            android:background="@color/light_gray"
+            android:background="@color/sfondo"
             android:orientation="vertical"
             android:visibility="gone" >
 
@@ -36,7 +36,6 @@
                     android:id="@+id/spinnerPagesLayout"
                     android:layout_width="match_parent"
                     android:layout_height="fill_parent"
-                    android:layout_centerInParent="true"
                     android:layout_weight="1"
                     android:background="@layout/imageview_selected"
                     android:orientation="horizontal" >
@@ -45,19 +44,17 @@
                         android:id="@+id/spinnerPages"
                         android:layout_width="fill_parent"
                         android:layout_height="fill_parent"
-                        android:layout_centerVertical="true"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:maxLines="1"
                         android:paddingLeft="5dp"
                         android:text="All Pages"
-                        android:textColor="@color/dark_dark_gray" />
+                        android:textColor="@color/dark_gray" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="5"
                         android:gravity="center"
@@ -67,9 +64,7 @@
                             android:id="@+id/imageViewTriangleSpinner2"
                             android:layout_width="8dp"
                             android:layout_height="8dp"
-                            android:layout_centerVertical="true"
                             android:layout_marginTop="1dp"
-                            android:layout_toRightOf="@+id/textViewGrayLine345"
                             android:layout_weight="1"
                             android:src="@drawable/triangle_spinner" />
                     </LinearLayout>
@@ -79,7 +74,6 @@
                     android:id="@+id/spinnerFilterLayout"
                     android:layout_width="match_parent"
                     android:layout_height="fill_parent"
-                    android:layout_centerInParent="true"
                     android:layout_weight="1"
                     android:background="@layout/imageview_selected"
                     android:orientation="horizontal" >
@@ -88,19 +82,17 @@
                         android:id="@+id/spinnerFilter"
                         android:layout_width="fill_parent"
                         android:layout_height="fill_parent"
-                        android:layout_centerVertical="true"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
                         android:gravity="center"
                         android:maxLines="1"
                         android:paddingLeft="5dp"
                         android:text="All Events"
-                        android:textColor="@color/dark_dark_gray" />
+                        android:textColor="@color/dark_gray" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_centerInParent="true"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="5"
                         android:gravity="center"
@@ -110,10 +102,8 @@
                             android:id="@+id/imageViewTriangleSpinner2"
                             android:layout_width="8dp"
                             android:layout_height="8dp"
-                            android:layout_centerVertical="true"
                             android:layout_marginRight="5dp"
                             android:layout_marginTop="1dp"
-                            android:layout_toRightOf="@+id/textViewGrayLine345"
                             android:layout_weight="1"
                             android:src="@drawable/triangle_spinner" />
                     </LinearLayout>
@@ -129,27 +119,33 @@
                 android:layout_marginBottom="3dp"
                 android:layout_marginTop="3dp"
                 android:background="@android:color/darker_gray" />
+
+            <View
+                android:id="@+id/bottomLineFilter"
+                android:layout_width="match_parent"
+                android:layout_height="0.1dp"
+                android:layout_alignParentBottom="true"
+                android:background="@android:color/darker_gray" />
         </RelativeLayout>
 
         <TextView
             android:id="@+id/textViewEventEmpty"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/light_light_gray"
+            android:background="@color/sfondo"
             android:gravity="center"
             android:text="No incoming events"
-            android:textColor="@color/android_gray"
+            android:textColor="@color/dark_gray"
             android:textSize="15sp"
             android:visibility="gone" />
 
-        <ListView
+        <se.emilsjolander.stickylistheaders.StickyListHeadersListView
             android:id="@+id/listViewMain"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:divider="@color/light_light_gray"
             android:dividerHeight="0dp"
-            android:footerDividersEnabled="false" >
-        </ListView>
+            android:footerDividersEnabled="false" />
     </LinearLayout>
 
     <Button
@@ -164,22 +160,68 @@
         android:visibility="gone" />
 
     <RelativeLayout
-        android:id="@+id/LayoutSeparatorFake"
+        android:id="@+id/LayoutSeparatorFakeBig"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:background="@color/light_light_gray_alpha"
+        android:layout_marginRight="10dp"
+        android:background="@color/sfondo_alpha"
         android:orientation="horizontal"
         android:paddingTop="5dp"
         android:visibility="gone" >
 
         <TextView
-            android:id="@+id/textViewSeparatorDay"
+            android:id="@+id/textViewSeparatorDayBig"
+            android:layout_width="93dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:background="@color/red"
+            android:gravity="center"
+            android:paddingBottom="3dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingTop="3dp"
+            android:text="Wednesday"
+            android:textColor="@color/light_light_gray"
+            android:textSize="15sp"
+            android:textStyle="italic|bold" />
+
+        <TextView
+            android:id="@+id/textViewSeparatorMonthBig"
+            android:layout_width="65dp"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/textViewSeparatorDayBig"
+            android:background="@color/red"
+            android:gravity="center"
+            android:paddingBottom="3dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingTop="3dp"
+            android:text="Jul 11"
+            android:textColor="@color/light_light_gray"
+            android:textSize="15sp"
+            android:textStyle="italic|bold" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/LayoutSeparatorFakeSmall"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:background="@color/sfondo_alpha"
+        android:orientation="horizontal"
+        android:paddingTop="5dp"
+        android:visibility="gone" >
+
+        <TextView
+            android:id="@+id/textViewSeparatorDaySmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:gravity="left"
-            android:paddingLeft="7dp"
             android:paddingTop="10dp"
             android:text="Wednesday"
             android:textColor="@color/dark_gray"
@@ -187,13 +229,12 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/textViewSeparatorMonth"
+            android:id="@+id/textViewSeparatorMonthSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:gravity="right"
-            android:paddingRight="7dp"
             android:paddingTop="10dp"
             android:text="Jul 11"
             android:textColor="@color/dark_gray"

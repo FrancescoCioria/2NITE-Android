@@ -95,6 +95,7 @@ public class DiscoverActivity extends SherlockActivity {
 	private Session.StatusCallback statusCallback = new SessionStatusCallback();
 	private Session session;
 
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -102,6 +103,7 @@ public class DiscoverActivity extends SherlockActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.discover);
 		EasyTracker.getTracker().sendView();
+
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 
 		pageCollection.clearPageAroundMe();
@@ -695,8 +697,9 @@ public class DiscoverActivity extends SherlockActivity {
 			dayOfWeekStart = "Tomorrow";
 		}
 
-		if (startCal.get(Calendar.DAY_OF_YEAR) < currentCal
-				.get(Calendar.DAY_OF_YEAR)
+		if (startCal.get(Calendar.YEAR) < currentCal.get(Calendar.YEAR)
+				|| startCal.get(Calendar.DAY_OF_YEAR) < currentCal
+						.get(Calendar.DAY_OF_YEAR)
 				|| (startCal.get(Calendar.DAY_OF_YEAR) == currentCal
 						.get(Calendar.DAY_OF_YEAR) && (startCal
 						.get(Calendar.HOUR_OF_DAY)
@@ -1619,10 +1622,12 @@ public class DiscoverActivity extends SherlockActivity {
 	public int getPagerCurrentItem() {
 		return viewPager.getCurrentItem();
 	}
-	
-	public int getCurrentListStyle(){
+
+	public int getCurrentListStyle() {
 		int currentListStyle = mPrefs.getInt("listStyle", 0);
 		return currentListStyle;
 	}
+	
+	
 
 }

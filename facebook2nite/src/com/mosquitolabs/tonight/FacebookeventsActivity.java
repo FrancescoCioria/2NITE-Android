@@ -13,6 +13,8 @@ import java.util.TimeZone;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -20,7 +22,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.PackageInfo;
 import android.graphics.Bitmap;
@@ -99,7 +100,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private JSONArray jarrayLikes;
 	private JSONArray jarrayAround;
 
-	private ListView listViewMain;
+	private StickyListHeadersListView listViewMain;
+	// private ListView listViewMain;
 	private ListView listViewPage;
 
 	private Rect rectList = new Rect();
@@ -119,7 +121,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private final static int NO_DECLINED = 2;
 	private final static int ALL = 3;
 
-	private myCustomAdapter eventArrayAdapter;
+	private myCustomAdapterProve eventArrayAdapter;
 	private myCustomAdapterPage pageArrayAdapter;
 
 	// private String userID = "";
@@ -147,6 +149,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private TextView textAttending;
 	private TextView filterPages;
 	private TextView filterEvents;
+	private TextView dayFakeBig;
+	private TextView dateFakeBig;
+	private TextView dayFakeSmall;
+	private TextView dateFakeSmall;
 	private TextView dayFake;
 	private TextView dateFake;
 
@@ -216,7 +222,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private Bitmap mIcon1;
 	private ProgressBar progressWelcome;
 	private RelativeLayout progressLogin;
-	private RelativeLayout separatorFake;
+	private RelativeLayout separatorFake = null;
+	private RelativeLayout separatorFakeBig;
+	private RelativeLayout separatorFakeSmall;
 	private ArrayList<String> items = new ArrayList<String>();
 
 	private AdView adView;
@@ -243,7 +251,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	private static final int PAGES = 0;
 	private static final int EVENTS = 1;
 	private static final int DESCRIPTION = 2;
-	
+
 	private static final int BIG = 0;
 	private static final int SMALL = 1;
 
@@ -253,6 +261,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.welcome);
 		Settings.addLoggingBehavior(LoggingBehavior.INCLUDE_ACCESS_TOKENS);
+
+//		listViewMain.setDrawingListUnderStickyHeader(true);
+//		listViewMain.setAreHeadersSticky(true);
 
 		actionbar = getSupportActionBar();
 		actionbar.hide();
@@ -519,7 +530,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					actionbar.setBackgroundDrawable(background);
 					pageArrayAdapter = new myCustomAdapterPage(
 							FacebookeventsActivity.this);
-					eventArrayAdapter = new myCustomAdapter(
+					eventArrayAdapter = new myCustomAdapterProve(
 							FacebookeventsActivity.this,
 							FacebookeventsActivity.this);
 
@@ -618,8 +629,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		actionbar.show();
 
 		pageArrayAdapter = new myCustomAdapterPage(FacebookeventsActivity.this);
-		eventArrayAdapter = new myCustomAdapter(FacebookeventsActivity.this,
-				FacebookeventsActivity.this);
+		eventArrayAdapter = new myCustomAdapterProve(
+				FacebookeventsActivity.this, FacebookeventsActivity.this);
 
 		ViewPagerAdapter adapter = new ViewPagerAdapter(
 				FacebookeventsActivity.this);
@@ -1737,10 +1748,12 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		form.format("%02d", startCal.get(Calendar.MINUTE));
 		timeStart = Integer.toString(startCal.get(Calendar.HOUR_OF_DAY)) + ":"
 				+ form.toString();
+		form.close();
 		form = new Formatter();
 		form.format("%02d", endCal.get(Calendar.MINUTE));
 		timeEnd = Integer.toString(endCal.get(Calendar.HOUR_OF_DAY)) + ":"
 				+ form.toString();
+		form.close();
 		dayOfWeekStart = "vuoto";
 		dayOfWeekEnd = "vuoto";
 		monthNameStart = "";
@@ -1757,8 +1770,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			}
 		}
 		if (startCal.get(Calendar.YEAR) <= currentCal.get(Calendar.YEAR)) {
-			if (startCal.get(Calendar.DAY_OF_YEAR) < currentCal
-					.get(Calendar.DAY_OF_YEAR)
+			if (startCal.get(Calendar.YEAR) < currentCal.get(Calendar.YEAR)
+					|| startCal.get(Calendar.DAY_OF_YEAR) < currentCal
+							.get(Calendar.DAY_OF_YEAR)
 					|| (startCal.get(Calendar.DAY_OF_YEAR) == currentCal
 							.get(Calendar.DAY_OF_YEAR) && (startCal
 							.get(Calendar.HOUR_OF_DAY)
@@ -2040,6 +2054,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 													.getPageList().get(i));
 									selectedPage = i;
 
+									separatorFake.setVisibility(View.GONE);
+
 									read();
 
 									toast("\""
@@ -2093,44 +2109,23 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				}
 
 				v = inflater.inflate(R.layout.main_activity, null);
-				listViewMain = (ListView) v.findViewById(R.id.listViewMain);
+				listViewMain = (StickyListHeadersListView) v
+						.findViewById(R.id.listViewMain);
 				listViewMain.setAdapter(eventArrayAdapter);
 
-				separatorFake = (RelativeLayout) v
-						.findViewById(R.id.LayoutSeparatorFake);
-				dayFake = (TextView) v.findViewById(R.id.textViewSeparatorDay);
-				dateFake = (TextView) v
-						.findViewById(R.id.textViewSeparatorMonth);
+				separatorFakeBig = (RelativeLayout) v
+						.findViewById(R.id.LayoutSeparatorFakeBig);
+				dayFakeBig = (TextView) v
+						.findViewById(R.id.textViewSeparatorDayBig);
+				dateFakeBig = (TextView) v
+						.findViewById(R.id.textViewSeparatorMonthBig);
 
-				/*
-				 * listViewMain .setOnItemClickListener(new
-				 * ListView.OnItemClickListener() {
-				 * 
-				 * @Override public void onItemClick(AdapterView<?> a, View v,
-				 * int i, long l) { if (i <
-				 * eventCollection.getEventList().size()) {
-				 * preferences.setModifiedSinglePage(true);
-				 * 
-				 * currentPageID = eventCollection
-				 * .getEventList().get(i).event_ID; singlePage(i);
-				 * textPageEmpty.setVisibility(View.GONE);
-				 * pagerMain.setCurrentItem(DESCRIPTION);
-				 * scrollViewDescriptionPage .fullScroll(ScrollView.FOCUS_UP); }
-				 * else { toast("The event appears to no longer exist..", true);
-				 * }
-				 * 
-				 * } });
-				 * 
-				 * listViewMain .setOnItemLongClickListener(new
-				 * AdapterView.OnItemLongClickListener() { public boolean
-				 * onItemLongClick( AdapterView<?> paramAdapterView, View
-				 * paramView, int paramInt, long paramLong) {
-				 * 
-				 * onLongClickListViewMain(eventCollection
-				 * .getEventList().get(paramInt).event_ID);
-				 * 
-				 * return true; } });
-				 */
+				separatorFakeSmall = (RelativeLayout) v
+						.findViewById(R.id.LayoutSeparatorFakeSmall);
+				dayFakeSmall = (TextView) v
+						.findViewById(R.id.textViewSeparatorDaySmall);
+				dateFakeSmall = (TextView) v
+						.findViewById(R.id.textViewSeparatorMonthSmall);
 
 				textEventEmpty = (TextView) v
 						.findViewById(R.id.textViewEventEmpty);
@@ -2163,106 +2158,129 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					}
 				});
 
-				listViewMain.setOnScrollListener(new OnScrollListener() {
-
-					@Override
-					public void onScrollStateChanged(AbsListView view,
-							int scrollState) {
-						
-						
-
-					}
-
-					@Override
-					public void onScroll(AbsListView view,
-							int firstVisibleItem, int visibleItemCount,
-							int totalItemCount) {
-
-						if (currentFirstVisibleItem != firstVisibleItem) {
-
-							now = listViewMain.getChildAt(0);
-							next = listViewMain.getChildAt(1);
-							if (now != null && next != null) {
-								currentFirstVisibleItem = firstVisibleItem;
-								Log.i("scroll",
-										Integer.toString(firstVisibleItem));
-							}
-
-						}
-
-						boolean isSeparatorTopVisible = false;
-						boolean isSeparatorBottomVisible = false;
-						boolean isSeparatorEnabled = false;
-
-						if (rectList.isEmpty() && listViewMain != null) {
-							listViewMain.getHitRect(rectList);
-						}
-
-						if (now != null && next != null
-								&& pagerMain.getCurrentItem() == EVENTS) {
-
-							View separatorBottom = now
-									.findViewById(R.id.LayoutSeparatorBottom);
-
-							if (now.findViewById(R.id.controlViewTop)
-									.getLocalVisibleRect(rectList)) {
-								isSeparatorTopVisible = true;
-							}
-							if (now.findViewById(R.id.controlViewBottom)
-									.getLocalVisibleRect(rectList)) {
-								isSeparatorBottomVisible = true;
-							}
-
-							isSeparatorEnabled = next.findViewById(
-									R.id.LayoutSeparatorTop).isEnabled();
-
-							boolean isSeparatorFakeVisible = separatorFake
-									.isShown();
-
-							if (firstVisibleItem == 0
-									&& isSeparatorTopVisible
-									&& (isSeparatorFakeVisible || separatorBottom
-											.isShown())) {
-								separatorFake.setVisibility(View.GONE);
-								separatorBottom.setVisibility(View.GONE);
-							} else {
-								if ((!isSeparatorFakeVisible || separatorBottom
-										.isShown())
-										&& !isSeparatorTopVisible
-										&& isSeparatorBottomVisible) {
-									if (!eventCollection.getEventList().get(
-											listViewMain
-													.getFirstVisiblePosition()).isInProgress) {
-										dayFake.setText(eventCollection
-												.getEventList()
-												.get(listViewMain
-														.getFirstVisiblePosition()).dayStart);
-										dateFake.setText(eventCollection
-												.getEventList()
-												.get(listViewMain
-														.getFirstVisiblePosition()).dateStart);
-									} else {
-										dayFake.setText("Right Now");
-										dateFake.setText("");
-									}
-
-									separatorFake.setVisibility(View.VISIBLE);
-									separatorBottom.setVisibility(View.GONE);
-								}
-
-								if ((isSeparatorFakeVisible || !separatorBottom
-										.isShown())
-										&& isSeparatorEnabled
-										&& !isSeparatorTopVisible
-										&& !isSeparatorBottomVisible) {
-									separatorFake.setVisibility(View.GONE);
-									separatorBottom.setVisibility(View.VISIBLE);
-								}
-
-							}
-						}
-					}
-				});
+				// listViewMain.setOnScrollListener(new OnScrollListener() {
+				//
+				// @Override
+				// public void onScrollStateChanged(AbsListView view,
+				// int scrollState) {
+				// }
+				//
+				// @Override
+				// public void onScroll(AbsListView view,
+				// int firstVisibleItem, int visibleItemCount,
+				// int totalItemCount) {
+				// if (!eventCollection.getEventList().isEmpty()) {
+				// if (currentFirstVisibleItem != firstVisibleItem) {
+				//
+				// now = listViewMain.getChildAt(0);
+				// next = listViewMain.getChildAt(1);
+				// if (now != null && next != null) {
+				// currentFirstVisibleItem = firstVisibleItem;
+				//
+				// }
+				//
+				// }
+				//
+				// boolean isSeparatorTopVisible = false;
+				// boolean isSeparatorBottomVisible = false;
+				// boolean isSeparatorEnabled = false;
+				//
+				// if (rectList.isEmpty() && listViewMain != null) {
+				// listViewMain.getHitRect(rectList);
+				// }
+				//
+				// if (now != null && next != null
+				// && pagerMain.getCurrentItem() == EVENTS) {
+				//
+				// if (separatorFake == null) {
+				// switch (getCurrentListStyle()) {
+				// case BIG:
+				// separatorFake = separatorFakeBig;
+				// dayFake = dayFakeBig;
+				// dateFake = dateFakeBig;
+				//
+				// break;
+				// case SMALL:
+				// separatorFake = separatorFakeSmall;
+				// dayFake = dayFakeSmall;
+				// dateFake = dateFakeSmall;
+				//
+				// break;
+				// }
+				//
+				// }
+				//
+				// if (!eventCollection.getEventList().get(
+				// listViewMain.getFirstVisiblePosition()).isInProgress) {
+				// dayFake.setText(eventCollection
+				// .getEventList()
+				// .get(listViewMain
+				// .getFirstVisiblePosition()).dayStart);
+				// dateFake.setText(eventCollection
+				// .getEventList()
+				// .get(listViewMain
+				// .getFirstVisiblePosition()).dateStart);
+				// } else {
+				// dayFake.setText("Right Now");
+				// dateFake.setText("");
+				// }
+				//
+				// View separatorBottom = now
+				// .findViewById(R.id.LayoutSeparatorBottom);
+				//
+				// if (now.findViewById(R.id.controlViewTop)
+				// .getLocalVisibleRect(rectList)) {
+				// isSeparatorTopVisible = true;
+				// }
+				// if (now.findViewById(R.id.controlViewBottom)
+				// .getLocalVisibleRect(rectList)) {
+				// isSeparatorBottomVisible = true;
+				// }
+				//
+				// isSeparatorEnabled = next.findViewById(
+				// R.id.LayoutSeparatorTop).isEnabled();
+				//
+				// boolean isSeparatorFakeVisible = separatorFake
+				// .isShown();
+				//
+				// if (firstVisibleItem == 0
+				// && isSeparatorTopVisible
+				// && (isSeparatorFakeVisible || separatorBottom
+				// .isShown())) {
+				//
+				// separatorFake.setVisibility(View.GONE);
+				//
+				// separatorBottom.setVisibility(View.GONE);
+				// } else {
+				// if ((!isSeparatorFakeVisible || separatorBottom
+				// .isShown())
+				// && !isSeparatorTopVisible
+				// && isSeparatorBottomVisible) {
+				//
+				// separatorFake
+				// .setVisibility(View.VISIBLE);
+				//
+				// separatorBottom
+				// .setVisibility(View.GONE);
+				// }
+				//
+				// if ((isSeparatorFakeVisible || !separatorBottom
+				// .isShown())
+				// && isSeparatorEnabled
+				// && !isSeparatorTopVisible
+				// && !isSeparatorBottomVisible) {
+				//
+				// separatorFake.setVisibility(View.GONE);
+				//
+				// separatorBottom
+				// .setVisibility(View.VISIBLE);
+				// }
+				//
+				// }
+				// }
+				// }
+				// }
+				// });
 
 				break;
 
@@ -2447,13 +2465,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					}
 				});
 
-				/*
-				 * if (loc.equals("null")) { buttonPlace.setText("N/A");
-				 * buttonPlace.setClickable(false); } else {
-				 * buttonPlace.setText("( i ) " + loc);
-				 * buttonPlace.setClickable(true); }
-				 */
-
 				isPageAvailable = true;
 				adView = (AdView) v.findViewById(R.id.adView35);
 				if (isPageJustOpened) {
@@ -2522,15 +2533,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 			if (isEventsJustOpened) {
 				read();
-
-				// refreshPageAdapter();
-				/*
-				 * if (!pageCollection.getPageList().isEmpty()) {
-				 * 
-				 * newFeature(); } SharedPreferences.Editor editor =
-				 * mPrefs.edit(); editor.putBoolean("newFeature", false);
-				 * editor.commit();
-				 */
 
 			}
 			criticalUpdate();
@@ -2817,6 +2819,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 				pageCollection.clearPageAroundMe();
 				Intent localIntent = new Intent(FacebookeventsActivity.this,
 						DiscoverActivity.class);
+
 				startActivity(localIntent);
 			} else {
 				toast("No internet connection", false);
@@ -2994,19 +2997,26 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 					public void onClick(DialogInterface dialog, int item) {
 						if (item != currentListStyle) {
 
+							separatorFake = null;
+							dayFake = null;
+							dateFake = null;
 							SharedPreferences.Editor editor = mPrefs.edit();
+
 							switch (item) {
 							case BIG:
 								editor.putInt("listStyle", BIG);
+								separatorFakeSmall.setVisibility(View.GONE);
 								break;
 							case SMALL:
 								editor.putInt("listStyle", SMALL);
-
+								separatorFakeBig.setVisibility(View.GONE);
 								break;
 
 							}
 							editor.commit();
-							eventArrayAdapter = new myCustomAdapter(FacebookeventsActivity.this, FacebookeventsActivity.this);
+							eventArrayAdapter = new myCustomAdapterProve(
+									FacebookeventsActivity.this,
+									FacebookeventsActivity.this);
 							listViewMain.setAdapter(eventArrayAdapter);
 							refreshEventsAdapter();
 						}
@@ -3473,8 +3483,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		final CharSequence[] items = {
 				"Events I'm going to",
 				"Events I'm going or might go to",
-				"Every events I've been invited to (excluding \"declined\" ones)",
-				"Every events I've been invited to" };
+				"Every event I've been invited to (excluding \"declined\" ones)",
+				"Every event I've been invited to" };
 		AlertDialog.Builder builder = new AlertDialog.Builder(
 				FacebookeventsActivity.this);
 
@@ -4248,7 +4258,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 			String temp = Long.toString(cal.getTimeInMillis());
 			final String current_time = temp.substring(0, 10);
 			String a = "";
-			String s = mPrefs.getString("user_id", null);
+			// String s = mPrefs.getString("user_id", null);
 
 			PageData page = new PageData();
 			page._ID = "1";
@@ -4411,7 +4421,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 								}
 
 								event.venue = b;
-								Bundle bundle = new Bundle();
 
 								isInProgress = false;
 
@@ -4431,7 +4440,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 								downloadImage(event.imageUri, event.event_ID);
 
 								final int p = progress;
-								;
+
 								FacebookeventsActivity.this
 										.runOnUiThread(new Runnable() {
 											public void run() {
@@ -4496,7 +4505,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 						jDataArray = jsonObject.getJSONArray("data");
 						int m = 0;
 						JSONArray jArray = new JSONArray();
-						Bundle bundle = new Bundle();
 						int h = jDataArray.length();
 
 						while (m < h
@@ -4707,10 +4715,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	};
 
 	private class ProgressThread extends Thread {
-		Handler mHandler;
+		// Handler mHandler;
 
 		ProgressThread(Handler h) {
-			mHandler = h;
+			// mHandler = h;
 		}
 
 		public void run() {
@@ -6452,18 +6460,19 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 	}
 
 	public void showImageEventList(final int i) {
-		AsyncTask<Void, Integer, Bitmap> task = new AsyncTask<Void, Integer, Bitmap>() {
-
-			Bitmap imagePage = null;
+		AsyncTask<Void, Integer, Bitmap[]> task = new AsyncTask<Void, Integer, Bitmap[]>() {
 
 			@Override
-			public Bitmap doInBackground(Void... params) {
+			public Bitmap[] doInBackground(Void... params) {
 				android.os.Process
 						.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND
 								+ android.os.Process.THREAD_PRIORITY_MORE_FAVORABLE);
 				Bitmap bmp = null;
+				Bitmap imagePage = null;
 
 				if (eventCollection.getEventList().size() > i) {
+
+					// GET EVENT PICTURE
 
 					try {
 						// Log.i("showImage", Integer.toString(i));
@@ -6475,9 +6484,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 
 					} catch (Exception e) {
 
-					}
-
-					if (bmp == null) {
 						try {
 							// Log.i("showImage", Integer.toString(i));
 							String pageID = eventCollection.getEventList().get(
@@ -6492,35 +6498,37 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 								bmp = BitmapFactory.decodeStream(in);
 							}
 
-						} catch (Exception e) {
-
+						} catch (Exception ex) {
 						}
 					}
 
-					try {
-						if (!eventCollection.getEventList().get(i).parentPage_ID
-								.equals("1")) {
-							java.io.FileInputStream in = FacebookeventsActivity.this
-									.openFileInput(eventCollection
-											.getEventList().get(i).parentPage_ID);
-							imagePage = BitmapFactory.decodeStream(in);
-						} else {
-							imagePage = BitmapFactory.decodeResource(
-									getResources(),
-									R.drawable.icon_other_events);
-						}
+					// GET PAGE PICTURE
 
-					} catch (Exception e) {
-
-					}
+					// try {
+					// if (!eventCollection.getEventList().get(i).parentPage_ID
+					// .equals("1")) {
+					// java.io.FileInputStream in = FacebookeventsActivity.this
+					// .openFileInput(eventCollection
+					// .getEventList().get(i).parentPage_ID);
+					// imagePage = BitmapFactory.decodeStream(in);
+					// } else {
+					// imagePage = BitmapFactory.decodeResource(
+					// getResources(),
+					// R.drawable.icon_other_events);
+					// }
+					//
+					// } catch (Exception e) {
+					//
+					// }
 
 				}
 
-				return bmp;
+				Bitmap[] toReturn = { bmp, imagePage };
+				return toReturn;
 			}
 
 			@Override
-			public void onPostExecute(Bitmap bmp) {
+			public void onPostExecute(Bitmap[] value) {
 				if (listViewMain.getFirstVisiblePosition() <= i
 						&& i <= listViewMain.getLastVisiblePosition()) {
 
@@ -6530,15 +6538,13 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 							.findViewById(R.id.imageViewList);
 					ImageView imagePageView = (ImageView) v
 							.findViewById(R.id.imageViewParentPage);
-					if (bmp != null) {
-						image.setImageBitmap(bmp);
+					if (value[0] != null) {
+						image.setImageBitmap(value[0]);
 					}
-					if (imagePage != null) {
-						imagePageView.setImageBitmap(imagePage);
+					if (value[1] != null) {
+						imagePageView.setImageBitmap(value[1]);
 					}
-
 				}
-
 			}
 
 		};
@@ -6742,8 +6748,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity {
 		outRect.right = mScrollX + (mRight - mLeft);
 		outRect.bottom = mScrollY + (mBottom - mTop);
 	}
-	
-	public int getCurrentListStyle(){
+
+	public int getCurrentListStyle() {
 		currentListStyle = mPrefs.getInt("listStyle", BIG);
 		return currentListStyle;
 	}
