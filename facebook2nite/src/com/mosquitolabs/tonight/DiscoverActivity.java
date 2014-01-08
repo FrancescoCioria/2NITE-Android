@@ -95,7 +95,6 @@ public class DiscoverActivity extends SherlockActivity {
 	private Session.StatusCallback statusCallback = new SessionStatusCallback();
 	private Session session;
 
-
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
@@ -1627,7 +1626,20 @@ public class DiscoverActivity extends SherlockActivity {
 		int currentListStyle = mPrefs.getInt("listStyle", 0);
 		return currentListStyle;
 	}
-	
-	
+
+	public void showImageEventList(final int i) {
+		AsyncTask<Void, Integer, Bitmap[]> task = new AsyncTask<Void, Integer, Bitmap[]>() {
+
+			@Override
+			public Bitmap[] doInBackground(Void... params) {
+
+				adapter.showImageEventList(i);
+
+				return null;
+			}
+
+		};
+		task.execute();
+	}
 
 }

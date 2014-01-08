@@ -30,12 +30,12 @@
         android:title="(click to view all)"/>
     <item
         android:id="@+id/menu_rsvp"
-        android:showAsAction="ifRoom|withText"
+        android:showAsAction="always|withText"
         android:title="RSVP"/>
     <item
         android:id="@+id/menu_share"
         android:icon="@drawable/ic_menu_share"
-        android:showAsAction="ifRoom"
+        android:showAsAction="always"
         android:title="Share with friends"/>
     <!-- android:actionProviderClass="com_actionbarsherlock.widget.ShareActionProvider" -->
 

@@ -24,7 +24,7 @@
             android:layout_height="35dp"
             android:background="@color/sfondo"
             android:orientation="vertical"
-            android:visibility="gone" >
+            android:visibility="visible" >
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -143,9 +143,12 @@
             android:id="@+id/listViewMain"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@color/sfondo"
             android:divider="@color/light_light_gray"
             android:dividerHeight="0dp"
-            android:footerDividersEnabled="false" />
+            android:drawSelectorOnTop="true"
+            android:footerDividersEnabled="false"
+            android:scrollbarStyle="outsideOverlay" />
     </LinearLayout>
 
     <Button

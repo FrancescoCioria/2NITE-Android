@@ -5,12 +5,12 @@ import java.net.URL;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -40,18 +40,6 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 
 	private ListView listPlaces;
 
-	private int currentFirstVisibleItem = -1;
-
-	private RelativeLayout separatorFakeBig;
-	private RelativeLayout separatorFakeSmall;
-	private RelativeLayout separatorFake;
-
-	private View now;
-	private View next;
-	private TextView dayFake;
-	private TextView dateFake;
-	private Rect rectList = new Rect();
-
 	private int userLikesInt = 0;
 	private int placesInt = 0;
 
@@ -72,7 +60,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 	final String APP_ID = "219909391458551";
 	private EventCollection eventCollection = EventCollection.getInstance();
 
-	private ListView listViewAroundMe;
+	private StickyListHeadersListView listViewAroundMe;
 
 	private MyCustomAdapterEventsAroundMe eventArrayAdapter;
 
@@ -81,17 +69,16 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 	private ListView listUserLike;
 
 	private boolean likesSorted = false;
-	private boolean aroundSorted = false;
 	private boolean isFirstTimeLike = true;
-
-	private final static int BIG = 0;
-	private final static int SMALL = 1;
 
 	private myCustomAdapterUserLikes customAdapterUserLikes;
 
 	private TextView noPagesUserLikes;
 
 	private int aroundMePictures;
+
+	private int oldFirstVisibleItem = 0;
+	private int scrollState = 0;
 
 	public DiscoverPagerAdapter(DiscoverActivity context) {
 		this.context = context;
@@ -123,31 +110,10 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 
 		case EVENTS:
 			v = inflater.inflate(R.layout.main_activity, null);
-			listViewAroundMe = (ListView) v.findViewById(R.id.listViewMain);
+			listViewAroundMe = (StickyListHeadersListView) v
+					.findViewById(R.id.listViewMain);
 			listViewAroundMe.setAdapter(eventArrayAdapter);
 			textEventEmpty = (TextView) v.findViewById(R.id.textViewEventEmpty);
-
-			switch (context.getCurrentListStyle()) {
-			case BIG:
-				separatorFake = (RelativeLayout) v
-						.findViewById(R.id.LayoutSeparatorFakeBig);
-				dayFake = (TextView) v
-						.findViewById(R.id.textViewSeparatorDayBig);
-				dateFake = (TextView) v
-						.findViewById(R.id.textViewSeparatorMonthBig);
-
-				break;
-			case SMALL:
-				separatorFake = (RelativeLayout) v
-						.findViewById(R.id.LayoutSeparatorFakeSmall);
-				dayFake = (TextView) v
-						.findViewById(R.id.textViewSeparatorDaySmall);
-				dateFake = (TextView) v
-						.findViewById(R.id.textViewSeparatorMonthSmall);
-
-				break;
-
-			}
 
 			if (eventCollection.getAroundMeEventList().size() == 0) {
 				textEventEmpty.setVisibility(View.VISIBLE);
@@ -156,117 +122,40 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			}
 			textEventEmpty
 					.setText("Please wait..\nLooking for events nearby \nwithin three days.\nThis may take a while.");
+			v.findViewById(R.id.LayoutFilter).setVisibility(View.GONE);
 
 			listViewAroundMe.setOnScrollListener(new OnScrollListener() {
 
 				@Override
 				public void onScrollStateChanged(AbsListView view,
 						int scrollState) {
+					DiscoverPagerAdapter.this.scrollState = scrollState;
 
+					if (scrollState == OnScrollListener.SCROLL_STATE_IDLE) {
+						int first = listViewAroundMe.getFirstVisiblePosition();
+						if (first < oldFirstVisibleItem) {
+							for (int z = listViewAroundMe
+									.getLastVisiblePosition(); z >= first; z--) {
+								showImageEventList(z);
+							}
+						} else {
+
+							for (int z = first; z <= listViewAroundMe
+									.getLastVisiblePosition(); z++) {
+								showImageEventList(z);
+							}
+						}
+
+						oldFirstVisibleItem = first;
+					}
 				}
 
 				@Override
 				public void onScroll(AbsListView view, int firstVisibleItem,
 						int visibleItemCount, int totalItemCount) {
 
-					if (currentFirstVisibleItem != firstVisibleItem) {
-
-						now = listViewAroundMe.getChildAt(0);
-						next = listViewAroundMe.getChildAt(1);
-						if (now != null && next != null) {
-							currentFirstVisibleItem = firstVisibleItem;
-							Log.i("scroll", Integer.toString(firstVisibleItem));
-						}
-
-					}
-
-					boolean isSeparatorTopVisible = false;
-					boolean isSeparatorBottomVisible = false;
-					boolean isSeparatorEnabled = false;
-
-					if (rectList.isEmpty() && listViewAroundMe != null) {
-						listViewAroundMe.getHitRect(rectList);
-					}
-
-					if (now != null && next != null
-							&& context.getPagerCurrentItem() == EVENTS) {
-
-						View separatorBottom = now
-								.findViewById(R.id.LayoutSeparatorBottom);
-
-						if (now.findViewById(R.id.controlViewTop)
-								.getLocalVisibleRect(rectList)) {
-							isSeparatorTopVisible = true;
-						}
-						if (now.findViewById(R.id.controlViewBottom)
-								.getLocalVisibleRect(rectList)) {
-							isSeparatorBottomVisible = true;
-						}
-
-						isSeparatorEnabled = next.findViewById(
-								R.id.LayoutSeparatorTop).isEnabled();
-
-						boolean isSeparatorFakeVisible = separatorFake
-								.isShown();
-
-						if (firstVisibleItem == 0
-								&& isSeparatorTopVisible
-								&& (isSeparatorFakeVisible || separatorBottom
-										.isShown())) {
-							separatorFake.setVisibility(View.GONE);
-							separatorBottom.setVisibility(View.GONE);
-						} else {
-							if ((!isSeparatorFakeVisible || separatorBottom
-									.isShown())
-									&& !isSeparatorTopVisible
-									&& isSeparatorBottomVisible) {
-								if (!eventCollection.getAroundMeEventList()
-										.get(listViewAroundMe
-												.getFirstVisiblePosition()).isInProgress) {
-									dayFake.setText(eventCollection
-											.getAroundMeEventList()
-											.get(listViewAroundMe
-													.getFirstVisiblePosition()).dayStart);
-									dateFake.setText(eventCollection
-											.getAroundMeEventList()
-											.get(listViewAroundMe
-													.getFirstVisiblePosition()).dateStart);
-								} else {
-									dayFake.setText("Right Now");
-									dateFake.setText("");
-								}
-
-								separatorFake.setVisibility(View.VISIBLE);
-								separatorBottom.setVisibility(View.GONE);
-							}
-
-							if ((isSeparatorFakeVisible || !separatorBottom
-									.isShown())
-									&& isSeparatorEnabled
-									&& !isSeparatorTopVisible
-									&& !isSeparatorBottomVisible) {
-								separatorFake.setVisibility(View.GONE);
-								separatorBottom.setVisibility(View.VISIBLE);
-							}
-
-						}
-					}
 				}
 			});
-
-			/*
-			 * listViewAroundMe .setOnItemClickListener(new
-			 * AdapterView.OnItemClickListener() { public void onItemClick(
-			 * AdapterView<?> paramAdapterView, View paramView, int paramInt,
-			 * long paramLong) { Intent localIntent = new Intent(context,
-			 * DescriptionEventActivity.class); localIntent.putExtra(
-			 * "currentPageID", eventCollection.getAroundMeEventList().get(
-			 * paramInt).event_ID);
-			 * 
-			 * context.startActivity(localIntent);
-			 * 
-			 * } });
-			 */
 
 			context.getLocation();
 
@@ -579,8 +468,10 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 					if (listViewAroundMe.getFirstVisiblePosition() <= aroundMePictures
 							&& aroundMePictures <= listViewAroundMe
 									.getLastVisiblePosition()) {
-						View v = listViewAroundMe.getChildAt(aroundMePictures
-								- listViewAroundMe.getFirstVisiblePosition());
+						View v = listViewAroundMe
+								.getListChildAt(aroundMePictures
+										- listViewAroundMe
+												.getFirstVisiblePosition());
 						ImageView image = (ImageView) v
 								.findViewById(R.id.imageViewList);
 
@@ -593,6 +484,86 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 				if (aroundMePictures < eventCollection.getAroundMeEventList()
 						.size() && context.isDiscover()) {
 					aroundMePicture();
+				}
+
+			}
+
+		};
+		task.execute();
+	}
+
+	public void showImageEventList(final int i) {
+		AsyncTask<Void, Integer, Bitmap[]> task = new AsyncTask<Void, Integer, Bitmap[]>() {
+
+			@Override
+			public Bitmap[] doInBackground(Void... params) {
+				// android.os.Process
+				// .setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND
+				// + android.os.Process.THREAD_PRIORITY_MORE_FAVORABLE);
+				Bitmap bmp = null;
+				Bitmap imagePage = null;
+
+				if (scrollState != OnScrollListener.SCROLL_STATE_FLING) {
+					if (eventCollection.getEventList().size() > i) {
+
+						// GET EVENT PICTURE
+
+						try {
+							java.io.FileInputStream in = context
+									.openFileInput(eventCollection
+											.getAroundMeEventList().get(i).event_ID);
+							bmp = BitmapFactory.decodeStream(in);
+
+						} catch (Exception e) {
+
+							try {
+								String pageID = eventCollection
+										.getAroundMeEventList().get(i).parentPage_ID;
+								if (pageID.equals("1")) {
+									bmp = BitmapFactory.decodeResource(
+											context.getResources(),
+											R.drawable.icon_other_events);
+								} else {
+									java.io.FileInputStream in = context
+											.openFileInput(pageID);
+									bmp = BitmapFactory.decodeStream(in);
+								}
+
+							} catch (Exception ex) {
+							}
+						}
+					}
+
+				}
+
+				Bitmap[] toReturn = { bmp, imagePage };
+				return toReturn;
+			}
+
+			@Override
+			public void onPostExecute(Bitmap[] value) {
+				if (value[0] != null) {
+					int first = listViewAroundMe.getFirstVisiblePosition();
+					int last = listViewAroundMe.getLastVisiblePosition();
+					int current = i;
+					if (first <= current && current <= last) {
+						try {
+							View v = listViewAroundMe.getListChildAt(current
+									- first);
+
+							ImageView image = (ImageView) v
+									.findViewById(R.id.imageViewList);
+
+							image.setImageBitmap(value[0]);
+
+							v.findViewById(R.id.progressBarImageEventList)
+									.setVisibility(View.GONE);
+
+						} catch (Exception e) {
+						}
+
+					}
+
 				}
 
 			}

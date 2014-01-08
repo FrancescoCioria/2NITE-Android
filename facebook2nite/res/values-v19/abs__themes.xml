@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Sherlock.__Theme" parent="android:Theme.Holo">
-        <item name="buttonStyleSmall">@style/Widget.Sherlock.Light.Button.Small</item>
-    </style>
+    <style name="Sherlock.__Theme" parent="android:Theme.Holo"></style>
 
     <style name="Sherlock.__Theme.Light" parent="android:Theme.Holo.Light"></style>
 
@@ -19,6 +17,10 @@
         <item name="dropDownListViewStyle">?android:attr/dropDownListViewStyle</item>
     </style>
 
+    <style name="Theme.Sherlock" parent="Sherlock.__Theme">
+        <item name="android:buttonStyle">@android:style/Widget.Holo.Light.Button</item>
+    </style>
+
     <style name="Theme.Sherlock.NoActionBar">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
@@ -29,7 +31,20 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
-    <style name="Theme.Sherlock.Dialog" parent="android:Theme.Holo.Dialog"></style>
+    <style name="Theme.Sherlock.Dialog" parent="Theme.Sherlock">
+        <item name="android:buttonStyle">@android:style/Widget.Holo.Light.Button</item>
+    </style>
+    <style name="Theme.Sherlock.Dialog" parent="@android:style/Theme.Dialog">
+        <item name="android:buttonStyle">@android:style/Widget.Holo.Light.Button</item>
+    </style>
+
+    <style name="Theme.Sherlock.Dialog" parent="android:Theme">
+        <item name="android:buttonStyle">@android:style/Widget.Holo.Light.Button</item>
+    </style>
+
+    <style name="Sherlock.__Theme.Dialog" parent="android:Theme.Dialog">
+        <item name="android:buttonStyle">@android:style/Widget.Holo.Light.Button</item>
+    </style>
 
     <style name="Theme.Sherlock.Light.Dialog" parent="android:Theme.Holo.Light.Dialog"></style>
 

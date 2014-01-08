@@ -69,13 +69,11 @@
                     android:id="@+id/textDescription"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_below="@+id/textViewText"
-                    android:layout_toRightOf="@+id/imageViewList"
                     android:ellipsize="end"
                     android:maxLines="4"
                     android:minLines="4"
                     android:orientation="vertical"
-                    android:text="Vivir y estudiar en Valencia no es suficiente, hay que aprovechar al máximo esta oportunidad y conocer a fondo la ciudad: Nosotros te lo ponemos fácil! Vamos de paseo por el centro histórico para descubrir su origen y su historia durante 2 horas."
+                    android:text="."
                     android:textColor="@color/dark_gray"
                     android:textSize="11sp" >
                 </TextView>
@@ -169,7 +167,18 @@
         android:layout_width="fill_parent"
         android:layout_height="100dp"
         android:layout_alignBottom="@+id/linearLayoutListItem"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
         android:background="@layout/imageview_selected"
         android:visibility="visible" />
+
+    <ProgressBar
+        android:id="@+id/progressBarImageEventList"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="73dp" />
 
 </RelativeLayout>

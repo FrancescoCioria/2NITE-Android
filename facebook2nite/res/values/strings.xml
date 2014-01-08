@@ -30,5 +30,6 @@
     <color name="actionbar_gray">#DDDDDD</color>
     <color name="gray">#DDDDDD</color>
     <color name="red">#FF0000</color>
+    <color name="black_alpha_strong">#C8000000</color>
 
 </resources>

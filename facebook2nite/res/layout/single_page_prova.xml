@@ -248,7 +248,7 @@
                         android:layout_width="fill_parent"
                         android:layout_height="33dp"
                         android:text="( i ) Arci Acropolis"
-                        android:textColor="@android:color/background_dark"
+                        android:textColor="@color/dark_dark_gray"
                         android:textSize="12dp" />
 
                     <Button
@@ -256,7 +256,7 @@
                         android:layout_width="fill_parent"
                         android:layout_height="33dp"
                         android:text="Get directions"
-                        android:textColor="@android:color/background_dark"
+                        android:textColor="@color/dark_dark_gray"
                         android:textSize="12dp" />
 
                     <TextView

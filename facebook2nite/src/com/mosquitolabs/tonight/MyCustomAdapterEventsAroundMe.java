@@ -1,11 +1,12 @@
 package com.mosquitolabs.tonight;
 
-import android.content.SharedPreferences;
+import java.util.ArrayList;
+import java.util.Calendar;
+
+import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Shader;
-import android.graphics.drawable.BitmapDrawable;
-import android.preference.PreferenceManager;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -13,15 +14,21 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.SectionIndexer;
 import android.widget.TextView;
 
-public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
+public class MyCustomAdapterEventsAroundMe extends BaseAdapter implements
+		StickyListHeadersAdapter, SectionIndexer {
 	EventCollection eventCollection = EventCollection.getInstance();
-	private SharedPreferences mPrefs;
+
+	PageCollection pageCollection = PageCollection.getInstance();
+	Preferences preferences = Preferences.getInstance();
 
 	private LayoutInflater mInflater;
-	// private Display display;
 	private DiscoverActivity context;
+
+	int counter = 0;
+	int counterDownloading = 0;
 
 	private Bitmap standardImage = null;
 	private Bitmap standardImagePage = null;
@@ -30,11 +37,81 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 	private Bitmap triangleRed = null;
 	private Bitmap triangleGreen = null;
 
+	private final static int BIG = 0;
+	private final static int SMALL = 1;
+
+	private final DiscoverActivity parentActivity;
+
+	private int[] mSectionIndices;
+	private String[] mSectionLetters;
+
+	private int descMaxLength = 0;
+
 	public MyCustomAdapterEventsAroundMe(DiscoverActivity paramContext) {
 		this.mInflater = LayoutInflater.from(paramContext);
 		context = paramContext;
-		mPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+		parentActivity = paramContext;
+		// if (!eventCollection.getAroundMeEventList().isEmpty()) {
+		// mSectionIndices = getSectionIndices();
+		// mSectionLetters = getSectionLetters();
+		// }
 
+	}
+
+	private int[] getSectionIndices() {
+
+		ArrayList<Integer> sectionIndices = new ArrayList<Integer>();
+
+		Calendar lastCal = Calendar.getInstance();
+		Calendar currentCal = Calendar.getInstance();
+
+		lastCal.setTimeInMillis(Long.parseLong(eventCollection
+				.getAroundMeEventList().get(0).startMillis) * 1000);
+
+		sectionIndices.add(0);
+
+		for (int i = 1; i < eventCollection.getAroundMeEventList().size(); i++) {
+			final EventData currentEvent = eventCollection
+					.getAroundMeEventList().get(i);
+			currentCal
+					.setTimeInMillis(Long.parseLong(currentEvent.startMillis) * 1000);
+
+			if ((currentCal.get(Calendar.DAY_OF_YEAR) > lastCal
+					.get(Calendar.DAY_OF_YEAR) || currentCal.get(Calendar.YEAR) > lastCal
+					.get(Calendar.YEAR))
+					&& !currentEvent.isInProgress) {
+				lastCal.setTimeInMillis(Long
+						.parseLong(currentEvent.startMillis) * 1000);
+				sectionIndices.add(i);
+			}
+
+		}
+
+		int[] sections = new int[sectionIndices.size()];
+		for (int i = 0; i < sectionIndices.size(); i++) {
+			sections[i] = sectionIndices.get(i);
+		}
+
+		return sections;
+	}
+
+	private String[] getSectionLetters() {
+		String[] letters = new String[mSectionIndices.length];
+		Calendar currentCal = Calendar.getInstance();
+		for (int i = 0; i < mSectionIndices.length; i++) {
+			EventData event = eventCollection.getAroundMeEventList().get(
+					mSectionIndices[i]);
+			currentCal
+					.setTimeInMillis(Long.parseLong(event.startMillis) * 1000);
+			if (event.isInProgress) {
+				letters[i] = "Now";
+			} else {
+				letters[i] = Integer.toString(currentCal
+						.get(Calendar.DAY_OF_MONTH));
+			}
+
+		}
+		return letters;
 	}
 
 	public int getCount() {
@@ -49,31 +126,45 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		return paramInt;
 	}
 
-	public View getView(final int paramInt, View paramView, ViewGroup paramViewGroup) {
+	public View getView(final int paramInt, View paramView,
+			ViewGroup paramViewGroup) {
 		ViewHolder localViewHolder;
 
 		if (paramView == null) {
-			switch (context.getCurrentListStyle()) {
-			case 0:
-				paramView = mInflater.inflate(R.layout.list_item_main, null);
+			DisplayMetrics displaymetrics = new DisplayMetrics();
+			parentActivity.getWindowManager().getDefaultDisplay()
+					.getMetrics(displaymetrics);
+			int width = displaymetrics.widthPixels;
+			int height = displaymetrics.heightPixels;
+			int density = displaymetrics.densityDpi;
+			int space;
+			switch (parentActivity.getCurrentListStyle()) {
+			case BIG:
+				paramView = mInflater.inflate(R.layout.list_item_big_images,
+						null);
+
+				space = width - 30 * 160 / density;
+				descMaxLength = (space * 160 / density) / 5;
+				descMaxLength *= 3;
+
 				break;
-			case 1:
-				paramView = mInflater.inflate(R.layout.list_item, null);
+			case SMALL:
+				paramView = mInflater.inflate(R.layout.list_item_small_images,
+						null);
+
+				space = width - 165 * 160 / density;
+				descMaxLength = (space * 160 / density) / 5;
+				descMaxLength *= 4;
+
 				break;
 			}
+
 			localViewHolder = new ViewHolder();
 			localViewHolder.text = (TextView) paramView
 					.findViewById(R.id.textViewText);
 			localViewHolder.desc = (TextView) paramView
 					.findViewById(R.id.textDescription);
-			localViewHolder.separatorMonth = (TextView) paramView
-					.findViewById(R.id.textViewSeparatorMonth);
-			localViewHolder.separatorDay = (TextView) paramView
-					.findViewById(R.id.textViewSeparatorDay);
-			localViewHolder.separatorMonthBottom = (TextView) paramView
-					.findViewById(R.id.textViewSeparatorMonthBottom);
-			localViewHolder.separatorDayBottom = (TextView) paramView
-					.findViewById(R.id.textViewSeparatorDayBottom);
+
 			localViewHolder.page = (TextView) paramView
 					.findViewById(R.id.textViewPage);
 			localViewHolder.attendingCount = (TextView) paramView
@@ -83,31 +174,28 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 			localViewHolder.image_page = (ImageView) paramView
 					.findViewById(R.id.imageViewParentPage);
 
-			localViewHolder.relativeFilter = (RelativeLayout) paramView
-					.findViewById(R.id.LayoutFilter);
 			localViewHolder.selector = (View) paramView
 					.findViewById(R.id.listItemSelector);
-			localViewHolder.layout_separator_top = (RelativeLayout) paramView
-					.findViewById(R.id.LayoutSeparatorTop);
-			localViewHolder.layout_separator_bottom = (RelativeLayout) paramView
-					.findViewById(R.id.LayoutSeparatorBottom);
+
 			localViewHolder.triangle_attending = (ImageView) paramView
 					.findViewById(R.id.imageViewTriangleAttending);
 
 			standardImage = BitmapFactory.decodeResource(
-					context.getResources(), R.drawable.standard_image);
-			
+					context.getResources(), R.drawable.icon_gray);
+
 			triangleGreen = BitmapFactory.decodeResource(
 					context.getResources(), R.drawable.triangle_green);
 			triangleYellow = BitmapFactory.decodeResource(
 					context.getResources(), R.drawable.triangle_yellow);
 			triangleRed = BitmapFactory.decodeResource(context.getResources(),
 					R.drawable.triangle_red);
+			mSectionIndices = getSectionIndices();
+			mSectionLetters = getSectionLetters();
 
 			paramView.setTag(localViewHolder);
+		} else {
+			localViewHolder = (ViewHolder) paramView.getTag();
 		}
-
-		localViewHolder = (ViewHolder) paramView.getTag();
 
 		localViewHolder.selector.setOnClickListener(new OnClickListener() {
 
@@ -117,14 +205,32 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 			}
 		});
 
-		
-		final EventData event = eventCollection.getAroundMeEventList().get(paramInt);
+		final EventData event = eventCollection.getAroundMeEventList().get(
+				paramInt);
 
 		String name = event.name;
 		localViewHolder.text.setText(name);
 
 		if (event.desc.length() > 0) {
-			String desc = event.desc.replaceAll("(?m)^[ \t]*\r?\n", "");
+
+			String desc = event.desc;
+
+			int d = descMaxLength * 2;
+
+			try {
+				desc = event.desc.substring(0, d);
+
+			} catch (Exception e) {
+			}
+			desc = desc.replaceAll("(?m)^[ \t]*\r?\n", "");
+
+			String lines[] = desc.split("\\r?\\n");
+			if (lines.length > 4) {
+				desc = "";
+				for (int q = 0; q < Math.min(lines.length, 4); q++) {
+					desc += lines[q] + "\n";
+				}
+			}
 
 			localViewHolder.desc.setText(desc);
 		} else {
@@ -137,95 +243,21 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		}
 
 		localViewHolder.image.setImageBitmap(standardImage);
-		
 
-		Bitmap image = null;
-		Bitmap imagePage = null;
+		parentActivity.showImageEventList(paramInt);
 
-		try {
-			java.io.FileInputStream in = context.openFileInput(event.event_ID);
-			image = BitmapFactory.decodeStream(in);
-			if (image != null) {
-				localViewHolder.image.setImageBitmap(image);
-			}
-		} catch (Exception e) {
-		}
+		// Bitmap image = null;
+		//
+		// try {
+		// java.io.FileInputStream in = context.openFileInput(event.event_ID);
+		// image = BitmapFactory.decodeStream(in);
+		// if (image != null) {
+		// localViewHolder.image.setImageBitmap(image);
+		// }
+		// } catch (Exception e) {
+		// }
 
-		/*try {
-			if (!event.parentPage_ID.equals("1")) {
-				java.io.FileInputStream in = context
-						.openFileInput(event.parentPage_ID);
-				imagePage = BitmapFactory.decodeStream(in);
-				localViewHolder.image_page.setImageBitmap(imagePage);
-			}
-
-		} catch (Exception e) {
-
-		}*/
-		
 		localViewHolder.image_page.setVisibility(View.GONE);
-
-		boolean previousEventIsInProgress = false;
-		boolean currentEventIsInProgress = false;
-		String previousEventDay = "";
-		if (paramInt != 0) {
-			previousEventIsInProgress = eventCollection.getAroundMeEventList().get(
-					paramInt - 1).isInProgress;
-			previousEventDay = eventCollection.getAroundMeEventList().get(paramInt - 1).dateStart;
-		}
-		currentEventIsInProgress = event.isInProgress;
-		String currentEventDay = event.dateStart;
-
-		if ((paramInt == 0)
-				|| (!previousEventDay.equals(currentEventDay) && !currentEventIsInProgress)
-				|| (previousEventDay.equals(currentEventDay)
-						&& previousEventIsInProgress && !currentEventIsInProgress)) {
-
-			if (currentEventIsInProgress) {
-
-				Bitmap bmp = BitmapFactory.decodeResource(
-						context.getResources(), R.drawable.stripes_redd);
-				BitmapDrawable background = new BitmapDrawable(
-						context.getResources(), bmp);
-				background.setTileModeXY(Shader.TileMode.REPEAT,
-						Shader.TileMode.REPEAT);
-				// localViewHolder.separatorDay.setBackgroundDrawable(background);
-				localViewHolder.separatorMonth.setText("");
-				localViewHolder.separatorDay.setText("Right Now");
-
-				// localViewHolder.separatorDay.setTextColor(Color.WHITE);
-			} else {
-
-				Bitmap bmp = BitmapFactory.decodeResource(
-						context.getResources(), R.drawable.stripe_darkk);
-				BitmapDrawable background = new BitmapDrawable(
-						context.getResources(), bmp);
-				background.setTileModeXY(Shader.TileMode.REPEAT,
-						Shader.TileMode.REPEAT);
-				// localViewHolder.separatorDay.setBackgroundDrawable(background);
-
-				localViewHolder.separatorMonth.setText(event.dateStart);
-				localViewHolder.separatorDay.setText(event.dayStart);
-
-				// localViewHolder.separatorDay.setTextColor(Color.WHITE);
-			}
-			localViewHolder.layout_separator_top.setVisibility(View.VISIBLE);
-			localViewHolder.layout_separator_top.setEnabled(true);
-
-			// localViewHolder.controlSeparator.setVisibility(View.VISIBLE);
-		} else {
-			localViewHolder.layout_separator_top.setVisibility(View.GONE);
-			localViewHolder.layout_separator_top.setEnabled(false);
-
-			// localViewHolder.controlSeparator.setVisibility(View.GONE);
-
-		}
-
-		if (paramInt == 0) {
-			localViewHolder.relativeFilter.setVisibility(View.VISIBLE);
-		} else {
-			localViewHolder.relativeFilter.setVisibility(View.GONE);
-		}
 
 		String status = event.status_attending;
 		if (status.equals("attending")) {
@@ -245,39 +277,95 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 			localViewHolder.triangle_attending.setVisibility(View.GONE);
 		}
 
-		localViewHolder.layout_separator_bottom.setVisibility(View.GONE);
-
-		if (event.isInProgress) {
-			localViewHolder.separatorMonthBottom.setText("");
-			localViewHolder.separatorDayBottom.setText("Right Now");
-		} else {
-			localViewHolder.separatorMonthBottom.setText(event.dateStart);
-			localViewHolder.separatorDayBottom.setText(event.dayStart);
-		}
-
 		localViewHolder.attendingCount.setText("Going: "
 				+ Integer.toString(event.attending_count));
-		
-		// localViewHolder.layout_separator.isShown()
-
-		// parentActivity.isFirstView(paramInt, paramView);
 
 		// DISABILITO IL FILTER!!
-
-		localViewHolder.relativeFilter.setVisibility(View.GONE);
-		
 
 		return paramView;
 	}
 
+	@Override
+	public View getHeaderView(int position, View convertView, ViewGroup parent) {
+		HeaderViewHolder holder;
+
+		if (convertView == null) {
+			holder = new HeaderViewHolder();
+			switch (parentActivity.getCurrentListStyle()) {
+			case BIG:
+				convertView = mInflater.inflate(R.layout.header_big_images,
+						parent, false);
+				break;
+			case SMALL:
+				convertView = mInflater.inflate(R.layout.header_small_images,
+						parent, false);
+				break;
+			}
+
+			holder.layout_separator_top = (RelativeLayout) convertView
+					.findViewById(R.id.LayoutSeparatorTop);
+			holder.separatorDay = (TextView) convertView
+					.findViewById(R.id.textViewSeparatorDay);
+			holder.separatorMonth = (TextView) convertView
+					.findViewById(R.id.textViewSeparatorMonth);
+			convertView.setTag(holder);
+		} else {
+			holder = (HeaderViewHolder) convertView.getTag();
+		}
+
+		// set header text as first char in name
+
+		final EventData event = eventCollection.getAroundMeEventList().get(
+				position);
+		if (event.isInProgress) {
+			holder.separatorMonth.setText("");
+			holder.separatorDay.setText("Right Now");
+		} else {
+			holder.separatorMonth.setText(event.dateStart);
+			holder.separatorDay.setText(event.dayStart);
+		}
+
+		return convertView;
+	}
+
+	@Override
+	public long getHeaderId(int position) {
+
+		for (int i = 0; i < mSectionIndices.length; i++) {
+			if (position < mSectionIndices[i]) {
+				return i - 1;
+			}
+		}
+
+		return mSectionIndices.length - 1;
+	}
+
+	@Override
+	public int getPositionForSection(int section) {
+		if (section >= mSectionIndices.length) {
+			section = mSectionIndices.length - 1;
+		} else if (section < 0) {
+			section = 0;
+		}
+		return mSectionIndices[section];
+	}
+
+	@Override
+	public int getSectionForPosition(int position) {
+		for (int i = 0; i < mSectionIndices.length; i++) {
+			if (position < mSectionIndices[i]) {
+				return i - 1;
+			}
+		}
+		return mSectionIndices.length - 1;
+	}
+
+	@Override
+	public Object[] getSections() {
+		return mSectionLetters;
+	}
+
 	private class ViewHolder {
-		RelativeLayout layout_separator_top;
-		RelativeLayout layout_separator_bottom;
-		RelativeLayout relativeFilter;
-		TextView separatorMonth;
-		TextView separatorDay;
-		TextView separatorMonthBottom;
-		TextView separatorDayBottom;
 		TextView text;
 		TextView desc;
 		TextView page;
@@ -286,7 +374,14 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter {
 		ImageView image;
 		ImageView triangle_attending;
 		ImageView image_page;
-		View selector;
 
+		View selector;
 	}
+
+	static class HeaderViewHolder {
+		RelativeLayout layout_separator_top;
+		TextView separatorMonth;
+		TextView separatorDay;
+	}
+
 }

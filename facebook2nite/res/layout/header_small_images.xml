@@ -5,40 +5,34 @@
     android:layout_height="40dp"
     android:background="@color/sfondo_alpha"
     android:orientation="horizontal"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
     android:visibility="visible" >
 
     <TextView
         android:id="@+id/textViewSeparatorDay"
-        android:layout_width="93dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
-        android:background="@color/red"
-        android:gravity="center"
-        android:paddingBottom="3dp"
-        android:paddingLeft="5dp"
-        android:paddingRight="5dp"
-        android:paddingTop="3dp"
+        android:gravity="left"
+        android:paddingTop="10dp"
         android:text="Wednesday"
-        android:textColor="@color/light_light_gray"
+        android:textColor="@color/dark_gray"
         android:textSize="15sp"
-        android:textStyle="italic|bold" />
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/textViewSeparatorMonth"
-        android:layout_width="65dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:layout_toRightOf="@+id/textViewSeparatorDay"
-        android:background="@color/red"
-        android:gravity="center"
-        android:paddingBottom="3dp"
-        android:paddingLeft="5dp"
-        android:paddingRight="5dp"
-        android:paddingTop="3dp"
+        android:gravity="right"
+        android:paddingTop="10dp"
         android:text="Jul 11"
-        android:textColor="@color/light_light_gray"
+        android:textColor="@color/dark_gray"
         android:textSize="15sp"
-        android:textStyle="italic|bold" />
+        android:textStyle="bold" />
 
 </RelativeLayout>

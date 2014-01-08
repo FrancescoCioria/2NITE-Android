@@ -1,12 +1,14 @@
 package com.mosquitolabs.tonight;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Shader;
-import android.graphics.drawable.BitmapDrawable;
-import android.os.AsyncTask;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -14,21 +16,19 @@ import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
-import com.mosquitolabs.tonight.TestBaseAdapter.HeaderViewHolder;
-
-public class myCustomAdapter extends BaseAdapter {
+public class myCustomAdapter extends BaseAdapter implements
+		StickyListHeadersAdapter, SectionIndexer {
 	EventCollection eventCollection = EventCollection.getInstance();
 
 	PageCollection pageCollection = PageCollection.getInstance();
 	Preferences preferences = Preferences.getInstance();
 
 	private LayoutInflater mInflater;
-	// private Display display;
 	private Activity context;
 
 	int counter = 0;
@@ -44,13 +44,79 @@ public class myCustomAdapter extends BaseAdapter {
 	private final static int BIG = 0;
 	private final static int SMALL = 1;
 
-	private FacebookeventsActivity parentActivity;
+	private final FacebookeventsActivity parentActivity;
+
+	private int[] mSectionIndices;
+	private String[] mSectionLetters;
+
+	private int descMaxLength = 0;
 
 	public myCustomAdapter(Activity paramContext,
 			FacebookeventsActivity activity) {
 		this.mInflater = LayoutInflater.from(paramContext);
 		context = paramContext;
 		parentActivity = activity;
+		// if (!eventCollection.getEventList().isEmpty()) {
+		// mSectionIndices = getSectionIndices();
+		// mSectionLetters = getSectionLetters();
+		// }
+
+	}
+
+	private int[] getSectionIndices() {
+
+		ArrayList<Integer> sectionIndices = new ArrayList<Integer>();
+
+		Calendar lastCal = Calendar.getInstance();
+		Calendar currentCal = Calendar.getInstance();
+
+		lastCal.setTimeInMillis(Long.parseLong(eventCollection.getEventList()
+				.get(0).startMillis) * 1000);
+
+		sectionIndices.add(0);
+
+		for (int i = 1; i < eventCollection.getEventList().size(); i++) {
+			final EventData currentEvent = eventCollection.getEventList()
+					.get(i);
+			currentCal
+					.setTimeInMillis(Long.parseLong(currentEvent.startMillis) * 1000);
+
+			if ((currentCal.get(Calendar.DAY_OF_YEAR) > lastCal
+					.get(Calendar.DAY_OF_YEAR) || currentCal.get(Calendar.YEAR) > lastCal
+					.get(Calendar.YEAR))
+					&& !currentEvent.isInProgress) {
+				lastCal.setTimeInMillis(Long
+						.parseLong(currentEvent.startMillis) * 1000);
+				sectionIndices.add(i);
+			}
+
+		}
+
+		int[] sections = new int[sectionIndices.size()];
+		for (int i = 0; i < sectionIndices.size(); i++) {
+			sections[i] = sectionIndices.get(i);
+		}
+
+		return sections;
+	}
+
+	private String[] getSectionLetters() {
+		String[] letters = new String[mSectionIndices.length];
+		Calendar currentCal = Calendar.getInstance();
+		for (int i = 0; i < mSectionIndices.length; i++) {
+			EventData event = eventCollection.getEventList().get(
+					mSectionIndices[i]);
+			currentCal
+					.setTimeInMillis(Long.parseLong(event.startMillis) * 1000);
+			if (event.isInProgress) {
+				letters[i] = "Now";
+			} else {
+				letters[i] = Integer.toString(currentCal
+						.get(Calendar.DAY_OF_MONTH));
+			}
+
+		}
+		return letters;
 	}
 
 	public int getCount() {
@@ -67,31 +133,44 @@ public class myCustomAdapter extends BaseAdapter {
 
 	public View getView(final int paramInt, View paramView,
 			ViewGroup paramViewGroup) {
+		long start = java.lang.System.currentTimeMillis();
+
 		ViewHolder localViewHolder;
 
 		if (paramView == null) {
+
+			DisplayMetrics displaymetrics = new DisplayMetrics();
+			parentActivity.getWindowManager().getDefaultDisplay()
+					.getMetrics(displaymetrics);
+			int width = displaymetrics.widthPixels;
+			int density = displaymetrics.densityDpi;
+			int space;
 			switch (parentActivity.getCurrentListStyle()) {
 			case BIG:
-				paramView = mInflater.inflate(R.layout.list_item_main, null);
+				paramView = mInflater.inflate(R.layout.list_item_big_images,
+						null);
+
+				space = width - 30 * 160 / density;
+				descMaxLength = (space * 160 / density) / 6;
+				descMaxLength *= 3;
+
 				break;
 			case SMALL:
-				paramView = mInflater.inflate(R.layout.list_item, null);
+				paramView = mInflater.inflate(R.layout.list_item_small_images,
+						null);
+
+				space = width - 165 * 160 / density;
+				descMaxLength = (space * 160 / density) / 6;
+				descMaxLength *= 4;
+
 				break;
 			}
-			// paramView = mInflater.inflate(R.layout.list_item, null);
+
 			localViewHolder = new ViewHolder();
 			localViewHolder.text = (TextView) paramView
 					.findViewById(R.id.textViewText);
 			localViewHolder.desc = (TextView) paramView
 					.findViewById(R.id.textDescription);
-			localViewHolder.separatorMonth = (TextView) paramView
-					.findViewById(R.id.textViewSeparatorMonth);
-			localViewHolder.separatorDay = (TextView) paramView
-					.findViewById(R.id.textViewSeparatorDay);
-			localViewHolder.separatorMonthBottom = (TextView) paramView
-					.findViewById(R.id.textViewSeparatorMonthBottom);
-			localViewHolder.separatorDayBottom = (TextView) paramView
-					.findViewById(R.id.textViewSeparatorDayBottom);
 			localViewHolder.page = (TextView) paramView
 					.findViewById(R.id.textViewPage);
 			localViewHolder.attendingCount = (TextView) paramView
@@ -100,41 +179,12 @@ public class myCustomAdapter extends BaseAdapter {
 					.findViewById(R.id.imageViewList);
 			localViewHolder.image_page = (ImageView) paramView
 					.findViewById(R.id.imageViewParentPage);
-			localViewHolder.filterEvents = (TextView) paramView
-					.findViewById(R.id.spinnerFilter);
-			localViewHolder.filterPages = (TextView) paramView
-					.findViewById(R.id.spinnerPages);
-			localViewHolder.filterEventsLayout = (LinearLayout) paramView
-					.findViewById(R.id.spinnerFilterLayout);
-			localViewHolder.filterPagesLayout = (LinearLayout) paramView
-					.findViewById(R.id.spinnerPagesLayout);
-			localViewHolder.relativeFilter = (RelativeLayout) paramView
-					.findViewById(R.id.LayoutFilter);
 			localViewHolder.selector = (View) paramView
 					.findViewById(R.id.listItemSelector);
-			localViewHolder.layout_separator_top = (RelativeLayout) paramView
-					.findViewById(R.id.LayoutSeparatorTop);
-			localViewHolder.layout_separator_bottom = (RelativeLayout) paramView
-					.findViewById(R.id.LayoutSeparatorBottom);
 			localViewHolder.triangle_attending = (ImageView) paramView
 					.findViewById(R.id.imageViewTriangleAttending);
-			localViewHolder.filterEventsLayout
-					.setOnClickListener(new OnClickListener() {
-
-						@Override
-						public void onClick(View v) {
-							parentActivity.spinnerEvent();
-						}
-					});
-			localViewHolder.filterPagesLayout
-					.setOnClickListener(new OnClickListener() {
-
-						@Override
-						public void onClick(View v) {
-							parentActivity.spinnerPage();
-
-						}
-					});
+			localViewHolder.progressBar = (ProgressBar) paramView
+					.findViewById(R.id.progressBarImageEventList);
 
 			standardImage = BitmapFactory.decodeResource(
 					context.getResources(), R.drawable.icon_gray);
@@ -147,10 +197,14 @@ public class myCustomAdapter extends BaseAdapter {
 			triangleRed = BitmapFactory.decodeResource(context.getResources(),
 					R.drawable.triangle_red);
 
-			paramView.setTag(localViewHolder);
-		}
+			mSectionIndices = getSectionIndices();
+			mSectionLetters = getSectionLetters();
 
-		localViewHolder = (ViewHolder) paramView.getTag();
+			paramView.setTag(localViewHolder);
+		} else {
+
+			localViewHolder = (ViewHolder) paramView.getTag();
+		}
 
 		localViewHolder.selector.setOnClickListener(new OnClickListener() {
 
@@ -171,14 +225,32 @@ public class myCustomAdapter extends BaseAdapter {
 				});
 
 		final EventData event = eventCollection.getEventList().get(paramInt);
-
 		String name = event.name;
 		localViewHolder.text.setText(name);
 
 		if (event.desc.length() > 0) {
-			String desc = event.desc.replaceAll("(?m)^[ \t]*\r?\n", "");
+
+			String desc = event.desc;
+
+			int d = descMaxLength * 2;
+
+			try {
+				desc = event.desc.substring(0, d);
+
+			} catch (Exception e) {
+			}
+			desc = desc.replaceAll("(?m)^[ \t]*\r?\n", "");
+
+			String lines[] = desc.split("\\r?\\n");
+			if (lines.length > 4) {
+				desc = "";
+				for (int q = 0; q < Math.min(lines.length, 4); q++) {
+					desc += lines[q] + "\n";
+				}
+			}
 
 			localViewHolder.desc.setText(desc);
+
 		} else {
 			localViewHolder.desc.setText("No description available.");
 		}
@@ -189,131 +261,57 @@ public class myCustomAdapter extends BaseAdapter {
 		}
 
 		localViewHolder.image.setImageBitmap(standardImage);
-		localViewHolder.image_page.setImageBitmap(standardImagePage);
+		localViewHolder.progressBar.setVisibility(View.VISIBLE);
+		// localViewHolder.image_page.setImageBitmap(standardImagePage);
 
-		if (counter <= 3 || parentActivity.isDownloadingImages()) {
-			if (parentActivity.isDownloadingImages() && counterDownloading == 0) {
-				parentActivity.showImageEventList(paramInt);
-				counterDownloading++;
-			}
-			Bitmap image = null;
-			Bitmap imagePage = null;
+		parentActivity.showImageEventList(paramInt);
 
-			try {
-				java.io.FileInputStream in = context
-						.openFileInput(event.event_ID);
-				image = BitmapFactory.decodeStream(in);
-				if (image != null) {
-					localViewHolder.image.setImageBitmap(image);
-				}
-			} catch (Exception e) {
-			}
+		// if (false && (counter <= 3 || parentActivity.isDownloadingImages()))
+		// {
+		// if (parentActivity.isDownloadingImages() && counterDownloading == 0)
+		// {
+		// parentActivity.showImageEventList(paramInt);
+		// counterDownloading++;
+		// }
+		// Bitmap image = null;
+		// Bitmap imagePage = null;
+		//
+		// try {
+		// java.io.FileInputStream in = context
+		// .openFileInput(event.event_ID);
+		// image = BitmapFactory.decodeStream(in);
+		// if (image != null) {
+		// localViewHolder.image.setImageBitmap(image);
+		// }
+		// } catch (Exception e) {
+		// }
+		//
+		// // try {
+		// // if (!event.parentPage_ID.equals("1")) {
+		// // java.io.FileInputStream in = context
+		// // .openFileInput(event.parentPage_ID);
+		// // imagePage = BitmapFactory.decodeStream(in);
+		// // localViewHolder.image_page.setImageBitmap(imagePage);
+		// // } else {
+		// // localViewHolder.image_page.setImageBitmap(BitmapFactory
+		// // .decodeResource(context.getResources(),
+		// // R.drawable.icon_other_events));
+		// // }
+		// //
+		// // } catch (Exception e) {
+		// //
+		// // }
+		//
+		// counter++;
+		//
+		// } else {
+		// if (counterDownloading > 0) {
+		// counterDownloading = 0;
+		// }
+		//
+		// }
 
-			try {
-				if (!event.parentPage_ID.equals("1")) {
-					java.io.FileInputStream in = context
-							.openFileInput(event.parentPage_ID);
-					imagePage = BitmapFactory.decodeStream(in);
-					localViewHolder.image_page.setImageBitmap(imagePage);
-				} else {
-					localViewHolder.image_page.setImageBitmap(BitmapFactory
-							.decodeResource(context.getResources(),
-									R.drawable.icon_other_events));
-				}
-
-			} catch (Exception e) {
-
-			}
-
-			counter++;
-
-		} else {
-			if (counterDownloading > 0) {
-				counterDownloading = 0;
-			}
-			parentActivity.showImageEventList(paramInt);
-		}
-
-		boolean previousEventIsInProgress = false;
-		boolean currentEventIsInProgress = false;
-		String previousEventDay = "";
-		if (paramInt != 0) {
-			previousEventIsInProgress = eventCollection.getEventList().get(
-					paramInt - 1).isInProgress;
-			previousEventDay = eventCollection.getEventList().get(paramInt - 1).dateStart;
-		}
-		currentEventIsInProgress = event.isInProgress;
-		String currentEventDay = event.dateStart;
-
-		if ((paramInt == 0)
-				|| (!previousEventDay.equals(currentEventDay) && !currentEventIsInProgress)
-				|| (previousEventDay.equals(currentEventDay)
-						&& previousEventIsInProgress && !currentEventIsInProgress)) {
-
-			if (currentEventIsInProgress) {
-
-				Bitmap bmp = BitmapFactory.decodeResource(
-						context.getResources(), R.drawable.stripes_redd);
-				BitmapDrawable background = new BitmapDrawable(
-						context.getResources(), bmp);
-				background.setTileModeXY(Shader.TileMode.REPEAT,
-						Shader.TileMode.REPEAT);
-				// localViewHolder.separatorDay.setBackgroundDrawable(background);
-				localViewHolder.separatorMonth.setText("");
-				localViewHolder.separatorDay.setText("Right Now");
-
-				// localViewHolder.separatorDay.setTextColor(Color.WHITE);
-			} else {
-
-				Bitmap bmp = BitmapFactory.decodeResource(
-						context.getResources(), R.drawable.stripe_darkk);
-				BitmapDrawable background = new BitmapDrawable(
-						context.getResources(), bmp);
-				background.setTileModeXY(Shader.TileMode.REPEAT,
-						Shader.TileMode.REPEAT);
-				// localViewHolder.separatorDay.setBackgroundDrawable(background);
-
-				localViewHolder.separatorMonth.setText(eventCollection
-						.getEventList().get(paramInt).dateStart);
-				localViewHolder.separatorDay.setText(eventCollection
-						.getEventList().get(paramInt).dayStart);
-
-				// localViewHolder.separatorDay.setTextColor(Color.WHITE);
-			}
-			localViewHolder.layout_separator_top.setVisibility(View.VISIBLE);
-			localViewHolder.layout_separator_top.setEnabled(true);
-
-			// localViewHolder.controlSeparator.setVisibility(View.VISIBLE);
-		} else {
-			localViewHolder.layout_separator_top.setVisibility(View.GONE);
-			localViewHolder.layout_separator_top.setEnabled(false);
-
-			// localViewHolder.controlSeparator.setVisibility(View.GONE);
-
-		}
-		if (preferences.getIsSelectedPage()) {
-			localViewHolder.filterPages.setText(pageCollection
-					.getSelectedPageList().get(0).name);
-		} else {
-			localViewHolder.filterPages.setText("All Pages");
-		}
-		if (paramInt == 0) {
-			localViewHolder.relativeFilter.setVisibility(View.VISIBLE);
-		} else {
-			localViewHolder.relativeFilter.setVisibility(View.GONE);
-		}
-		if (parentActivity.filter.equals("all"))
-			localViewHolder.filterEvents.setText("All Events");
-		if (parentActivity.filter.equals("going"))
-			localViewHolder.filterEvents.setText("Going");
-		if (parentActivity.filter.equals("maybe"))
-			localViewHolder.filterEvents.setText("Maybe");
-		if (parentActivity.filter.equals("declined"))
-			localViewHolder.filterEvents.setText("Declined");
-		if (parentActivity.filter.equals("not answered"))
-			localViewHolder.filterEvents.setText("Not Answered");
-
-		String status = eventCollection.getEventList().get(paramInt).status_attending;
+		String status = event.status_attending;
 		if (status.equals("attending")) {
 			localViewHolder.triangle_attending.setImageBitmap(triangleGreen);
 			localViewHolder.triangle_attending.setVisibility(View.VISIBLE);
@@ -338,73 +336,107 @@ public class myCustomAdapter extends BaseAdapter {
 			parentActivity.filter();
 		}
 
-		localViewHolder.layout_separator_bottom.setVisibility(View.GONE);
-
-		if (event.isInProgress) {
-			localViewHolder.separatorMonthBottom.setText("");
-			localViewHolder.separatorDayBottom.setText("Right Now");
-		} else {
-			localViewHolder.separatorMonthBottom.setText(event.dateStart);
-			localViewHolder.separatorDayBottom.setText(event.dayStart);
-		}
-
 		localViewHolder.attendingCount.setText("Going: "
 				+ Integer.toString(event.attending_count));
 
-		// localViewHolder.layout_separator.isShown()
-
-		// parentActivity.isFirstView(paramInt, paramView);
+		long time = java.lang.System.currentTimeMillis() - start;
+		Log.i("adapter-time",
+				Long.toString(time) + " " + Integer.toString(paramInt));
 
 		return paramView;
 
 	}
 
-	
+	@Override
+	public View getHeaderView(int position, View convertView, ViewGroup parent) {
+		HeaderViewHolder holder;
 
-	public void getImage(final View v, final int i) {
-		AsyncTask<Void, Bitmap, Bitmap> task = new AsyncTask<Void, Bitmap, Bitmap>() {
-
-			@Override
-			public Bitmap doInBackground(Void... params) {
-
-				return parentActivity.readImageFromDisk(eventCollection
-						.getEventList().get(i).event_ID);
+		if (convertView == null) {
+			holder = new HeaderViewHolder();
+			switch (parentActivity.getCurrentListStyle()) {
+			case BIG:
+				convertView = mInflater.inflate(R.layout.header_big_images,
+						parent, false);
+				break;
+			case SMALL:
+				convertView = mInflater.inflate(R.layout.header_small_images,
+						parent, false);
+				break;
 			}
 
-			@Override
-			protected void onPostExecute(Bitmap bmp) {
-				ImageView image = (ImageView) v
-						.findViewById(R.id.imageViewPage);
-				if (eventCollection.getEventList().size() > i) {
-					image.setImageBitmap(bmp);
-				}
+			holder.layout_separator_top = (RelativeLayout) convertView
+					.findViewById(R.id.LayoutSeparatorTop);
+			holder.separatorDay = (TextView) convertView
+					.findViewById(R.id.textViewSeparatorDay);
+			holder.separatorMonth = (TextView) convertView
+					.findViewById(R.id.textViewSeparatorMonth);
+			convertView.setTag(holder);
+		} else {
+			holder = (HeaderViewHolder) convertView.getTag();
+		}
 
-				super.onPostExecute(null);
+		// set header text as first char in name
+
+		final EventData event = eventCollection.getEventList().get(position);
+		if (event.isInProgress) {
+			holder.separatorMonth.setText("");
+			holder.separatorDay.setText("Right Now");
+		} else {
+			holder.separatorMonth.setText(event.dateStart);
+			holder.separatorDay.setText(event.dayStart);
+		}
+
+		return convertView;
+	}
+
+	@Override
+	public long getHeaderId(int position) {
+
+		for (int i = 0; i < mSectionIndices.length; i++) {
+			if (position < mSectionIndices[i]) {
+				return i - 1;
 			}
+		}
+		return mSectionIndices.length - 1;
+	}
 
-		};
-		task.execute();
+	@Override
+	public int getPositionForSection(int section) {
+		if (section >= mSectionIndices.length) {
+			section = mSectionIndices.length - 1;
+		} else if (section < 0) {
+			section = 0;
+		}
+		return mSectionIndices[section];
+	}
+
+	@Override
+	public int getSectionForPosition(int position) {
+		for (int i = 0; i < mSectionIndices.length; i++) {
+			if (position < mSectionIndices[i]) {
+				return i - 1;
+			}
+		}
+		return mSectionIndices.length - 1;
+	}
+
+	@Override
+	public Object[] getSections() {
+		return mSectionLetters;
 	}
 
 	static class ViewHolder {
-		RelativeLayout layout_separator_top;
-		RelativeLayout layout_separator_bottom;
-		RelativeLayout relativeFilter;
-		TextView separatorMonth;
-		TextView separatorDay;
-		TextView separatorMonthBottom;
-		TextView separatorDayBottom;
 		TextView text;
 		TextView desc;
 		TextView page;
-		TextView filterPages;
 		TextView attendingCount;
-		LinearLayout filterPagesLayout;
-		TextView filterEvents;
-		LinearLayout filterEventsLayout;
+
 		ImageView image;
 		ImageView triangle_attending;
 		ImageView image_page;
+
+		ProgressBar progressBar;
+
 		View selector;
 	}
 

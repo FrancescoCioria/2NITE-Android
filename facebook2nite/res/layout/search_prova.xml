@@ -3,7 +3,7 @@
     android:id="@+id/relativeSearch"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@android:color/background_light"
+    android:background="@color/sfondo"
     android:orientation="vertical" >
 
     <LinearLayout
@@ -86,7 +86,6 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/layoutGray"
-        android:background="@android:color/background_light"
         android:descendantFocusability="blocksDescendants"
         android:divider="@color/gray"
         android:dividerHeight="0.1dp"
@@ -101,7 +100,7 @@
         android:gravity="center"
         android:padding="5dp"
         android:text="No results matching your search were found"
-        android:textColor="@color/android_gray"
+        android:textColor="@color/dark_gray"
         android:textSize="15sp"
         android:visibility="gone" />
 

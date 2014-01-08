@@ -1,13 +1,10 @@
 package com.mosquitolabs.tonight;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-
-import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Shader;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,20 +14,16 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ListAdapter;
 import android.widget.RelativeLayout;
-import android.widget.SectionIndexer;
 import android.widget.TextView;
 
-public class myCustomAdapterProve extends BaseAdapter implements
-		StickyListHeadersAdapter, SectionIndexer {
+public class myCustomAdapterOld extends BaseAdapter {
 	EventCollection eventCollection = EventCollection.getInstance();
 
 	PageCollection pageCollection = PageCollection.getInstance();
 	Preferences preferences = Preferences.getInstance();
 
 	private LayoutInflater mInflater;
-	// private Display display;
 	private Activity context;
 
 	int counter = 0;
@@ -46,75 +39,13 @@ public class myCustomAdapterProve extends BaseAdapter implements
 	private final static int BIG = 0;
 	private final static int SMALL = 1;
 
-	private final FacebookeventsActivity parentActivity;
+	private FacebookeventsActivity parentActivity;
 
-	// private final Context mContext;
-	private String[] mCountries;
-	private int[] mSectionIndices;
-	private String[] mSectionLetters;
-
-	public myCustomAdapterProve(Activity paramContext,
+	public myCustomAdapterOld(Activity paramContext,
 			FacebookeventsActivity activity) {
 		this.mInflater = LayoutInflater.from(paramContext);
 		context = paramContext;
 		parentActivity = activity;
-		mSectionIndices = getSectionIndices();
-		mSectionLetters = getSectionLetters();
-
-	}
-
-	private int[] getSectionIndices() {
-
-		ArrayList<Integer> sectionIndices = new ArrayList<Integer>();
-
-		Calendar lastCal = Calendar.getInstance();
-		Calendar currentCal = Calendar.getInstance();
-
-		lastCal.setTimeInMillis(Long.parseLong(eventCollection.getEventList()
-				.get(0).startMillis) * 1000);
-
-		sectionIndices.add(0);
-
-		for (int i = 1; i < eventCollection.getEventList().size(); i++) {
-			final EventData currentEvent = eventCollection.getEventList()
-					.get(i);
-			currentCal
-					.setTimeInMillis(Long.parseLong(currentEvent.startMillis) * 1000);
-
-			if (currentCal.get(Calendar.DAY_OF_YEAR) > lastCal
-					.get(Calendar.DAY_OF_YEAR) && !currentEvent.isInProgress) {
-				lastCal.setTimeInMillis(Long
-						.parseLong(currentEvent.startMillis) * 1000);
-				sectionIndices.add(i);
-			}
-
-		}
-
-		int[] sections = new int[sectionIndices.size()];
-		for (int i = 0; i < sectionIndices.size(); i++) {
-			sections[i] = sectionIndices.get(i);
-		}
-
-		return sections;
-	}
-
-	private String[] getSectionLetters() {
-		String[] letters = new String[mSectionIndices.length];
-		Calendar currentCal = Calendar.getInstance();
-		for (int i = 0; i < mSectionIndices.length; i++) {
-			EventData event = eventCollection.getEventList().get(
-					mSectionIndices[i]);
-			currentCal
-					.setTimeInMillis(Long.parseLong(event.startMillis) * 1000);
-			if (event.isInProgress) {
-				letters[i] = "Now";
-			} else {
-				letters[i] = Integer.toString(currentCal
-						.get(Calendar.DAY_OF_MONTH));
-			}
-
-		}
-		return letters;
 	}
 
 	public int getCount() {
@@ -148,7 +79,14 @@ public class myCustomAdapterProve extends BaseAdapter implements
 					.findViewById(R.id.textViewText);
 			localViewHolder.desc = (TextView) paramView
 					.findViewById(R.id.textDescription);
-
+			localViewHolder.separatorMonth = (TextView) paramView
+					.findViewById(R.id.textViewSeparatorMonth);
+			localViewHolder.separatorDay = (TextView) paramView
+					.findViewById(R.id.textViewSeparatorDay);
+			localViewHolder.separatorMonthBottom = (TextView) paramView
+					.findViewById(R.id.textViewSeparatorMonthBottom);
+			localViewHolder.separatorDayBottom = (TextView) paramView
+					.findViewById(R.id.textViewSeparatorDayBottom);
 			localViewHolder.page = (TextView) paramView
 					.findViewById(R.id.textViewPage);
 			localViewHolder.attendingCount = (TextView) paramView
@@ -169,7 +107,10 @@ public class myCustomAdapterProve extends BaseAdapter implements
 					.findViewById(R.id.LayoutFilter);
 			localViewHolder.selector = (View) paramView
 					.findViewById(R.id.listItemSelector);
-
+			localViewHolder.layout_separator_top = (RelativeLayout) paramView
+					.findViewById(R.id.LayoutSeparatorTop);
+			localViewHolder.layout_separator_bottom = (RelativeLayout) paramView
+					.findViewById(R.id.LayoutSeparatorBottom);
 			localViewHolder.triangle_attending = (ImageView) paramView
 					.findViewById(R.id.imageViewTriangleAttending);
 			localViewHolder.filterEventsLayout
@@ -247,7 +188,7 @@ public class myCustomAdapterProve extends BaseAdapter implements
 
 		if (counter <= 3 || parentActivity.isDownloadingImages()) {
 			if (parentActivity.isDownloadingImages() && counterDownloading == 0) {
-				parentActivity.showImageEventList(paramInt);
+//				parentActivity.showImageEventList(paramInt);
 				counterDownloading++;
 			}
 			Bitmap image = null;
@@ -285,7 +226,7 @@ public class myCustomAdapterProve extends BaseAdapter implements
 			if (counterDownloading > 0) {
 				counterDownloading = 0;
 			}
-			parentActivity.showImageEventList(paramInt);
+//			parentActivity.showImageEventList(paramInt);
 		}
 
 		boolean previousEventIsInProgress = false;
@@ -299,42 +240,63 @@ public class myCustomAdapterProve extends BaseAdapter implements
 		currentEventIsInProgress = event.isInProgress;
 		String currentEventDay = event.dateStart;
 
-		// if ((paramInt == 0)
-		// || (!previousEventDay.equals(currentEventDay) &&
-		// !currentEventIsInProgress)
-		// || (previousEventDay.equals(currentEventDay)
-		// && previousEventIsInProgress && !currentEventIsInProgress)) {
-		//
-		// if (currentEventIsInProgress) {
-		//
-		// // localViewHolder.separatorDay.setTextColor(Color.WHITE);
-		// } else {
-		//
-		// // localViewHolder.separatorDay.setBackgroundDrawable(background);
-		//
-		// // localViewHolder.separatorDay.setTextColor(Color.WHITE);
-		// }
-		//
-		// // localViewHolder.controlSeparator.setVisibility(View.VISIBLE);
-		// } else {
-		//
-		// // localViewHolder.controlSeparator.setVisibility(View.GONE);
-		//
-		// }
+		if ((paramInt == 0)
+				|| (!previousEventDay.equals(currentEventDay) && !currentEventIsInProgress)
+				|| (previousEventDay.equals(currentEventDay)
+						&& previousEventIsInProgress && !currentEventIsInProgress)) {
 
+			if (currentEventIsInProgress) {
+
+				Bitmap bmp = BitmapFactory.decodeResource(
+						context.getResources(), R.drawable.stripes_redd);
+				BitmapDrawable background = new BitmapDrawable(
+						context.getResources(), bmp);
+				background.setTileModeXY(Shader.TileMode.REPEAT,
+						Shader.TileMode.REPEAT);
+				// localViewHolder.separatorDay.setBackgroundDrawable(background);
+				localViewHolder.separatorMonth.setText("");
+				localViewHolder.separatorDay.setText("Right Now");
+
+				// localViewHolder.separatorDay.setTextColor(Color.WHITE);
+			} else {
+
+				Bitmap bmp = BitmapFactory.decodeResource(
+						context.getResources(), R.drawable.stripe_darkk);
+				BitmapDrawable background = new BitmapDrawable(
+						context.getResources(), bmp);
+				background.setTileModeXY(Shader.TileMode.REPEAT,
+						Shader.TileMode.REPEAT);
+				// localViewHolder.separatorDay.setBackgroundDrawable(background);
+
+				localViewHolder.separatorMonth.setText(eventCollection
+						.getEventList().get(paramInt).dateStart);
+				localViewHolder.separatorDay.setText(eventCollection
+						.getEventList().get(paramInt).dayStart);
+
+				// localViewHolder.separatorDay.setTextColor(Color.WHITE);
+			}
+			localViewHolder.layout_separator_top.setVisibility(View.VISIBLE);
+			localViewHolder.layout_separator_top.setEnabled(true);
+
+			// localViewHolder.controlSeparator.setVisibility(View.VISIBLE);
+		} else {
+			localViewHolder.layout_separator_top.setVisibility(View.GONE);
+			localViewHolder.layout_separator_top.setEnabled(false);
+
+			// localViewHolder.controlSeparator.setVisibility(View.GONE);
+
+		}
 		if (preferences.getIsSelectedPage()) {
 			localViewHolder.filterPages.setText(pageCollection
 					.getSelectedPageList().get(0).name);
 		} else {
 			localViewHolder.filterPages.setText("All Pages");
 		}
-
 		if (paramInt == 0) {
 			localViewHolder.relativeFilter.setVisibility(View.VISIBLE);
 		} else {
 			localViewHolder.relativeFilter.setVisibility(View.GONE);
 		}
-
 		if (parentActivity.filter.equals("all"))
 			localViewHolder.filterEvents.setText("All Events");
 		if (parentActivity.filter.equals("going"))
@@ -371,87 +333,28 @@ public class myCustomAdapterProve extends BaseAdapter implements
 			parentActivity.filter();
 		}
 
+		localViewHolder.layout_separator_bottom.setVisibility(View.GONE);
+
+		if (event.isInProgress) {
+			localViewHolder.separatorMonthBottom.setText("");
+			localViewHolder.separatorDayBottom.setText("Right Now");
+		} else {
+			localViewHolder.separatorMonthBottom.setText(event.dateStart);
+			localViewHolder.separatorDayBottom.setText(event.dayStart);
+		}
+
 		localViewHolder.attendingCount.setText("Going: "
 				+ Integer.toString(event.attending_count));
+
+		// localViewHolder.layout_separator.isShown()
+
+		// parentActivity.isFirstView(paramInt, paramView);
 
 		return paramView;
 
 	}
 
-	@Override
-	public View getHeaderView(int position, View convertView, ViewGroup parent) {
-		HeaderViewHolder holder;
-
-		if (convertView == null) {
-			holder = new HeaderViewHolder();
-			convertView = mInflater.inflate(R.layout.header_big_images, parent,
-					false);
-			holder.layout_separator_top = (RelativeLayout) convertView
-					.findViewById(R.id.LayoutSeparatorTop);
-			holder.separatorDay = (TextView) convertView
-					.findViewById(R.id.textViewSeparatorDay);
-			holder.separatorMonth = (TextView) convertView
-					.findViewById(R.id.textViewSeparatorMonth);
-			convertView.setTag(holder);
-		} else {
-			holder = (HeaderViewHolder) convertView.getTag();
-		}
-
-		// set header text as first char in name
-
-		final EventData event = eventCollection.getEventList().get(position);
-		if (event.isInProgress) {
-			holder.separatorMonth.setText("");
-			holder.separatorDay.setText("Right Now");
-		} else {
-			holder.separatorMonth.setText(event.dateStart);
-			holder.separatorDay.setText(event.dayStart);
-		}
-
-		return convertView;
-	}
-
-	@Override
-	public long getHeaderId(int position) {
-		// return the first character of the country as ID because this is what
-		// headers are based upon
-		Calendar cal = Calendar.getInstance();
-		cal.setTimeInMillis(Long.parseLong(eventCollection.getEventList().get(
-				position).startMillis));
-
-		return cal.get(Calendar.DAY_OF_YEAR);
-	}
-
-	@Override
-	public int getPositionForSection(int section) {
-		if (section >= mSectionIndices.length) {
-			section = mSectionIndices.length - 1;
-		} else if (section < 0) {
-			section = 0;
-		}
-		return mSectionIndices[section];
-	}
-
-	@Override
-	public int getSectionForPosition(int position) {
-		for (int i = 0; i < mSectionIndices.length; i++) {
-			if (position < mSectionIndices[i]) {
-				return i - 1;
-			}
-		}
-		return mSectionIndices.length - 1;
-	}
-
-	@Override
-	public Object[] getSections() {
-		return mSectionLetters;
-	}
-
-	public interface StickyListHeadersAdapter extends ListAdapter {
-		View getHeaderView(int position, View convertView, ViewGroup parent);
-
-		long getHeaderId(int position);
-	}
+	
 
 	public void getImage(final View v, final int i) {
 		AsyncTask<Void, Bitmap, Bitmap> task = new AsyncTask<Void, Bitmap, Bitmap>() {
@@ -479,9 +382,13 @@ public class myCustomAdapterProve extends BaseAdapter implements
 	}
 
 	static class ViewHolder {
-
+		RelativeLayout layout_separator_top;
+		RelativeLayout layout_separator_bottom;
 		RelativeLayout relativeFilter;
-
+		TextView separatorMonth;
+		TextView separatorDay;
+		TextView separatorMonthBottom;
+		TextView separatorDayBottom;
 		TextView text;
 		TextView desc;
 		TextView page;
