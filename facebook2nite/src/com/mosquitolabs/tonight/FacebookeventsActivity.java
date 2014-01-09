@@ -42,7 +42,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
-import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.SpannableString;
@@ -50,16 +49,15 @@ import android.text.style.UnderlineSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -71,6 +69,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.ActionBar.OnNavigationListener;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
@@ -112,9 +112,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	private int counterEnter = 0;
 	private int counterExit = 0;
 	private int currentListStyle = 0;
-
-	private View now;
-	private View next;
 
 	private final static int ATTENDING = 0;
 	private final static int ATTENDING_UNSURE = 1;
@@ -205,6 +202,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	private boolean isFromFilter = false;
 	private boolean isContentMain = false;
 	private boolean myEventsSettingsDownload = false;
+	private boolean isAutomaticClick = false;
 
 	private ProgressDialog progressDialog;
 	private ProgressThread progressThread;
@@ -246,13 +244,13 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	private static final int BIG = 0;
 	private static final int SMALL = 1;
 
-	private ArrayList<Integer> imageQueue = new ArrayList<Integer>();
-	private boolean addingToQueue = false;
-	private boolean gettingFromQueue = false;
-
-	private int motionAction = 0;
 	private int oldFirstVisibleItem = 0;
 	private int scrollState = 0;
+
+	private RelativeLayout relativeCurrentPage;
+	private TextView textCurrentPage;
+
+	private ActionBar.OnNavigationListener navigationListener;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -262,6 +260,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		Settings.addLoggingBehavior(LoggingBehavior.INCLUDE_ACCESS_TOKENS);
 
 		actionbar = getSupportActionBar();
+		initializeSpinnerNavigation();
 		actionbar.hide();
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 		SharedPreferences.Editor editor = mPrefs.edit();
@@ -337,6 +336,59 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			progressWelcomeVisible(true);
 			showMyLogo();
 		}
+
+	}
+
+	private void initializeSpinnerNavigation() {
+
+		final String[] actions = new String[] { "All", "Going", "Maybe",
+				"Not Answered", "Declined (trash)" };
+
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+				getBaseContext(),
+				android.R.layout.simple_spinner_dropdown_item, actions);
+
+		actionbar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+
+		navigationListener = new OnNavigationListener() {
+
+			@Override
+			public boolean onNavigationItemSelected(int itemPosition,
+					long itemId) {
+				if(isAutomaticClick){
+					isAutomaticClick = false;
+					return false;
+				}
+
+				switch (itemPosition) {
+				case 0:
+					filter = "all";
+					break;
+
+				case 1:
+					filter = "going";
+					break;
+
+				case 2:
+					filter = "maybe";
+					break;
+				case 3:
+					filter = "not answered";
+					break;
+				case 4:
+					filter = "declined";
+					break;
+
+				}
+				
+				filter();
+				filterBar();
+				
+				return false;
+			}
+		};
+
+		actionbar.setListNavigationCallbacks(adapter, navigationListener);
 
 	}
 
@@ -439,7 +491,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 	@Override
 	protected void onResume() {
-		Log.i("onResume", "start");
+		// Log.i("onResume", "start");
 
 		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 		if ((preferences.getModifiedPages() || isEventsJustOpened)
@@ -468,8 +520,26 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			refreshPageAdapter();
 			viewAll();
 		}
+		try {
+			switch (pagerMain.getCurrentItem()) {
+			case PAGES:
+				setPageOne();
+				break;
+			case EVENTS:
+				setPageTwo();
+				break;
+			case DESCRIPTION:
+				setPageThree();
+				break;
 
-		Log.i("onResume", "end");
+			}
+		} catch (Exception e) {
+
+		}
+		
+		resetSpinner();
+
+		// Log.i("onResume", "end");
 		super.onResume();
 
 	}
@@ -503,7 +573,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		AsyncTask<Void, Void, Boolean> task = new AsyncTask<Void, Void, Boolean>() {
 			@Override
 			public Boolean doInBackground(Void... params) {
-				Log.i("showMyLogo", "start");
+				// Log.i("showMyLogo", "start");
 
 				eventCollection.readFromDisk(FacebookeventsActivity.this);
 				pageCollection.readFromDisk(FacebookeventsActivity.this);
@@ -574,7 +644,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 						}
 					}
 				}
-				Log.i("showMyLogo", "end");
+				// Log.i("showMyLogo", "end");
 			}
 
 		};
@@ -2057,6 +2127,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 													i).name + "\""
 											+ " selected", false);
 
+									currentPageVisible(true);
+									textCurrentPage.setText(pageCollection
+											.getPageList().get(i).name);
+
 									preferences.setModifiedSinglePage(true);
 									invalidateCurrentPageId();
 									refreshPageAdapter();
@@ -2106,42 +2180,54 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 				listViewMain = (StickyListHeadersListView) v
 						.findViewById(R.id.listViewMain);
 
-				// listViewMain.setEmptyView()
 				listViewMain.setAdapter(eventArrayAdapter);
 
 				textEventEmpty = (TextView) v
 						.findViewById(R.id.textViewEventEmpty);
 
-				relativeFilter = (RelativeLayout) v
-						.findViewById(R.id.LayoutFilter);
+				// relativeFilter = (RelativeLayout) v
+				// .findViewById(R.id.LayoutFilter);
+
+				relativeCurrentPage = (RelativeLayout) v
+						.findViewById(R.id.LayoutCurrentPage);
+				textCurrentPage = (TextView) v
+						.findViewById(R.id.textViewCurrentPage);
 
 				relativeFilterVisible(false);
 
-				filterEvents = (TextView) v.findViewById(R.id.spinnerFilter);
+				filterEvents = (TextView) v.findViewById(R.id.spinnerEvent);
 				filterPages = (TextView) v.findViewById(R.id.spinnerPages);
-				LinearLayout layoutFilterEvents = (LinearLayout) v
-						.findViewById(R.id.spinnerFilterLayout);
-				LinearLayout layoutFilterPages = (LinearLayout) v
-						.findViewById(R.id.spinnerPagesLayout);
 
-				layoutFilterEvents.setOnClickListener(new OnClickListener() {
-
-					@Override
-					public void onClick(View v) {
-						spinnerEvent();
-
-						// textPageEmpty.setVisibility(View.VISIBLE);
-
-					}
-				});
-				layoutFilterPages.setOnClickListener(new OnClickListener() {
-
+				relativeCurrentPage.setOnClickListener(new OnClickListener() {
 					@Override
 					public void onClick(View v) {
 						spinnerPage();
-
 					}
 				});
+
+				// LinearLayout layoutFilterEvents = (LinearLayout) v
+				// .findViewById(R.id.spinnerFilterLayout);
+				// LinearLayout layoutFilterPages = (LinearLayout) v
+				// .findViewById(R.id.spinnerPagesLayout);
+				//
+				// layoutFilterEvents.setOnClickListener(new OnClickListener() {
+				//
+				// @Override
+				// public void onClick(View v) {
+				// spinnerEvent();
+				//
+				// // textPageEmpty.setVisibility(View.VISIBLE);
+				//
+				// }
+				// });
+				// layoutFilterPages.setOnClickListener(new OnClickListener() {
+				//
+				// @Override
+				// public void onClick(View v) {
+				// spinnerPage();
+				//
+				// }
+				// });
 
 				listViewMain.setOnScrollListener(new OnScrollListener() {
 
@@ -3314,7 +3400,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 									.saveToDisk(FacebookeventsActivity.this);
 							toast("RSVP status updated", false);
 							filter();
-							// refreshEventsAdapter();
 						} catch (Exception e) {
 							Log.e("rsvp", e.toString());
 							toast("an error occurred while trying to update your RSVP status",
@@ -4780,7 +4865,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 				preferences.setisModifiedPageListToClear(true);
 				updateAttendingCount();
 
-				toast("Images will be downloaded in background", true);
+				// toast("Images will be downloaded in background", true);
 
 			}
 		}
@@ -4797,7 +4882,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 				progressDialog = new ProgressDialog(FacebookeventsActivity.this);
 				progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 				progressDialog.setMessage("Downloading: \"My Events..\"");
-
 				progressDialog.setCancelable(false);
 				progressDialog.show();
 
@@ -4863,15 +4947,29 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		});
 	}
 
-	private void relativeFilterVisible(final boolean b) {
+	private void currentPageVisible(final boolean b) {
 		FacebookeventsActivity.this.runOnUiThread(new Runnable() {
 			public void run() {
 
 				if (b) {
-					relativeFilter.setVisibility(View.GONE);
+					relativeCurrentPage.setVisibility(View.VISIBLE);
 				} else {
-					relativeFilter.setVisibility(View.GONE);
+					relativeCurrentPage.setVisibility(View.GONE);
 				}
+
+			}
+		});
+	}
+
+	private void relativeFilterVisible(final boolean b) {
+		FacebookeventsActivity.this.runOnUiThread(new Runnable() {
+			public void run() {
+
+				// if (b) {
+				// relativeFilter.setVisibility(View.GONE);
+				// } else {
+				// relativeFilter.setVisibility(View.GONE);
+				// }
 
 				// relativeFilter.setVisibility(View.VISIBLE);
 
@@ -5404,7 +5502,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 					eventCollection.sortByDate();
 					eventCollection.saveCompleteEventList();
 					eventCollection.saveToDisk(FacebookeventsActivity.this);
-					// refreshEventsAdapter();
 					newDownloads = false;
 
 				}
@@ -5843,7 +5940,18 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			setFacebook(false);
 			setPlaces(true);
 			setlistStyle(false);
+			setSearch(false);
+			setReset(true);
+			setSortEvents(false);
+			setSortPages(false);
+			setCalendar(false);
+
 			viewAll();
+			filterAll();
+
+			resetSpinner();
+			setSpinner(false);
+
 		} catch (Exception e) {
 			EasyTracker.getTracker().sendException(
 					"setPageOne() - " + e.toString(), false);
@@ -5864,10 +5972,81 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			setLike(false);
 			setFacebook(false);
 			setlistStyle(true);
+			setSpinner(true);
+			setSearch(false);
+			setReset(false);
+			setCalendar(false);
+
+			if (isPageSelected() || !filter.equals("all")) {
+				setViewAllName();
+				setViewAll(true);
+
+			} else {
+				setViewAll(false);
+			}
+
 		} catch (Exception e) {
 			EasyTracker.getTracker().sendException(
 					"setPageTwo() - " + e.toString(), false);
 		}
+	}
+
+	public void setPageThree() {
+		setShareIntent();
+		setPlaces(false);
+		setlistStyle(false);
+		setSpinner(false);
+		setSearch(false);
+		setReset(false);
+		setSortEvents(false);
+		setSortPages(false);
+		setViewAll(false);
+		setRefresh(false);
+
+		if (isEventPageFilled()) {
+			setInfoPageName(getCurrentPageName());
+			if (getLoc().equals("null")) {
+				setInfo(false);
+			} else {
+				setInfo(true);
+			}
+			setFacebook(true);
+			setShare(true);
+			setRSVP(true);
+			setLike(false);
+			setInfo2NITE(true);
+			setCalendar(true);
+
+		} else {
+			setInfo(false);
+			setFacebook(false);
+			setShare(false);
+			setInfo2NITE(true);
+			setRSVP(false);
+			setLike(false);
+			setCalendar(false);
+
+		}
+	}
+
+	public void setSpinner(boolean b) {
+		if (b) {
+			actionbar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
+		} else {
+			actionbar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+		}
+	}
+
+	public void resetSpinner() {
+		final String[] actions = new String[] { "All", "Going", "Maybe",
+				"Not Answered", "Declined (trash)" };
+
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+				getBaseContext(),
+				android.R.layout.simple_spinner_dropdown_item, actions);
+		actionbar.setListNavigationCallbacks(adapter, navigationListener);
+		isAutomaticClick = true;
+
 	}
 
 	public void setInfo(boolean b) {
@@ -5895,7 +6074,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	}
 
 	public void setViewAll(boolean b) {
-		viewall.setVisible(b);
+		viewall.setVisible(false);
 	}
 
 	public void setFacebook(boolean b) {
@@ -5910,7 +6089,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	}
 
 	public void setSortEvents(boolean b) {
-		sortEvents.setVisible(b);
+		sortEvents.setVisible(false);
 	}
 
 	public void setSortPages(boolean b) {
@@ -5970,9 +6149,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			read();
 			filterBar();
 			viewall.setVisible(false);
-
+			currentPageVisible(false);
 		}
-
 	}
 
 	public void filterAll() {
@@ -6101,6 +6279,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 												item - 1).name + "\""
 										+ " selected", false);
 
+								currentPageVisible(true);
+								textCurrentPage.setText(pageCollection
+										.getPageList().get(item - 1).name);
+
 								preferences.setModifiedSinglePage(true);
 								invalidateCurrentPageId();
 								refreshPageAdapter();
@@ -6115,6 +6297,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 								filterPages.setText("All Pages");
 								filter();
 								refreshEventsAdapter();
+								currentPageVisible(false);
 							} else {
 								viewAll();
 							}
@@ -6375,7 +6558,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			if (key.equals("service_updated")
 					&& mPrefs.getBoolean("service_updated", true)) {
 				filter();
-				// refreshEventsAdapter();
 			}
 
 			Log.d("debug", "\"" + key + "\"" + " preference has been changed");
@@ -6487,9 +6669,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 			@Override
 			public Bitmap[] doInBackground(Void... params) {
-				// android.os.Process
-				// .setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND
-				// + android.os.Process.THREAD_PRIORITY_MORE_FAVORABLE);
+				android.os.Process
+						.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND
+								+ android.os.Process.THREAD_PRIORITY_MORE_FAVORABLE);
 				Bitmap bmp = null;
 				Bitmap imagePage = null;
 
@@ -6505,21 +6687,22 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 							bmp = BitmapFactory.decodeStream(in);
 
 						} catch (Exception e) {
+							if (!isDownloadingImages()) {
+								try {
+									String pageID = eventCollection
+											.getEventList().get(i).parentPage_ID;
+									if (pageID.equals("1")) {
+										bmp = BitmapFactory.decodeResource(
+												getResources(),
+												R.drawable.icon_other_events);
+									} else {
+										java.io.FileInputStream in = FacebookeventsActivity.this
+												.openFileInput(pageID);
+										bmp = BitmapFactory.decodeStream(in);
+									}
 
-							try {
-								String pageID = eventCollection.getEventList()
-										.get(i).parentPage_ID;
-								if (pageID.equals("1")) {
-									bmp = BitmapFactory.decodeResource(
-											getResources(),
-											R.drawable.icon_other_events);
-								} else {
-									java.io.FileInputStream in = FacebookeventsActivity.this
-											.openFileInput(pageID);
-									bmp = BitmapFactory.decodeStream(in);
+								} catch (Exception ex) {
 								}
-
-							} catch (Exception ex) {
 							}
 						}
 					}
@@ -6560,7 +6743,15 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			}
 
 		};
-		task.execute();
+
+		if (Build.VERSION.SDK_INT >= 11) {
+			// --post GB use serial executor by default --
+			task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+		} else {
+			// --GB uses ThreadPoolExecutor by default--
+			task.execute();
+		}
+		// task.execute();
 	}
 
 	private void downloadImage(final URL img_value, final String ID) {
@@ -6570,8 +6761,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 			@Override
 			public Bitmap doInBackground(Void... params) {
-				Log.i("download image",
-						"start" + Integer.toString(counterEnter));
+				// Log.i("download image",
+				// "start" + Integer.toString(counterEnter));
 
 				Bitmap image = null;
 				try {
@@ -6582,23 +6773,31 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 					Log.e("download image", e.toString());
 				}
 
-				Log.i("download image", ID);
+				// Log.i("download image", ID);
 
 				return null;
 			}
 
 			@Override
 			protected void onPostExecute(Bitmap result) {
-				if (eventCollection.getCompleteEventByID(ID) != null) {
-					eventCollection.getCompleteEventByID(ID).imageDownloaded = true;
+				int i = 0;
+				for (EventData event : eventCollection.getCompleteEventList()) {
+					if (event.event_ID.equals(ID)) {
+						eventCollection.getCompleteEventByID(ID).imageDownloaded = true;
+						showImageEventList(i);
+						break;
+					}
+					i++;
 				}
-				refreshEventsAdapter();
+
 				counterExit++;
-				Log.i("download image", "end" + Integer.toString(counterExit));
+				// Log.i("download image", "end" +
+				// Integer.toString(counterExit));
 
 			}
 
 		};
+
 		task.execute();
 	}
 
@@ -6761,16 +6960,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		if (true && Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			header.setAlpha(1 - (offset / (float) header.getMeasuredHeight()));
 		}
-	}
-
-	@Override
-	public boolean onTouchEvent(MotionEvent ev) {
-		// Let the ScaleGestureDetector inspect all events.
-
-		final int action = MotionEventCompat.getActionMasked(ev);
-		motionAction = action;
-
-		return true;
 	}
 
 }

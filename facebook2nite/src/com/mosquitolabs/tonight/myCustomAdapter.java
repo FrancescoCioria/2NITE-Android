@@ -133,7 +133,6 @@ public class myCustomAdapter extends BaseAdapter implements
 
 	public View getView(final int paramInt, View paramView,
 			ViewGroup paramViewGroup) {
-		long start = java.lang.System.currentTimeMillis();
 
 		ViewHolder localViewHolder;
 
@@ -338,10 +337,6 @@ public class myCustomAdapter extends BaseAdapter implements
 
 		localViewHolder.attendingCount.setText("Going: "
 				+ Integer.toString(event.attending_count));
-
-		long time = java.lang.System.currentTimeMillis() - start;
-		Log.i("adapter-time",
-				Long.toString(time) + " " + Integer.toString(paramInt));
 
 		return paramView;
 

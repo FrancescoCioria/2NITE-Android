@@ -32,6 +32,8 @@
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:layout_marginLeft="5dp"
+            android:background="@color/light_gray"
+            android:padding="0.5dp"
             android:scaleType="centerCrop"
             android:src="@drawable/icon_other_events" />
 
@@ -41,13 +43,13 @@
             android:layout_height="13dp"
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
-            android:layout_marginBottom="5dp"
-            android:layout_marginLeft="51.5dp"
+            android:layout_marginBottom="6dp"
+            android:layout_marginLeft="51dp"
             android:scaleType="centerCrop"
             android:src="@drawable/triangle" />
 
         <ImageView
-            android:id="@+id/imageViewTriangle"
+            android:id="@+id/imageViewArrow"
             android:layout_width="10dp"
             android:layout_height="8dp"
             android:layout_alignParentRight="true"
@@ -64,8 +66,7 @@
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:layout_marginLeft="5dp"
-            android:background="@layout/imageview_selected"
-             >
+            android:background="@layout/imageview_selected" >
         </RelativeLayout>
     </RelativeLayout>
 

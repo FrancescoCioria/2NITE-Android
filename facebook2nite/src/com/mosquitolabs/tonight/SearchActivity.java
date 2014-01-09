@@ -21,6 +21,7 @@ import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -32,6 +33,7 @@ import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -42,6 +44,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
@@ -56,10 +59,10 @@ import com.facebook.Session;
 import com.facebook.SessionState;
 import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.Tracker;
+import com.mosquitolabs.tonight.myCustomAdapter.ViewHolder;
 
 public class SearchActivity extends SherlockActivity {
 	final String APP_ID = "219909391458551";
-	private Button buttonSearch;
 	private EditText editTextSearch;
 	private EventCollection eventCollection = EventCollection.getInstance();
 	private JSONObject json = new JSONObject();
@@ -81,12 +84,14 @@ public class SearchActivity extends SherlockActivity {
 	private Preferences preferences = Preferences.getInstance();
 	private ProgressBar progressSearch;
 	private boolean isFirstTime = false;
-	//private boolean isInsidePreview = false;
+	// private boolean isInsidePreview = false;
 	private TextView textNoResult;
 	private com.actionbarsherlock.app.ActionBar actionbar;
 	private Button tab1;
 	private Button tab2;
 	private Button buttonBack;
+	private Button buttonSearch;
+
 	private int numberPicture;
 
 	private int searchSortChecked;
@@ -99,19 +104,22 @@ public class SearchActivity extends SherlockActivity {
 
 	private Session session;
 
+	private int oldFirstVisibleItem = 0;
+	private int scrollState = 0;
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
 		this.setTheme(R.style.Theme_Sherlock);
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.search_prova);
+		setContentView(R.layout.search);
 
 		EasyTracker.getTracker().sendView();
 
 		actionbar = getSupportActionBar();
 		actionbar.setHomeButtonEnabled(true);
 		actionbar.setDisplayHomeAsUpEnabled(true);
-		actionbar.hide();
+		// actionbar.hide();
 
 		pageCollection.restorePreviousPage();
 		pageCollection.getPageSearchList().clear();
@@ -150,9 +158,8 @@ public class SearchActivity extends SherlockActivity {
 			mySearch = (extras.getString("search"));
 			isFirstTime = true;
 		}
-		
-		initialize();
 
+		initialize();
 
 	}
 
@@ -206,18 +213,18 @@ public class SearchActivity extends SherlockActivity {
 			Request.Callback callback = new Request.Callback() {
 				public void onCompleted(Response response) {
 					Log.i("request", "end_first");
-					try{
-					JSONObject j = response.getGraphObject()
-							.getInnerJSONObject();
-					searchComplete(j);
-					}catch (Exception e) {
+					try {
+						JSONObject j = response.getGraphObject()
+								.getInnerJSONObject();
+						searchComplete(j);
+					} catch (Exception e) {
 						// TODO: handle exception
 					}
 				}
 			};
 
-			Request request = new Request(Session.getActiveSession(), "search", localBundle,
-					HttpMethod.GET, callback);
+			Request request = new Request(Session.getActiveSession(), "search",
+					localBundle, HttpMethod.GET, callback);
 			request.executeAsync();
 
 			// mAsyncRunner.request("search", localBundle,
@@ -496,8 +503,8 @@ public class SearchActivity extends SherlockActivity {
 					}
 				};
 
-				Request request = new Request(Session.getActiveSession(), "fql", bun,
-						HttpMethod.GET, callback);
+				Request request = new Request(Session.getActiveSession(),
+						"fql", bun, HttpMethod.GET, callback);
 				request.executeAndWait();
 
 				return null;
@@ -518,16 +525,15 @@ public class SearchActivity extends SherlockActivity {
 
 	@Override
 	public void onBackPressed() {
-		
-			if (!pageCollection.getModifiedPageList().isEmpty()) {
-				pageCollection.restoreSelectedPageList();
-				preferences.setisModifiedPageListToClear(false);
-			}
-			pageCollection.saveToDisk(this);
-			eventCollection.restoreEventList();
-			// facebookeventsActivity.read();
-			super.onBackPressed();
-		
+
+		if (!pageCollection.getModifiedPageList().isEmpty()) {
+			pageCollection.restoreSelectedPageList();
+			preferences.setisModifiedPageListToClear(false);
+		}
+		pageCollection.saveToDisk(this);
+		eventCollection.restoreEventList();
+		// facebookeventsActivity.read();
+		super.onBackPressed();
 
 	}
 
@@ -571,10 +577,7 @@ public class SearchActivity extends SherlockActivity {
 			return true;
 
 		case R.id.menu_search:
-			mySearch = editTextSearch.getText().toString();
-			if (mySearch.length() > 0) {
-				onButtonClickDoTHisThing();
-			}
+			search();
 			return true;
 
 		default:
@@ -630,6 +633,7 @@ public class SearchActivity extends SherlockActivity {
 
 	public class myCustomAdapterStar extends BaseAdapter {
 		private LayoutInflater mInflater;
+		private Bitmap standardImage = null;
 
 		public myCustomAdapterStar(Context paramContext) {
 			this.mInflater = LayoutInflater.from(paramContext);
@@ -650,31 +654,43 @@ public class SearchActivity extends SherlockActivity {
 		public View getView(final int paramInt, View paramView,
 				ViewGroup paramViewGroup) {
 			ViewHolderStar localViewHolder;
+			if (paramView == null) {
+				paramView = mInflater.inflate(R.layout.list_pages, null);
+				localViewHolder = new ViewHolderStar();
+				localViewHolder.selected = (RelativeLayout) paramView
+						.findViewById(R.id.imageViewSelected);
+				localViewHolder.text = (TextView) paramView
+						.findViewById(R.id.textViewListPages);
+				localViewHolder.star = (ImageView) paramView
+						.findViewById(R.id.imageViewStar);
+				localViewHolder.image = (ImageView) paramView
+						.findViewById(R.id.imageViewPage);
+				localViewHolder.text_fan = (TextView) paramView
+						.findViewById(R.id.textViewListPagesFanCount);
 
-			paramView = mInflater.inflate(R.layout.list_pages, null);
-			localViewHolder = new ViewHolderStar();
-			localViewHolder.selected = (RelativeLayout) paramView
-					.findViewById(R.id.imageViewSelected);
-			localViewHolder.text = (TextView) paramView
-					.findViewById(R.id.textViewListPages);
-			localViewHolder.star = (ImageView) paramView
-					.findViewById(R.id.imageViewStar);
-			localViewHolder.image = (ImageView) paramView
-					.findViewById(R.id.imageViewPage);
-			localViewHolder.text_fan = (TextView) paramView
-					.findViewById(R.id.textViewListPagesFanCount);
+				localViewHolder.text.setText(pageCollection.getPageSearchList()
+						.get(paramInt).name);
+				standardImage = BitmapFactory.decodeResource(
+						SearchActivity.this.getResources(),
+						R.drawable.icon_gray);
 
-			localViewHolder.text.setText(pageCollection.getPageSearchList()
-					.get(paramInt).name);
-
-			paramView.setTag(localViewHolder);
-
-			if (readImageFromDisk(pageCollection.getPageSearchList().get(
-					paramInt)._ID) != null) {
-				localViewHolder.image
-						.setImageBitmap(readImageFromDisk(pageCollection
-								.getPageSearchList().get(paramInt)._ID));
+				paramView.setTag(localViewHolder);
+			} else {
+				localViewHolder = (ViewHolderStar) paramView.getTag();
 			}
+
+			// if (readImageFromDisk(pageCollection.getPageSearchList().get(
+			// paramInt)._ID) != null) {
+			// localViewHolder.image
+			// .setImageBitmap(readImageFromDisk(pageCollection
+			// .getPageSearchList().get(paramInt)._ID));
+			// }
+			paramView.findViewById(R.id.progressBarImagePageList)
+			.setVisibility(View.VISIBLE);
+
+			localViewHolder.image.setImageBitmap(standardImage);
+
+			showImagePageList(paramInt);
 
 			localViewHolder.selected
 					.setOnClickListener(new View.OnClickListener() {
@@ -804,9 +820,11 @@ public class SearchActivity extends SherlockActivity {
 									@Override
 									public void onClick(DialogInterface dialog,
 											int which) {
-										Session.getActiveSession().openForRead(new Session.OpenRequest(
-												SearchActivity.this)
-												.setCallback(statusCallback));
+										Session.getActiveSession()
+												.openForRead(
+														new Session.OpenRequest(
+																SearchActivity.this)
+																.setCallback(statusCallback));
 									}
 								});
 						builder.setCancelable(false);
@@ -871,8 +889,8 @@ public class SearchActivity extends SherlockActivity {
 				}
 			}
 		};
-		Request request = new Request(Session.getActiveSession(), "fql", bundle, HttpMethod.GET,
-				callback);
+		Request request = new Request(Session.getActiveSession(), "fql",
+				bundle, HttpMethod.GET, callback);
 		request.executeAsync();
 	}
 
@@ -917,17 +935,20 @@ public class SearchActivity extends SherlockActivity {
 									progressSearch.setVisibility(View.GONE);
 									listView.setVisibility(View.VISIBLE);
 								}
-								if (listView.getFirstVisiblePosition() <= j
-										&& j <= listView
-												.getLastVisiblePosition()) {
-									View v = listView.getChildAt(j
-											- listView
-													.getFirstVisiblePosition());
-									ImageView image = (ImageView) v
-											.findViewById(R.id.imageViewPage);
-									image.setImageBitmap(readImageFromDisk(pageCollection
-											.getPageSearchList().get(j)._ID));
-								}
+								
+//								if (listView.getFirstVisiblePosition() <= j
+//										&& j <= listView
+//												.getLastVisiblePosition()) {
+//									View v = listView.getChildAt(j
+//											- listView
+//													.getFirstVisiblePosition());
+//									ImageView image = (ImageView) v
+//											.findViewById(R.id.imageViewPage);
+//									image.setImageBitmap(readImageFromDisk(pageCollection
+//											.getPageSearchList().get(j)._ID));
+//								}
+								
+								showImagePageList(j);
 
 								if (j + 1 < pageCollection.getPageSearchList()
 										.size()) {
@@ -1001,14 +1022,15 @@ public class SearchActivity extends SherlockActivity {
 					.setText("Add pages to your favorite list to never miss their events again.");
 			textNoResult.setVisibility(View.VISIBLE);
 		}
-		buttonBack = (Button) findViewById(R.id.buttonBack);
-		buttonBack.setOnClickListener(new OnClickListener() {
+		// buttonBack = (Button) findViewById(R.id.buttonBack);
+		// buttonBack.setOnClickListener(new OnClickListener() {
+		//
+		// @Override
+		// public void onClick(View v) {
+		// onBackPressed();
+		// }
+		// });
 
-			@Override
-			public void onClick(View v) {
-				onBackPressed();
-			}
-		});
 		pageArrayAdapter = new myCustomAdapterStar(SearchActivity.this);
 		listView = (ListView) findViewById(R.id.listSearch);
 		listView.setAdapter(pageArrayAdapter);
@@ -1129,38 +1151,54 @@ public class SearchActivity extends SherlockActivity {
 			}
 		});
 
-		buttonSearch = (Button) findViewById(R.id.buttonSearch);
-		buttonSearch.setOnClickListener(new View.OnClickListener() {
+		listView.setOnScrollListener(new OnScrollListener() {
 
 			@Override
-			public void onClick(View v) {
-				mySearch = editTextSearch.getText().toString();
-				if (mySearch.length() > 0) {
-					onButtonClickDoTHisThing();
+			public void onScrollStateChanged(AbsListView view, int scrollState) {
+				SearchActivity.this.scrollState = scrollState;
+
+				if (scrollState == OnScrollListener.SCROLL_STATE_IDLE) {
+					int first = listView.getFirstVisiblePosition();
+					if (first < oldFirstVisibleItem) {
+						for (int z = listView.getLastVisiblePosition(); z >= first; z--) {
+							showImagePageList(z);
+						}
+					} else {
+
+						for (int z = first; z <= listView
+								.getLastVisiblePosition(); z++) {
+							showImagePageList(z);
+						}
+					}
+
+					oldFirstVisibleItem = first;
 				}
 			}
-		});
-
-		buttonSearch.setOnLongClickListener(new OnLongClickListener() {
 
 			@Override
-			public boolean onLongClick(View v) {
-				// TODO Auto-generated method stub
-				return false;
+			public void onScroll(AbsListView view, int firstVisibleItem,
+					int visibleItemCount, int totalItemCount) {
+
 			}
 		});
 
+		buttonSearch = (Button) findViewById(R.id.buttonSearch);
 		editTextSearch = (EditText) findViewById(R.id.editTextSearch);
+
+		buttonSearch.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				search();
+			}
+		});
+
 		editTextSearch.setOnEditorActionListener(new OnEditorActionListener() {
 
 			@Override
 			public boolean onEditorAction(TextView v, int actionId,
 					KeyEvent event) {
 				if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-					mySearch = editTextSearch.getText().toString();
-					if (mySearch.length() > 0) {
-						onButtonClickDoTHisThing();
-					}
+					search();
 				}
 				return false;
 			}
@@ -1173,11 +1211,85 @@ public class SearchActivity extends SherlockActivity {
 		}
 	}
 
+	private void search() {
+		mySearch = editTextSearch.getText().toString();
+		if (mySearch.length() > 0) {
+			onButtonClickDoTHisThing();
+		}
+	}
+
 	private class SessionStatusCallback implements Session.StatusCallback {
 		@Override
 		public void call(Session session, SessionState state,
 				Exception exception) {
 
+		}
+	}
+
+	public void showImagePageList(final int i) {
+		AsyncTask<Void, Integer, Bitmap[]> task = new AsyncTask<Void, Integer, Bitmap[]>() {
+
+			@Override
+			public Bitmap[] doInBackground(Void... params) {
+				// android.os.Process
+				// .setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND
+				// + android.os.Process.THREAD_PRIORITY_MORE_FAVORABLE);
+				Bitmap bmp = null;
+				Bitmap imagePage = null;
+
+				if (scrollState != OnScrollListener.SCROLL_STATE_FLING) {
+					if (pageCollection.getPageSearchList().size() > i) {
+
+						// GET PAGE PICTURE
+
+						try {
+							java.io.FileInputStream in = SearchActivity.this
+									.openFileInput(pageCollection
+											.getPageSearchList().get(i)._ID);
+							bmp = BitmapFactory.decodeStream(in);
+
+						} catch (Exception e) {
+
+						}
+					}
+
+				}
+
+				Bitmap[] toReturn = { bmp, imagePage };
+				return toReturn;
+			}
+
+			@Override
+			public void onPostExecute(Bitmap[] value) {
+				if (value[0] != null) {
+					int first = listView.getFirstVisiblePosition();
+					int last = listView.getLastVisiblePosition();
+					int current = i;
+					if (first <= current && current <= last) {
+						try {
+							View v = listView.getChildAt(current - first);
+
+							ImageView image = (ImageView) v
+									.findViewById(R.id.imageViewPage);
+
+							image.setImageBitmap(value[0]);
+
+							v.findViewById(R.id.progressBarImagePageList)
+									.setVisibility(View.GONE);
+
+						} catch (Exception e) {
+						}
+					}
+				}
+			}
+
+		};
+		if (Build.VERSION.SDK_INT >= 11) {
+			// --post GB use serial executor by default --
+			task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+		} else {
+			// --GB uses ThreadPoolExecutor by default--
+			task.execute();
 		}
 	}
 

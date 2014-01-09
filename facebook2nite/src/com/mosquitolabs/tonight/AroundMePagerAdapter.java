@@ -5,6 +5,8 @@ import java.net.URL;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.mosquitolabs.tonight.UserLikesPagerAdapter.ViewHolderStarUser;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -343,19 +345,28 @@ public class AroundMePagerAdapter extends PagerAdapter {
 			temp = (pageCollection.getPageAroundMe().get(paramInt));
 
 			final PageData page = temp;
-			paramView = mInflater.inflate(R.layout.list_pages, null);
-			localViewHolder = new ViewHolderStarPlaces();
-			localViewHolder.selected = (RelativeLayout) paramView
-					.findViewById(R.id.imageViewSelected);
-			localViewHolder.text = (TextView) paramView
-					.findViewById(R.id.textViewListPages);
-			localViewHolder.text_fan = (TextView) paramView
-					.findViewById(R.id.textViewListPagesFanCount);
-			localViewHolder.star = (ImageView) paramView
-					.findViewById(R.id.imageViewStar);
-			localViewHolder.image = (ImageView) paramView
-					.findViewById(R.id.imageViewPage);
-			localViewHolder.text.setText(page.name);
+			if (paramView == null) {
+				paramView = mInflater.inflate(R.layout.list_pages, null);
+				localViewHolder = new ViewHolderStarPlaces();
+				localViewHolder.selected = (RelativeLayout) paramView
+						.findViewById(R.id.imageViewSelected);
+				localViewHolder.text = (TextView) paramView
+						.findViewById(R.id.textViewListPages);
+				localViewHolder.text_fan = (TextView) paramView
+						.findViewById(R.id.textViewListPagesFanCount);
+				localViewHolder.star = (ImageView) paramView
+						.findViewById(R.id.imageViewStar);
+				localViewHolder.image = (ImageView) paramView
+						.findViewById(R.id.imageViewPage);
+				localViewHolder.text.setText(page.name);
+				paramView.setTag(localViewHolder);
+			} else {
+
+				localViewHolder = (ViewHolderStarPlaces) paramView.getTag();
+			}
+
+			paramView.findViewById(R.id.progressBarImagePageList)
+					.setVisibility(View.GONE);
 
 			int counter = placesInt;
 

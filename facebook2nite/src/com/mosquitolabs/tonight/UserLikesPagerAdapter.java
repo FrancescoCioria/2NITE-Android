@@ -356,9 +356,11 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 				localViewHolder.image = (ImageView) paramView
 						.findViewById(R.id.imageViewPage);
 				paramView.setTag(localViewHolder);
-			}
+			}else{
 			localViewHolder = (ViewHolderStar) paramView.getTag();
-
+			}
+			paramView.findViewById(R.id.progressBarImagePageList)
+			.setVisibility(View.GONE);
 			localViewHolder.text.setText(page.name);
 
 			int counter = userLikesInt;
@@ -450,10 +452,12 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 						.findViewById(R.id.imageViewPage);
 
 				paramView.setTag(localViewHolder);
-			}
+			}else{
 
 			localViewHolder = (ViewHolderStarUser) paramView.getTag();
-
+			}
+			paramView.findViewById(R.id.progressBarImagePageList)
+			.setVisibility(View.GONE);
 			localViewHolder.text.setText(page.name);
 
 			int counter = placesInt;

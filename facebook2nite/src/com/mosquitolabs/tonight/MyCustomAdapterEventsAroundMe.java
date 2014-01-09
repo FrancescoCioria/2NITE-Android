@@ -51,10 +51,6 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter implements
 		this.mInflater = LayoutInflater.from(paramContext);
 		context = paramContext;
 		parentActivity = paramContext;
-		// if (!eventCollection.getAroundMeEventList().isEmpty()) {
-		// mSectionIndices = getSectionIndices();
-		// mSectionLetters = getSectionLetters();
-		// }
 
 	}
 
@@ -135,7 +131,6 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter implements
 			parentActivity.getWindowManager().getDefaultDisplay()
 					.getMetrics(displaymetrics);
 			int width = displaymetrics.widthPixels;
-			int height = displaymetrics.heightPixels;
 			int density = displaymetrics.densityDpi;
 			int space;
 			switch (parentActivity.getCurrentListStyle()) {

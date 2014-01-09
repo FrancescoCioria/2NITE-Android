@@ -122,7 +122,6 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			}
 			textEventEmpty
 					.setText("Please wait..\nLooking for events nearby \nwithin three days.\nThis may take a while.");
-			v.findViewById(R.id.LayoutFilter).setVisibility(View.GONE);
 
 			listViewAroundMe.setOnScrollListener(new OnScrollListener() {
 
@@ -630,9 +629,13 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 				localViewHolder.image = (ImageView) paramView
 						.findViewById(R.id.imageViewPage);
 				paramView.setTag(localViewHolder);
+			} else {
+				localViewHolder = (ViewHolderStar) paramView.getTag();
 			}
-			localViewHolder = (ViewHolderStar) paramView.getTag();
-
+			
+			paramView.findViewById(R.id.progressBarImagePageList)
+			.setVisibility(View.GONE);
+			
 			localViewHolder.text.setText(page.name);
 
 			int counter = userLikesInt;
@@ -709,6 +712,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			temp = (pageCollection.getPageAroundMe().get(paramInt));
 
 			final PageData page = temp;
+			if(paramView==null){
 			paramView = mInflater.inflate(R.layout.list_pages, null);
 			localViewHolder = new ViewHolderStarPlaces();
 			localViewHolder.selected = (RelativeLayout) paramView
@@ -723,6 +727,13 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 					.findViewById(R.id.imageViewPage);
 			localViewHolder.text.setText(page.name);
 
+			paramView.setTag(localViewHolder);
+			} else {
+				localViewHolder = (ViewHolderStarPlaces) paramView.getTag();
+			}
+			paramView.findViewById(R.id.progressBarImagePageList)
+					.setVisibility(View.GONE);
+			
 			int counter = placesInt;
 
 			if (paramInt <= counter

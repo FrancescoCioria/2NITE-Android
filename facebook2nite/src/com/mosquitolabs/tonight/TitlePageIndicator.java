@@ -807,96 +807,15 @@ public class TitlePageIndicator extends View implements PageIndicator {
 		if (parentActivity.isActionbarAvailable()) {
 			switch (position) {
 			case 0:
-				parentActivity.setPlaces(true);
-				parentActivity.setSearch(false);
-				parentActivity.setShare(false);
-				parentActivity.setInfo(false);
-				parentActivity.setRefresh(true);
-				parentActivity.setViewAll(false);
-				parentActivity.setRSVP(false);
-				parentActivity.setLike(true);
-				parentActivity.setReset(true);
-				parentActivity.setSortEvents(false);
-				parentActivity.setSortPages(false);
-				parentActivity.viewAll();
-				parentActivity.filterAll();
-				parentActivity.setInfo2NITE(true);
-				parentActivity.setCalendar(false);
-				parentActivity.setlistStyle(false);
-
+				parentActivity.setPageOne();
 				break;
 
 			case 1:
-				parentActivity.setPlaces(true);
-				parentActivity.setInfo(false);
-				parentActivity.setFacebook(false);
-				parentActivity.setShare(false);
-				parentActivity.setRSVP(false);
-				parentActivity.setSearch(false);
-				parentActivity.setRSVP(false);
-				parentActivity.setLike(true);
-				parentActivity.setRefresh(true);
-				parentActivity.setReset(false);
-				parentActivity.setSortEvents(true);
-				parentActivity.setSortPages(true);
-				parentActivity.setInfo2NITE(true);
-				parentActivity.setCalendar(false);
-				parentActivity.setlistStyle(true);
-
-				if (parentActivity.isPageSelected()
-						|| !parentActivity.filter.equals("all")) {
-					parentActivity.setViewAllName();
-					parentActivity.setViewAll(true);
-
-				} else {
-					parentActivity.setViewAll(false);
-				}
-				// parentActivity.pageDescription();
+				parentActivity.setPageTwo();
 				break;
 
 			case 2:
-				parentActivity.setShareIntent();
-				parentActivity.setPlaces(false);
-				parentActivity.setlistStyle(false);
-
-				if (parentActivity.isEventPageFilled()) {
-					parentActivity.setInfoPageName(parentActivity
-							.getCurrentPageName());
-					parentActivity.setSearch(false);
-					parentActivity.setViewAll(false);
-					if (parentActivity.getLoc().equals("null")) {
-						parentActivity.setInfo(false);
-					} else {
-						parentActivity.setInfo(true);
-					}
-					parentActivity.setFacebook(true);
-					parentActivity.setShare(true);
-					parentActivity.setRSVP(true);
-					parentActivity.setLike(false);
-					parentActivity.setReset(false);
-					parentActivity.setInfo2NITE(true);
-					parentActivity.setSortEvents(false);
-					parentActivity.setSortPages(false);
-					parentActivity.setCalendar(true);
-
-					// parentActivity.setOverflow(true);
-					parentActivity.setRefresh(false);
-				} else {
-					parentActivity.setSearch(false);
-					parentActivity.setInfo(false);
-					parentActivity.setFacebook(false);
-					parentActivity.setShare(false);
-					parentActivity.setViewAll(false);
-					parentActivity.setInfo2NITE(true);
-					parentActivity.setSortEvents(false);
-					parentActivity.setSortPages(false);
-					parentActivity.setRSVP(false);
-					parentActivity.setLike(false);
-					parentActivity.setRefresh(false);
-					parentActivity.setReset(false);
-					parentActivity.setCalendar(false);
-
-				}
+				parentActivity.setPageThree();
 				break;
 
 			}

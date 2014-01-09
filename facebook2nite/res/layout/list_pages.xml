@@ -12,6 +12,8 @@
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
         android:layout_marginLeft="5dp"
+        android:background="@color/light_gray"
+        android:padding="0.5dp"
         android:scaleType="centerCrop"
         android:src="@drawable/icon_other_events" />
 
@@ -48,9 +50,8 @@
         android:id="@+id/imageViewTriangle"
         android:layout_width="13dp"
         android:layout_height="13dp"
-       
-        android:layout_marginTop="51dp"
-        android:layout_marginLeft="52dp"
+        android:layout_marginLeft="51.5dp"
+        android:layout_marginTop="50.5dp"
         android:scaleType="centerCrop"
         android:src="@drawable/triangle" />
 
@@ -61,19 +62,23 @@
         android:layout_alignParentRight="true"
         android:layout_centerInParent="true"
         android:layout_marginRight="10dp" />
-    
-    
-     <RelativeLayout
-            android:id="@+id/imageViewSelected"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="5dp"
-            android:background="@layout/imageview_selected"
-             >
-        </RelativeLayout>
-    
-    
+
+    <RelativeLayout
+        android:id="@+id/imageViewSelected"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="5dp"
+        android:background="@layout/imageview_selected" >
+
+        <ProgressBar
+            android:id="@+id/progressBarImagePageList"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true" />
+    </RelativeLayout>
 
 </RelativeLayout>

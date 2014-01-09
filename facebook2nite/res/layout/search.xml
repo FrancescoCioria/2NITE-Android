@@ -1,38 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/relativeSearch"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@android:color/background_light"
+    android:background="@color/sfondo"
     android:orientation="vertical" >
 
-   
-    <TextView
-        android:id="@+id/textViewNoResult"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="Couldn't find any place neraby your location"
-        android:textColor="@android:color/darker_gray"
-        android:textSize="17sp"
-        android:visibility="gone" />
-
     <ListView
-        android:id="@android:id/list"
+        android:id="@+id/listSearch"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@+id/LayoutSearch"
         android:descendantFocusability="blocksDescendants"
         android:divider="@color/gray"
         android:dividerHeight="0.1dp"
         android:footerDividersEnabled="true" >
     </ListView>
 
+    <TextView
+        android:id="@+id/textViewNoResult"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/LayoutSearch"
+        android:gravity="center"
+        android:padding="5dp"
+        android:text="No results matching your search were found"
+        android:textColor="@color/dark_gray"
+        android:textSize="15sp"
+        android:visibility="gone" />
+
     <ProgressBar
         android:id="@+id/progressBarSearch"
         style="?android:attr/progressBarStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
+        android:layout_below="@+id/LayoutSearch"
+        android:layout_centerHorizontal="true"
         android:layout_marginTop="10dp"
         android:visibility="gone" />
 
-</LinearLayout>
+    <RelativeLayout
+        android:id="@+id/LayoutSearch"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:background="@color/sfondo"
+        android:orientation="vertical"
+        android:visibility="visible" >
+
+        <EditText
+            android:id="@+id/editTextSearch"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_toLeftOf="@+id/imageViewSearchIcon"
+            android:cursorVisible="true"
+            android:ems="10"
+            android:hint="Search pages.."
+            android:imeOptions="actionSearch"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:singleLine="true"
+            android:textColor="@android:color/background_dark"
+            android:textCursorDrawable="@null"
+            android:textSize="16sp" >
+        </EditText>
+
+        <View
+            android:id="@+id/bottomLineSearch"
+            android:layout_width="match_parent"
+            android:layout_height="0.1dp"
+            android:layout_alignParentBottom="true"
+            android:background="@android:color/darker_gray" />
+
+        <ImageView
+            android:id="@+id/imageViewSearchIcon"
+            android:layout_width="65dp"
+            android:layout_height="45dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_menu_search_holo_light" />
+
+        <Button
+            android:id="@+id/buttonSearch"
+            android:layout_width="65dp"
+            android:layout_height="45dp"
+            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@+id/editTextSearch"
+            android:background="@layout/imageview_selected" />
+    </RelativeLayout>
+
+</RelativeLayout>
