@@ -14,7 +14,7 @@
             android:id="@+id/textViewListPages"
             android:layout_width="fill_parent"
             android:layout_height="70dp"
-            android:layout_toRightOf="@+id/imageViewPage"
+            android:layout_toRightOf="@+id/layoutImagePage"
             android:layout_weight="1"
             android:gravity="center_vertical"
             android:maxLines="2"
@@ -25,17 +25,25 @@
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <ImageView
-            android:id="@+id/imageViewPage"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+        <LinearLayout
+            android:id="@+id/layoutImagePage"
+            android:layout_width="61dp"
+            android:layout_height="61dp"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:layout_marginLeft="5dp"
             android:background="@color/light_gray"
-            android:padding="0.5dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/icon_other_events" />
+            android:orientation="vertical" >
+
+            <ImageView
+                android:id="@+id/imageViewPage"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_margin="0.5dp"
+                android:contentDescription="@android:drawable/alert_light_frame"
+                android:scaleType="centerCrop"
+                android:src="@drawable/icon_other_events" />
+        </LinearLayout>
 
         <ImageView
             android:id="@+id/imageViewTriangle"
@@ -43,8 +51,8 @@
             android:layout_height="13dp"
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
-            android:layout_marginBottom="6dp"
-            android:layout_marginLeft="51dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="52.5dp"
             android:scaleType="centerCrop"
             android:src="@drawable/triangle" />
 
@@ -61,8 +69,8 @@
 
         <RelativeLayout
             android:id="@+id/imageViewSelected"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="61dp"
+            android:layout_height="61dp"
             android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
             android:layout_marginLeft="5dp"

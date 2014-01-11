@@ -123,6 +123,14 @@ public class EventCollection {
 		}
 		return null;
 	}
+	
+	public EventData getEventByIndex(int index) {
+		try{
+			return eventList.get(index);
+		}catch (Exception e){
+			return new EventData();
+		}
+	}
 
 	public EventData getAroundMeEventByID(String _ID) {
 		if (_ID == null) {

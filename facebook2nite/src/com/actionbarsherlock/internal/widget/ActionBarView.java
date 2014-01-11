@@ -16,16 +16,15 @@
 
 package com.actionbarsherlock.internal.widget;
 
-import org.xmlpull.v1.XmlPullParser;
+import static com.actionbarsherlock.internal.ResourcesCompat.getResources_getBoolean;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
-import android.content.res.XmlResourceParser;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Parcel;
@@ -46,10 +45,9 @@ import android.widget.LinearLayout;
 import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
-import com.mosquitolabs.tonight.R;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.ActionBar.OnNavigationListener;
-import com.actionbarsherlock.internal.ActionBarSherlockCompat;
+import com.actionbarsherlock.internal.ResourcesCompat;
 import com.actionbarsherlock.internal.view.menu.ActionMenuItem;
 import com.actionbarsherlock.internal.view.menu.ActionMenuPresenter;
 import com.actionbarsherlock.internal.view.menu.ActionMenuView;
@@ -62,15 +60,13 @@ import com.actionbarsherlock.view.CollapsibleActionView;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.Window;
-
-import static com.actionbarsherlock.internal.ResourcesCompat.getResources_getBoolean;
+import com.mosquitolabs.tonight.R;
 
 /**
  * @hide
  */
 public class ActionBarView extends AbsActionBarView {
     private static final String TAG = "ActionBarView";
-    private static final boolean DEBUG = false;
 
     /**
      * Display options applied by default
@@ -168,6 +164,7 @@ public class ActionBarView extends AbsActionBarView {
         }
     };
 
+	@TargetApi(9)
     public ActionBarView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -190,7 +187,7 @@ public class ActionBarView extends AbsActionBarView {
                 if (context instanceof Activity) {
                     //Even though native methods existed in API 9 and 10 they don't work
                     //so just parse the manifest to look for the logo pre-Honeycomb
-                    final int resId = loadLogoFromManifest((Activity) context);
+                    final int resId = ResourcesCompat.loadLogoFromManifest((Activity) context);
                     if (resId != 0) {
                         mLogo = context.getResources().getDrawable(resId);
                     }
@@ -263,85 +260,6 @@ public class ActionBarView extends AbsActionBarView {
         mHomeLayout.setOnClickListener(mUpClickListener);
         mHomeLayout.setClickable(true);
         mHomeLayout.setFocusable(true);
-    }
-
-    /**
-     * Attempt to programmatically load the logo from the manifest file of an
-     * activity by using an XML pull parser. This should allow us to read the
-     * logo attribute regardless of the platform it is being run on.
-     *
-     * @param activity Activity instance.
-     * @return Logo resource ID.
-     */
-    private static int loadLogoFromManifest(Activity activity) {
-        int logo = 0;
-        try {
-            final String thisPackage = activity.getClass().getName();
-            if (DEBUG) Log.i(TAG, "Parsing AndroidManifest.xml for " + thisPackage);
-
-            final String packageName = activity.getApplicationInfo().packageName;
-            final AssetManager am = activity.createPackageContext(packageName, 0).getAssets();
-            final XmlResourceParser xml = am.openXmlResourceParser("AndroidManifest.xml");
-
-            int eventType = xml.getEventType();
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                if (eventType == XmlPullParser.START_TAG) {
-                    String name = xml.getName();
-
-                    if ("application".equals(name)) {
-                        //Check if the <application> has the attribute
-                        if (DEBUG) Log.d(TAG, "Got <application>");
-
-                        for (int i = xml.getAttributeCount() - 1; i >= 0; i--) {
-                            if (DEBUG) Log.d(TAG, xml.getAttributeName(i) + ": " + xml.getAttributeValue(i));
-
-                            if ("logo".equals(xml.getAttributeName(i))) {
-                                logo = xml.getAttributeResourceValue(i, 0);
-                                break; //out of for loop
-                            }
-                        }
-                    } else if ("activity".equals(name)) {
-                        //Check if the <activity> is us and has the attribute
-                        if (DEBUG) Log.d(TAG, "Got <activity>");
-                        Integer activityLogo = null;
-                        String activityPackage = null;
-                        boolean isOurActivity = false;
-
-                        for (int i = xml.getAttributeCount() - 1; i >= 0; i--) {
-                            if (DEBUG) Log.d(TAG, xml.getAttributeName(i) + ": " + xml.getAttributeValue(i));
-
-                            //We need both uiOptions and name attributes
-                            String attrName = xml.getAttributeName(i);
-                            if ("logo".equals(attrName)) {
-                                activityLogo = xml.getAttributeResourceValue(i, 0);
-                            } else if ("name".equals(attrName)) {
-                                activityPackage = ActionBarSherlockCompat.cleanActivityName(packageName, xml.getAttributeValue(i));
-                                if (!thisPackage.equals(activityPackage)) {
-                                    break; //on to the next
-                                }
-                                isOurActivity = true;
-                            }
-
-                            //Make sure we have both attributes before processing
-                            if ((activityLogo != null) && (activityPackage != null)) {
-                                //Our activity, logo specified, override with our value
-                                logo = activityLogo.intValue();
-                            }
-                        }
-                        if (isOurActivity) {
-                            //If we matched our activity but it had no logo don't
-                            //do any more processing of the manifest
-                            break;
-                        }
-                    }
-                }
-                eventType = xml.nextToken();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (DEBUG) Log.i(TAG, "Returning " + Integer.toHexString(logo));
-        return logo;
     }
 
     /*
@@ -1311,7 +1229,7 @@ public class ActionBarView extends AbsActionBarView {
             onPopulateAccessibilityEvent(event);
             return true;
         }
-
+    	@TargetApi(14)
         @Override
         public void onPopulateAccessibilityEvent(AccessibilityEvent event) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
@@ -1322,7 +1240,7 @@ public class ActionBarView extends AbsActionBarView {
                 event.getText().add(cdesc);
             }
         }
-
+    	@TargetApi(14)
         @Override
         public boolean dispatchHoverEvent(MotionEvent event) {
             // Don't allow children to hover; we want this to be treated as a single component.

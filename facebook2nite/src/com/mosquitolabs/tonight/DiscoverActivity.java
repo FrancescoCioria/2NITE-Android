@@ -28,6 +28,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.view.ViewPager;
@@ -98,7 +99,7 @@ public class DiscoverActivity extends SherlockActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
-		this.setTheme(R.style.Theme_Sherlock);
+		this.setTheme(R.style.MainTheme);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.discover);
 		EasyTracker.getTracker().sendView();
@@ -220,9 +221,15 @@ public class DiscoverActivity extends SherlockActivity {
 	}
 
 	public void infoPage(final PageData paramPageData) {
-		final Dialog layout = new Dialog(DiscoverActivity.this);
+		Dialog dialog;
+		if (Build.VERSION.SDK_INT >= 19) {
+			dialog = new Dialog(this, R.style.DialogLightButtons);
+		} else {
+			dialog = new Dialog(this);
+		}
+		final Dialog layout = dialog;
 		layout.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		layout.setContentView(R.layout.page_info_prova);
+		layout.setContentView(R.layout.page_info);
 
 		TextView textPhone = (TextView) layout.findViewById(R.id.textViewPhone);
 		TextView textPhoneTitle = (TextView) layout
@@ -1068,9 +1075,11 @@ public class DiscoverActivity extends SherlockActivity {
 									}
 
 								} catch (Exception e) {
-
-									toast("An error occurred");
-
+									if (isOnline()) {
+										toast("Server timed out, please retry later.");
+									} else {
+										toast("Internet connection lost.");
+									}
 									Log.e("getplaces", e.toString());
 								}
 							}

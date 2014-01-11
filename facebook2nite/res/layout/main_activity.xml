@@ -88,11 +88,13 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/sfondo"
+            android:cacheColorHint="@android:color/transparent"
             android:divider="@color/light_light_gray"
             android:dividerHeight="0dp"
             android:drawSelectorOnTop="true"
             android:footerDividersEnabled="false"
-            android:scrollbarStyle="outsideOverlay" />
+            android:listSelector="@android:color/transparent"
+            android:scrollbarStyle="insideOverlay" />
     </LinearLayout>
 
     <TextView

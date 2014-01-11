@@ -8,13 +8,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
@@ -23,35 +23,30 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.AbsListView.OnScrollListener;
-import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
+import com.actionbarsherlock.widget.SearchView;
 import com.facebook.HttpMethod;
 import com.facebook.Request;
 import com.facebook.Response;
@@ -59,38 +54,27 @@ import com.facebook.Session;
 import com.facebook.SessionState;
 import com.google.analytics.tracking.android.EasyTracker;
 import com.google.analytics.tracking.android.Tracker;
-import com.mosquitolabs.tonight.myCustomAdapter.ViewHolder;
 
 public class SearchActivity extends SherlockActivity {
 	final String APP_ID = "219909391458551";
-	private EditText editTextSearch;
 	private EventCollection eventCollection = EventCollection.getInstance();
-	private JSONObject json = new JSONObject();
-	private JSONArray jDataArray;
-	private JSONArray jarray;
-	private JSONObject jsonObject;
+	private PageCollection pageCollection = PageCollection.getInstance();
+	private Preferences preferences = Preferences.getInstance();
+
+	private JSONArray jArray;
 	private ListView listView;
+	// private EditText editTextSearch;
+	private myCustomAdapterStar pageArrayAdapter;
+	private SearchView searchView;
 
 	private String mySearch;
-	private MenuItem sort;
-	private MenuItem distance;
-	private MenuItem rsvp;
-	private MenuItem share;
-	private MenuItem seeOnFacebook;
-	private MenuItem sortsearch;
-	private myCustomAdapterStar pageArrayAdapter;
-	private PageCollection pageCollection = PageCollection.getInstance();
-	private SharedPreferences mPrefs;
-	private Preferences preferences = Preferences.getInstance();
-	private ProgressBar progressSearch;
-	private boolean isFirstTime = false;
-	// private boolean isInsidePreview = false;
+
+	private LinearLayout progressSearch;
+	// private boolean isFirstTime = false;
 	private TextView textNoResult;
 	private com.actionbarsherlock.app.ActionBar actionbar;
-	private Button tab1;
-	private Button tab2;
-	private Button buttonBack;
-	private Button buttonSearch;
+
+	// private Button buttonSearch;
 
 	private int numberPicture;
 
@@ -99,6 +83,9 @@ public class SearchActivity extends SherlockActivity {
 	private Tracker MyTracker;
 	private long counterStart;
 	private long counterStop;
+
+	private boolean isSearchActivity = true;
+	private boolean isSearching = false;
 
 	private Session.StatusCallback statusCallback = new SessionStatusCallback();
 
@@ -109,8 +96,7 @@ public class SearchActivity extends SherlockActivity {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-
-		this.setTheme(R.style.Theme_Sherlock);
+		this.setTheme(R.style.MainTheme);
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.search);
 
@@ -119,7 +105,10 @@ public class SearchActivity extends SherlockActivity {
 		actionbar = getSupportActionBar();
 		actionbar.setHomeButtonEnabled(true);
 		actionbar.setDisplayHomeAsUpEnabled(true);
-		// actionbar.hide();
+		Drawable background = getResources().getDrawable(
+				R.drawable.darkstripes_action);
+
+		actionbar.setBackgroundDrawable(background);
 
 		pageCollection.restorePreviousPage();
 		pageCollection.getPageSearchList().clear();
@@ -130,9 +119,7 @@ public class SearchActivity extends SherlockActivity {
 			onButtonClickDoTHisThing();
 
 		}
-		Bundle extras = getIntent().getExtras();
 
-		mPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 		session = Session.getActiveSession();
 		if (session == null) {
 			if (savedInstanceState != null) {
@@ -154,11 +141,6 @@ public class SearchActivity extends SherlockActivity {
 		pageCollection.getModifiedPageList().clear();
 		preferences.setisModifiedPageListToClear(false);
 
-		if (extras != null) {
-			mySearch = (extras.getString("search"));
-			isFirstTime = true;
-		}
-
 		initialize();
 
 	}
@@ -169,7 +151,6 @@ public class SearchActivity extends SherlockActivity {
 		if (listView != null) {
 			refreshSearchPage();
 		}
-
 		super.onResume();
 	}
 
@@ -197,17 +178,97 @@ public class SearchActivity extends SherlockActivity {
 				"Search Activity", "");
 	}
 
+	@Override
+	public void onBackPressed() {
+		if (!pageCollection.getModifiedPageList().isEmpty()) {
+			pageCollection.restoreSelectedPageList();
+			preferences.setisModifiedPageListToClear(false);
+		}
+		pageCollection.saveToDisk(this);
+		eventCollection.restoreEventList();
+		isSearchActivity = false;
+		super.onBackPressed();
+	}
+
+	@TargetApi(11)
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getSupportMenuInflater().inflate(R.menu.menu_search, menu);
+
+		searchView = new SearchView(getSupportActionBar().getThemedContext());
+
+		searchView.setIconifiedByDefault(false);
+		searchView.setQueryHint("Search..");
+		searchView.setFocusable(true);
+
+		menu.add("Search")
+				.setActionView(searchView)
+				.setIcon(
+						getResources().getDrawable(
+								R.drawable.ic_menu_search_holo_light))
+				.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+
+		SearchView.OnQueryTextListener queryTextListener = new SearchView.OnQueryTextListener() {
+			public boolean onQueryTextChange(String newText) {
+				return true;
+			}
+
+			public boolean onQueryTextSubmit(String query) {
+				mySearch = query;
+				// searchView.setQuery("", false);
+				searchNew();
+				return true;
+			}
+		};
+
+		searchView.setOnQueryTextListener(queryTextListener);
+		searchView.setSubmitButtonEnabled(true);
+
+		openKeyboard();
+
+		return super.onCreateOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case android.R.id.home:
+			onBackPressed();
+			return true;
+
+			// case R.id.menusearch_sort:
+			// setSearchSortBy();
+			// return true;
+
+			// case R.id.menu_search:
+			// search();
+			// return true;
+
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
 	private void onButtonClickDoTHisThing() {
 		if (isOnline()) {
-			Log.i("start_search", "start");
+			Log.d("start_search", "start");
+
 			textNoResult.setVisibility(View.GONE);
-			progressSearch.setVisibility(View.VISIBLE);
-			listView.setVisibility(View.GONE);
+			setProgressBarVisible(true);
+			setListViewVisible(false);
+			// progressSearch.setVisibility(View.VISIBLE);
+
+			// listView.setVisibility(View.GONE);
 
 			Bundle localBundle = new Bundle();
 			localBundle.putString("q", mySearch);
 			localBundle.putString("type", "page");
-			Log.i("request", "start_first");
+
+			Log.d("request", "start_first");
+
 			numberPicture = 0;
 
 			Request.Callback callback = new Request.Callback() {
@@ -218,7 +279,7 @@ public class SearchActivity extends SherlockActivity {
 								.getInnerJSONObject();
 						searchComplete(j);
 					} catch (Exception e) {
-						// TODO: handle exception
+						isSearching=false;
 					}
 				}
 			};
@@ -227,8 +288,6 @@ public class SearchActivity extends SherlockActivity {
 					localBundle, HttpMethod.GET, callback);
 			request.executeAsync();
 
-			// mAsyncRunner.request("search", localBundle,
-			// new SearchRequestListener());
 		} else {
 			toast("Internet connection lost");
 		}
@@ -244,16 +303,37 @@ public class SearchActivity extends SherlockActivity {
 		});
 	}
 
+	@TargetApi(11)
+	private void closeKeyboard() {
+		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+		imm.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
+		// searchView.clearFocus();
+	}
+
+	private void openKeyboard() {
+		searchView.requestFocus();
+		// InputMethodManager imm = (InputMethodManager)
+		// getSystemService(Context.INPUT_METHOD_SERVICE);
+		// imm.hideSoftInputFromWindow(searchView.getWindowToken(),
+		// InputMethodManager.SHOW_FORCED);
+
+	}
+
 	private void infoPage(final PageData paramPageData) {
-		final Dialog layout = new Dialog(SearchActivity.this);
+		Dialog dialog;
+		if (Build.VERSION.SDK_INT >= 19) {
+			dialog = new Dialog(this, R.style.DialogLightButtons);
+		} else {
+			dialog = new Dialog(this);
+		}
+		final Dialog layout = dialog;
 		layout.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		layout.setContentView(R.layout.page_info_prova);
+		layout.setContentView(R.layout.page_info);
 
 		TextView textPhone = (TextView) layout.findViewById(R.id.textViewPhone);
 		TextView textPhoneTitle = (TextView) layout
 				.findViewById(R.id.textViewPhoneTitle);
 		TextView textTitle = (TextView) layout.findViewById(R.id.textViewTitle);
-
 		TextView lineBlue1 = (TextView) layout
 				.findViewById(R.id.textViewDescriptionBlue1);
 		TextView lineBlue2 = (TextView) layout
@@ -264,7 +344,6 @@ public class SearchActivity extends SherlockActivity {
 				.findViewById(R.id.textViewWebsiteTitle);
 		LinearLayout layoutButtons = (LinearLayout) layout
 				.findViewById(R.id.layoutButtons);
-
 		final Button buttonNavigate = (Button) layout
 				.findViewById(R.id.buttonNavigate);
 		Button buttonSeeOnFacebook = (Button) layout
@@ -323,8 +402,6 @@ public class SearchActivity extends SherlockActivity {
 		});
 
 		downloadInfoPageSmallImages(layout, paramPageData._ID);
-
-		// textName.setText(paramPageData.name);
 
 		textTitle.setText(paramPageData.name);
 
@@ -523,70 +600,7 @@ public class SearchActivity extends SherlockActivity {
 
 	}
 
-	@Override
-	public void onBackPressed() {
-
-		if (!pageCollection.getModifiedPageList().isEmpty()) {
-			pageCollection.restoreSelectedPageList();
-			preferences.setisModifiedPageListToClear(false);
-		}
-		pageCollection.saveToDisk(this);
-		eventCollection.restoreEventList();
-		// facebookeventsActivity.read();
-		super.onBackPressed();
-
-	}
-
-	public boolean onCreateOptionsMenu(Menu menu) {
-		MenuInflater inflater = getSupportMenuInflater();
-
-		inflater.inflate(R.menu.menu_search, menu);
-		sortsearch = menu.findItem(R.id.menusearch_sort);
-		sort = menu.findItem(R.id.menu_sort);
-		distance = menu.findItem(R.id.menu_distance);
-		share = menu.findItem(R.id.menu_share);
-		rsvp = menu.findItem(R.id.menu_rsvp);
-		seeOnFacebook = menu.findItem(R.id.menu_facebook);
-		sort.setVisible(false);
-		distance.setVisible(false);
-		share.setVisible(false);
-
-		// disattivata momentaneamente
-		sortsearch.setVisible(false);
-
-		seeOnFacebook.setVisible(false);
-		rsvp.setVisible(false);
-
-		return true;
-	}
-
-	@Override
-	public boolean onPrepareOptionsMenu(Menu menu) {
-
-		return super.onPrepareOptionsMenu(menu);
-	}
-
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case android.R.id.home:
-			onBackPressed();
-			return true;
-
-		case R.id.menusearch_sort:
-			setSearchSortBy();
-			return true;
-
-		case R.id.menu_search:
-			search();
-			return true;
-
-		default:
-			return super.onOptionsItemSelected(item);
-		}
-	}
-
 	private boolean isOnline() {
-
 		ConnectivityManager cm = (ConnectivityManager) SearchActivity.this
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo netInfo = cm.getActiveNetworkInfo();
@@ -667,9 +681,6 @@ public class SearchActivity extends SherlockActivity {
 						.findViewById(R.id.imageViewPage);
 				localViewHolder.text_fan = (TextView) paramView
 						.findViewById(R.id.textViewListPagesFanCount);
-
-				localViewHolder.text.setText(pageCollection.getPageSearchList()
-						.get(paramInt).name);
 				standardImage = BitmapFactory.decodeResource(
 						SearchActivity.this.getResources(),
 						R.drawable.icon_gray);
@@ -686,7 +697,7 @@ public class SearchActivity extends SherlockActivity {
 			// .getPageSearchList().get(paramInt)._ID));
 			// }
 			paramView.findViewById(R.id.progressBarImagePageList)
-			.setVisibility(View.VISIBLE);
+					.setVisibility(View.VISIBLE);
 
 			localViewHolder.image.setImageBitmap(standardImage);
 
@@ -700,8 +711,10 @@ public class SearchActivity extends SherlockActivity {
 
 							try {
 
-								json = jarray.getJSONObject(paramInt);
-								jsonObject = json.getJSONObject("location");
+								JSONObject json = jArray
+										.getJSONObject(paramInt);
+								JSONObject jsonObject = json
+										.getJSONObject("location");
 
 								pageCollection.getPageSearchList()
 										.get(paramInt).checkins = json
@@ -748,18 +761,23 @@ public class SearchActivity extends SherlockActivity {
 						}
 					});
 			try {
-				json = jarray.getJSONObject(paramInt);
+				JSONObject json = jArray.getJSONObject(paramInt);
 				pageCollection.getPageSearchList().get(paramInt).number_of_likes = json
 						.getInt("fan_count");
 			} catch (Exception e) {
 				Log.e("fan_count", e.toString());
 			}
+
 			localViewHolder.text_fan.setText(Integer.toString(pageCollection
 					.getPageSearchList().get(paramInt).number_of_likes)
 					+ " likes");
 
+			localViewHolder.text.setText(pageCollection.getPageSearchList()
+					.get(paramInt).name);
+
 			localViewHolder.star
 					.setBackgroundResource(android.R.drawable.btn_star_big_off);
+
 			for (PageData currentPage : pageCollection.getPageList()) {
 				if (currentPage._ID.equals(pageCollection.getPageSearchList()
 						.get(paramInt)._ID)) {
@@ -768,11 +786,6 @@ public class SearchActivity extends SherlockActivity {
 					break;
 				}
 			}
-			/*
-			 * if ((numberPicture < jarray.length() - 1) && isOneAdapterSearch)
-			 * { numberPicture++; downloadOnePicture(numberPicture);
-			 * isOneAdapterSearch = false; }
-			 */
 
 			return paramView;
 		}
@@ -786,27 +799,29 @@ public class SearchActivity extends SherlockActivity {
 		TextView text_fan;
 	}
 
-	private void searchComplete(JSONObject js) {
-
+	private void searchComplete(final JSONObject json) {
+		JSONArray jDataArray = new JSONArray();
 		try {
-			json = js;
 			jDataArray = json.getJSONArray("data");
-			int i = jDataArray.length();
 			pageCollection.getPageSearchListRelevant().clear();
-			for (int j = 0; j < i; j++) {
+
+			for (int j = 0; j < jDataArray.length(); j++) {
 				PageData localPageData = new PageData();
-				jsonObject = jDataArray.getJSONObject(j);
+				JSONObject jsonObject = jDataArray.getJSONObject(j);
 				localPageData.name = jsonObject.getString("name");
 				localPageData._ID = jsonObject.getString("id");
 				pageCollection.getPageSearchListRelevant().add(localPageData);
 			}
+
 			pageCollection.sortSearchByRelevance();
+
 		} catch (JSONException localJSONException) {
 			Log.e("search complete", localJSONException.toString());
 			SearchActivity.this.runOnUiThread(new Runnable() {
 				public void run() {
-					progressSearch.setVisibility(View.GONE);
-					listView.setVisibility(View.GONE);
+					setProgressBarVisible(false);
+					setListViewVisible(false);
+					
 					if (json.isNull("error")) {
 						toast("An error occurred. Check your internet connection and try again.");
 					} else {
@@ -834,18 +849,20 @@ public class SearchActivity extends SherlockActivity {
 				}
 			});
 		}
+
+		refreshSearchPage();
+		isSearching=false;
 		if (jDataArray != null && jDataArray.length() > 0) {
-			refreshSearchPage();
 			downloadPictures();
 		} else {
 			SearchActivity.this.runOnUiThread(new Runnable() {
 				public void run() {
-					pageArrayAdapter.notifyDataSetChanged();
-					progressSearch.setVisibility(View.GONE);
+					refreshSearchPage();
+					setProgressBarVisible(false);
+					setListViewVisible(true);
 					textNoResult.setText("\"" + mySearch + "\""
 							+ " didn't match any result.");
 					textNoResult.setVisibility(View.VISIBLE);
-					listView.setVisibility(View.VISIBLE);
 
 				}
 			});
@@ -870,20 +887,22 @@ public class SearchActivity extends SherlockActivity {
 			public void onCompleted(Response response) {
 				try {
 
-					json = response.getGraphObject().getInnerJSONObject();
-					jarray = json.getJSONArray("data");
+					JSONObject json = response.getGraphObject()
+							.getInnerJSONObject();
+					jArray = json.getJSONArray("data");
 					int searchListSize = pageCollection.getPageSearchList()
 							.size();
-					if (searchListSize > jarray.length())
-						for (int i = searchListSize - 1; i >= jarray.length(); i--) {
+					if (searchListSize > jArray.length())
+						for (int i = searchListSize - 1; i >= jArray.length(); i--) {
 							pageCollection.getPageSearchList().remove(i);
 						}
 					Log.i("image", "start_image");
 					downloadOnePicture(0);
 
 				} catch (Exception e) {
-					progressSearch.setVisibility(View.GONE);
-					listView.setVisibility(View.GONE);
+					setProgressBarVisible(false);
+					setListViewVisible(false);
+
 					Log.e("downloadPictures", e.toString());
 					toast("an error has occurred");
 				}
@@ -902,11 +921,10 @@ public class SearchActivity extends SherlockActivity {
 				if (isOnline()) {
 
 					try {
-
 						if (readImageFromDisk(pageCollection
 								.getPageSearchList().get(j)._ID) == null) {
 							try {
-								json = jarray.getJSONObject(j);
+								JSONObject json = jArray.getJSONObject(j);
 								URL img_value = null;
 								if (json.getString("pic").length() > 0) {
 									img_value = new URL(json.getString("pic"));
@@ -932,26 +950,14 @@ public class SearchActivity extends SherlockActivity {
 						SearchActivity.this.runOnUiThread(new Runnable() {
 							public void run() {
 								if (j == 0) {
-									progressSearch.setVisibility(View.GONE);
-									listView.setVisibility(View.VISIBLE);
+									setProgressBarVisible(false);
+									setListViewVisible(true);
 								}
-								
-//								if (listView.getFirstVisiblePosition() <= j
-//										&& j <= listView
-//												.getLastVisiblePosition()) {
-//									View v = listView.getChildAt(j
-//											- listView
-//													.getFirstVisiblePosition());
-//									ImageView image = (ImageView) v
-//											.findViewById(R.id.imageViewPage);
-//									image.setImageBitmap(readImageFromDisk(pageCollection
-//											.getPageSearchList().get(j)._ID));
-//								}
-								
+
 								showImagePageList(j);
 
 								if (j + 1 < pageCollection.getPageSearchList()
-										.size()) {
+										.size() && isSearchActivity() && !isSearching()) {
 									downloadOnePicture(j + 1);
 
 								}
@@ -961,19 +967,19 @@ public class SearchActivity extends SherlockActivity {
 					} catch (Exception e) {
 						SearchActivity.this.runOnUiThread(new Runnable() {
 							public void run() {
-								progressSearch.setVisibility(View.GONE);
-								listView.setVisibility(View.VISIBLE);
-								pageArrayAdapter.notifyDataSetChanged();
+								setProgressBarVisible(false);
+								setListViewVisible(true);
+								refreshSearchPage();
 							}
 						});
 						Log.e("downloadOnePicture", e.toString());
 					}
-					// }
 				} else {
 					SearchActivity.this.runOnUiThread(new Runnable() {
 						public void run() {
-							progressSearch.setVisibility(View.GONE);
-							listView.setVisibility(View.GONE);
+							setProgressBarVisible(false);
+							setListViewVisible(false);
+							
 							toast("Internet connection lost");
 						}
 					});
@@ -1014,8 +1020,32 @@ public class SearchActivity extends SherlockActivity {
 		});
 	}
 
+	private void setProgressBarVisible(final boolean b) {
+		SearchActivity.this.runOnUiThread(new Runnable() {
+			public void run() {
+				if (b) {
+					progressSearch.setVisibility(View.VISIBLE);
+				} else {
+					progressSearch.setVisibility(View.GONE);
+				}
+			}
+		});
+	}
+
+	private void setListViewVisible(final boolean b) {
+		SearchActivity.this.runOnUiThread(new Runnable() {
+			public void run() {
+				if (b) {
+					listView.setVisibility(View.VISIBLE);
+				} else {
+					listView.setVisibility(View.GONE);
+				}
+			}
+		});
+	}
+
 	private void initialize() {
-		progressSearch = (ProgressBar) findViewById(R.id.progressBarSearch);
+		progressSearch = (LinearLayout) findViewById(R.id.progressBarSearch);
 		textNoResult = (TextView) findViewById(R.id.textViewNoResult);
 		if (pageCollection.getPageSearchList().isEmpty()) {
 			textNoResult
@@ -1040,9 +1070,9 @@ public class SearchActivity extends SherlockActivity {
 					View paramView, int paramInt, long paramLong) {
 
 				try {
-					json = jarray.getJSONObject(paramInt);
+					JSONObject json = jArray.getJSONObject(paramInt);
 
-					jsonObject = json.getJSONObject("location");
+					JSONObject jsonObject = json.getJSONObject("location");
 					pageCollection.getPageSearchList().get(paramInt).number_of_likes = json
 							.getInt("fan_count");
 					pageCollection.getPageSearchList().get(paramInt).checkins = json
@@ -1078,7 +1108,6 @@ public class SearchActivity extends SherlockActivity {
 					pageCollection.getPageSearchList().get(paramInt).address = a;
 
 				} catch (Exception e) {
-					// TODO: handle exception
 				}
 				pageCollection.addModifiedPage(pageCollection
 						.getPageSearchList().get(paramInt));
@@ -1086,9 +1115,16 @@ public class SearchActivity extends SherlockActivity {
 						.getPageSearchList().get(paramInt))) {
 					toast(pageCollection.getPageSearchList().get(paramInt).name
 							+ " added as favourite!");
-					editTextSearch.setText("");
-					// mSearchView.setQuery("", false);
+					// editTextSearch.setText("");
 					preferences.setModifiedPages(true);
+					try {
+						listView.getChildAt(paramInt)
+								.findViewById(R.id.imageViewStar)
+								.setBackgroundResource(
+										android.R.drawable.btn_star_big_on);
+					} catch (Exception e) {
+						Log.d("listitem click", "error setting star ON");
+					}
 
 				} else {
 					pageCollection.removePageFromFavourites(pageCollection
@@ -1097,9 +1133,16 @@ public class SearchActivity extends SherlockActivity {
 					preferences.setModifiedSinglePage(true);
 					toast(pageCollection.getPageSearchList().get(paramInt).name
 							+ " removed from favourites!");
+					try {
+						listView.getChildAt(paramInt)
+								.findViewById(R.id.imageViewStar)
+								.setBackgroundResource(
+										android.R.drawable.btn_star_big_off);
+					} catch (Exception e) {
+						Log.d("listitem click", "error setting star OFF");
+					}
 				}
 
-				pageArrayAdapter.notifyDataSetChanged();
 			}
 		});
 
@@ -1107,9 +1150,8 @@ public class SearchActivity extends SherlockActivity {
 			public boolean onItemLongClick(AdapterView<?> paramAdapterView,
 					View paramView, int paramInt, long paramLong) {
 				try {
-					json = jarray.getJSONObject(paramInt);
-
-					jsonObject = json.getJSONObject("location");
+					JSONObject json = jArray.getJSONObject(paramInt);
+					JSONObject jsonObject = json.getJSONObject("location");
 					pageCollection.getPageSearchList().get(paramInt).number_of_likes = json
 							.getInt("fan_count");
 					pageCollection.getPageSearchList().get(paramInt).checkins = json
@@ -1144,7 +1186,6 @@ public class SearchActivity extends SherlockActivity {
 					pageCollection.getPageSearchList().get(paramInt).address = a;
 
 				} catch (Exception e) {
-					// TODO: handle exception
 				}
 				infoPage(pageCollection.getPageSearchList().get(paramInt));
 				return false;
@@ -1182,38 +1223,47 @@ public class SearchActivity extends SherlockActivity {
 			}
 		});
 
-		buttonSearch = (Button) findViewById(R.id.buttonSearch);
-		editTextSearch = (EditText) findViewById(R.id.editTextSearch);
-
-		buttonSearch.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				search();
-			}
-		});
-
-		editTextSearch.setOnEditorActionListener(new OnEditorActionListener() {
-
-			@Override
-			public boolean onEditorAction(TextView v, int actionId,
-					KeyEvent event) {
-				if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-					search();
-				}
-				return false;
-			}
-		});
-
-		if (isFirstTime && mySearch.length() > 0) {
-			editTextSearch.setText(mySearch);
-			onButtonClickDoTHisThing();
-			isFirstTime = false;
-		}
+		// buttonSearch = (Button) findViewById(R.id.buttonSearch);
+		// editTextSearch = (EditText) findViewById(R.id.editTextSearch);
+		//
+		// buttonSearch.setOnClickListener(new View.OnClickListener() {
+		// @Override
+		// public void onClick(View v) {
+		// search();
+		// }
+		// });
+		//
+		// editTextSearch.setOnEditorActionListener(new OnEditorActionListener()
+		// {
+		//
+		// @Override
+		// public boolean onEditorAction(TextView v, int actionId,
+		// KeyEvent event) {
+		// if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+		// search();
+		// }
+		// return false;
+		// }
+		// });
+		//
+		// if (isFirstTime && mySearch.length() > 0) {
+		// editTextSearch.setText(mySearch);
+		// onButtonClickDoTHisThing();
+		// isFirstTime = false;
+		// }
 	}
 
-	private void search() {
-		mySearch = editTextSearch.getText().toString();
+	// private void search() {
+	// mySearch = editTextSearch.getText().toString();
+	// if (mySearch.length() > 0) {
+	// onButtonClickDoTHisThing();
+	// }
+	// }
+
+	private void searchNew() {
 		if (mySearch.length() > 0) {
+			isSearching = true;
+			closeKeyboard();
 			onButtonClickDoTHisThing();
 		}
 	}
@@ -1226,6 +1276,7 @@ public class SearchActivity extends SherlockActivity {
 		}
 	}
 
+	@TargetApi(11)
 	public void showImagePageList(final int i) {
 		AsyncTask<Void, Integer, Bitmap[]> task = new AsyncTask<Void, Integer, Bitmap[]>() {
 
@@ -1284,13 +1335,22 @@ public class SearchActivity extends SherlockActivity {
 			}
 
 		};
-		if (Build.VERSION.SDK_INT >= 11) {
-			// --post GB use serial executor by default --
-			task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-		} else {
-			// --GB uses ThreadPoolExecutor by default--
-			task.execute();
+		try {
+			if (Build.VERSION.SDK_INT >= 11) {
+				task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+			} else {
+				task.execute();
+			}
+		} catch (Exception e) {
+			Log.d("ThreadOnExecutor", e.toString());
 		}
+	}
+
+	private boolean isSearchActivity() {
+		return isSearchActivity;
+	}
+	private boolean isSearching() {
+		return isSearching;
 	}
 
 }

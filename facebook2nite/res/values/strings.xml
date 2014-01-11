@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="version">Ver. 2.2</string>
-    <string name="version_manifest">2.2</string>
+    <string name="version">Ver. 2.3</string>
+    <string name="version_manifest">2.3</string>
     <string name="app_name">Facebookevents</string>
     <string name="app_id">219909391458551</string>
     <string name="image_event">100dp</string>

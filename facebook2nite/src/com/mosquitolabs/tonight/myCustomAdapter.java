@@ -56,10 +56,6 @@ public class myCustomAdapter extends BaseAdapter implements
 		this.mInflater = LayoutInflater.from(paramContext);
 		context = paramContext;
 		parentActivity = activity;
-		// if (!eventCollection.getEventList().isEmpty()) {
-		// mSectionIndices = getSectionIndices();
-		// mSectionLetters = getSectionLetters();
-		// }
 
 	}
 

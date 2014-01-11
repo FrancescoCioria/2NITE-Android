@@ -13,6 +13,7 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
@@ -159,7 +160,6 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter implements
 					.findViewById(R.id.textViewText);
 			localViewHolder.desc = (TextView) paramView
 					.findViewById(R.id.textDescription);
-
 			localViewHolder.page = (TextView) paramView
 					.findViewById(R.id.textViewPage);
 			localViewHolder.attendingCount = (TextView) paramView
@@ -168,12 +168,12 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter implements
 					.findViewById(R.id.imageViewList);
 			localViewHolder.image_page = (ImageView) paramView
 					.findViewById(R.id.imageViewParentPage);
-
 			localViewHolder.selector = (View) paramView
 					.findViewById(R.id.listItemSelector);
-
 			localViewHolder.triangle_attending = (ImageView) paramView
 					.findViewById(R.id.imageViewTriangleAttending);
+			localViewHolder.progressBar = (ProgressBar) paramView
+					.findViewById(R.id.progressBarImageEventList);
 
 			standardImage = BitmapFactory.decodeResource(
 					context.getResources(), R.drawable.icon_gray);
@@ -238,6 +238,7 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter implements
 		}
 
 		localViewHolder.image.setImageBitmap(standardImage);
+		localViewHolder.progressBar.setVisibility(View.VISIBLE);
 
 		parentActivity.showImageEventList(paramInt);
 
@@ -369,6 +370,8 @@ public class MyCustomAdapterEventsAroundMe extends BaseAdapter implements
 		ImageView image;
 		ImageView triangle_attending;
 		ImageView image_page;
+		
+		ProgressBar progressBar;
 
 		View selector;
 	}

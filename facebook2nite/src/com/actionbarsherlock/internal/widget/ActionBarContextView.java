@@ -15,6 +15,7 @@
  */
 package com.actionbarsherlock.internal.widget;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
@@ -28,7 +29,6 @@ import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.mosquitolabs.tonight.R;
 import com.actionbarsherlock.internal.nineoldandroids.animation.Animator;
 import com.actionbarsherlock.internal.nineoldandroids.animation.Animator.AnimatorListener;
 import com.actionbarsherlock.internal.nineoldandroids.animation.AnimatorSet;
@@ -39,6 +39,7 @@ import com.actionbarsherlock.internal.view.menu.ActionMenuPresenter;
 import com.actionbarsherlock.internal.view.menu.ActionMenuView;
 import com.actionbarsherlock.internal.view.menu.MenuBuilder;
 import com.actionbarsherlock.view.ActionMode;
+import com.mosquitolabs.tonight.R;
 
 /**
  * @hide
@@ -388,6 +389,7 @@ public class ActionBarContextView extends AbsActionBarView implements AnimatorLi
         }
     }
 
+	@TargetApi(11)
     private Animator makeInAnimation() {
         mClose.setTranslationX(-mClose.getWidth() -
                 ((MarginLayoutParams) mClose.getLayoutParams()).leftMargin);

@@ -1,35 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
-    
-    <item android:id="@+id/menusearch_sort"
-          android:showAsAction="never"
-            android:title="Sort search by.."
-          />
-  
-     <item android:id="@+id/menu_sort"
-          android:showAsAction="never"
-            android:title="Sort by.."
-          />
-      
-      <item android:id="@+id/menu_distance"
-          android:showAsAction="never"
-            android:title="Set distance parameter"
-          />
-      
-      <item android:id="@+id/menu_rsvp"
-          android:showAsAction="ifRoom|withText" 
-            android:title="RSVP"
-          />
-    
-    <item android:id="@+id/menu_share"
-          android:showAsAction="always"
-          android:icon="@drawable/ic_menu_share"
-          android:title="Share with friends"
-           />
-    
-    <item android:id="@+id/menu_facebook"
-          android:showAsAction="never"
-            android:title="See this event on facebook"
-          />
-    
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+   <!--  <item
+        android:id="@+id/search"
+        android:actionLayout="@layout/edittext"
+        android:showAsAction="always"
+        android:title="Search"/> -->
+
 </menu>

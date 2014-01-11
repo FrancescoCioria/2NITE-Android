@@ -6,12 +6,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.v4.view.PagerAdapter;
@@ -192,6 +194,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 								toast(pageCollection.getPageAroundMe().get(i).name
 										+ " has been removed from your pages.");
 							}
+							refreshLikeAdapter();
 							refreshPageAdapter();
 						}
 					});
@@ -231,6 +234,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 										+ " has been removed from your pages.");
 							}
 							refreshLikeAdapter();
+							refreshPageAdapter();
 						}
 					});
 
@@ -405,7 +409,10 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			public Bitmap doInBackground(Void... params) {
 
 				Bitmap picture = null;
+
 				try {
+					EventData event = eventCollection.getAroundMeEventList()
+							.get(aroundMePictures);
 					JSONObject jsonAround = new JSONObject();
 					JSONArray jarrayAround = context.getJArrayEventAround();
 					JSONArray jarrayInteresting = context
@@ -414,8 +421,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 					int k = 0;
 
 					boolean b = true;
-					String index_ID = eventCollection.getAroundMeEventList()
-							.get(aroundMePictures).event_ID;
+					String index_ID = event.event_ID;
 
 					while (z < jarrayAround.length() && b) {
 						jsonAround = jarrayAround.getJSONObject(z);
@@ -445,10 +451,22 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 						if (picture == null) {
 							URL img_value = new URL(
 									jsonAround.getString("pic_big"));
-							picture = BitmapFactory.decodeStream(img_value
-									.openConnection().getInputStream());
-							context.saveImageToDisk(
-									jsonAround.getString("eid"), picture);
+							String ID = jsonAround.getString("eid");
+							event.imageUri = img_value;
+							try {
+								picture = BitmapFactory.decodeStream(img_value
+										.openConnection().getInputStream());
+								context.saveImageToDisk(ID, picture);
+								event.imageDownloaded = true;
+							} catch (Exception e) {
+								Log.d("Failed downloadImage aroundme",
+										e.toString());
+							}
+						} else {
+							URL img_value = new URL(
+									jsonAround.getString("pic_big"));
+							event.imageUri = img_value;
+							event.imageDownloaded = true;
 						}
 					}
 				} catch (Exception e) {
@@ -463,18 +481,25 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			@Override
 			public void onPostExecute(Bitmap pic) {
 
-				if (pic != null && listViewAroundMe != null) {
-					if (listViewAroundMe.getFirstVisiblePosition() <= aroundMePictures
-							&& aroundMePictures <= listViewAroundMe
-									.getLastVisiblePosition()) {
-						View v = listViewAroundMe
-								.getListChildAt(aroundMePictures
-										- listViewAroundMe
-												.getFirstVisiblePosition());
-						ImageView image = (ImageView) v
-								.findViewById(R.id.imageViewList);
+				if (pic != null) {
+					int first = listViewAroundMe.getFirstVisiblePosition();
+					int last = listViewAroundMe.getLastVisiblePosition();
+					int current = aroundMePictures;
+					if (first <= current && current <= last) {
+						try {
+							View v = listViewAroundMe.getListChildAt(current
+									- first);
 
-						image.setImageBitmap(pic);
+							ImageView image = (ImageView) v
+									.findViewById(R.id.imageViewList);
+
+							image.setImageBitmap(pic);
+
+							v.findViewById(R.id.progressBarImageEventList)
+									.setVisibility(View.GONE);
+
+						} catch (Exception e) {
+						}
 
 					}
 				}
@@ -491,6 +516,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 		task.execute();
 	}
 
+	@TargetApi(11)
 	public void showImageEventList(final int i) {
 		AsyncTask<Void, Integer, Bitmap[]> task = new AsyncTask<Void, Integer, Bitmap[]>() {
 
@@ -502,37 +528,41 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 				Bitmap bmp = null;
 				Bitmap imagePage = null;
 
-				if (scrollState != OnScrollListener.SCROLL_STATE_FLING) {
-					if (eventCollection.getEventList().size() > i) {
+				if (eventCollection.getAroundMeEventList().size() > i) {
+
+					EventData event = eventCollection.getAroundMeEventList()
+							.get(i);
+
+					if (scrollState != OnScrollListener.SCROLL_STATE_FLING
+							&& event.imageDownloaded) {
 
 						// GET EVENT PICTURE
 
 						try {
 							java.io.FileInputStream in = context
-									.openFileInput(eventCollection
-											.getAroundMeEventList().get(i).event_ID);
+									.openFileInput(event.event_ID);
 							bmp = BitmapFactory.decodeStream(in);
-
 						} catch (Exception e) {
-
-							try {
-								String pageID = eventCollection
-										.getAroundMeEventList().get(i).parentPage_ID;
-								if (pageID.equals("1")) {
-									bmp = BitmapFactory.decodeResource(
-											context.getResources(),
-											R.drawable.icon_other_events);
-								} else {
-									java.io.FileInputStream in = context
-											.openFileInput(pageID);
-									bmp = BitmapFactory.decodeStream(in);
-								}
-
-							} catch (Exception ex) {
-							}
+							e.printStackTrace();
 						}
-					}
 
+					} else if (!(aroundMePictures < eventCollection
+							.getAroundMeEventList().size() && context
+							.isDiscover())
+							&& !event.imageDownloaded) {
+						URL img_value = event.imageUri;
+						String ID = event.event_ID;
+						try {
+							bmp = BitmapFactory.decodeStream(img_value
+									.openConnection().getInputStream());
+							context.saveImageToDisk(ID, bmp);
+							event.imageDownloaded = true;
+						} catch (Exception e) {
+							Log.d("Failed downloadImage showimage",
+									e.toString());
+						}
+
+					}
 				}
 
 				Bitmap[] toReturn = { bmp, imagePage };
@@ -568,7 +598,11 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			}
 
 		};
-		task.execute();
+		if (Build.VERSION.SDK_INT >= 11) {
+			task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+		} else {
+			task.execute();
+		}
 	}
 
 	@Override
@@ -632,10 +666,10 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			} else {
 				localViewHolder = (ViewHolderStar) paramView.getTag();
 			}
-			
+
 			paramView.findViewById(R.id.progressBarImagePageList)
-			.setVisibility(View.GONE);
-			
+					.setVisibility(View.GONE);
+
 			localViewHolder.text.setText(page.name);
 
 			int counter = userLikesInt;
@@ -712,28 +746,28 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			temp = (pageCollection.getPageAroundMe().get(paramInt));
 
 			final PageData page = temp;
-			if(paramView==null){
-			paramView = mInflater.inflate(R.layout.list_pages, null);
-			localViewHolder = new ViewHolderStarPlaces();
-			localViewHolder.selected = (RelativeLayout) paramView
-					.findViewById(R.id.imageViewSelected);
-			localViewHolder.text = (TextView) paramView
-					.findViewById(R.id.textViewListPages);
-			localViewHolder.text_fan = (TextView) paramView
-					.findViewById(R.id.textViewListPagesFanCount);
-			localViewHolder.star = (ImageView) paramView
-					.findViewById(R.id.imageViewStar);
-			localViewHolder.image = (ImageView) paramView
-					.findViewById(R.id.imageViewPage);
-			localViewHolder.text.setText(page.name);
+			if (paramView == null) {
+				paramView = mInflater.inflate(R.layout.list_pages, null);
+				localViewHolder = new ViewHolderStarPlaces();
+				localViewHolder.selected = (RelativeLayout) paramView
+						.findViewById(R.id.imageViewSelected);
+				localViewHolder.text = (TextView) paramView
+						.findViewById(R.id.textViewListPages);
+				localViewHolder.text_fan = (TextView) paramView
+						.findViewById(R.id.textViewListPagesFanCount);
+				localViewHolder.star = (ImageView) paramView
+						.findViewById(R.id.imageViewStar);
+				localViewHolder.image = (ImageView) paramView
+						.findViewById(R.id.imageViewPage);
+				localViewHolder.text.setText(page.name);
 
-			paramView.setTag(localViewHolder);
+				paramView.setTag(localViewHolder);
 			} else {
 				localViewHolder = (ViewHolderStarPlaces) paramView.getTag();
 			}
 			paramView.findViewById(R.id.progressBarImagePageList)
 					.setVisibility(View.GONE);
-			
+
 			int counter = placesInt;
 
 			if (paramInt <= counter

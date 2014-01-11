@@ -16,8 +16,12 @@
 
 package com.actionbarsherlock.internal.app;
 
+import static com.actionbarsherlock.internal.ResourcesCompat.getResources_getBoolean;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -26,6 +30,7 @@ import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Handler;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.util.TypedValue;
 import android.view.ContextThemeWrapper;
@@ -34,14 +39,13 @@ import android.view.View;
 import android.view.Window;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.SpinnerAdapter;
-import com.mosquitolabs.tonight.R;
+
 import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.internal.nineoldandroids.animation.Animator;
+import com.actionbarsherlock.internal.nineoldandroids.animation.Animator.AnimatorListener;
 import com.actionbarsherlock.internal.nineoldandroids.animation.AnimatorListenerAdapter;
 import com.actionbarsherlock.internal.nineoldandroids.animation.AnimatorSet;
 import com.actionbarsherlock.internal.nineoldandroids.animation.ObjectAnimator;
-import com.actionbarsherlock.internal.nineoldandroids.animation.Animator.AnimatorListener;
 import com.actionbarsherlock.internal.nineoldandroids.widget.NineFrameLayout;
 import com.actionbarsherlock.internal.view.menu.MenuBuilder;
 import com.actionbarsherlock.internal.view.menu.MenuPopupHelper;
@@ -54,7 +58,7 @@ import com.actionbarsherlock.view.ActionMode;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
-import static com.actionbarsherlock.internal.ResourcesCompat.getResources_getBoolean;
+import com.mosquitolabs.tonight.R;
 
 /**
  * ActionBarImpl is the ActionBar implementation used
@@ -109,6 +113,7 @@ public class ActionBarImpl extends ActionBar {
 
     final AnimatorListener mHideListener = new AnimatorListenerAdapter() {
         @Override
+    	@TargetApi(11)
         public void onAnimationEnd(Animator animation) {
             if (mContentView != null) {
                 mContentView.setTranslationY(0);
@@ -170,7 +175,12 @@ public class ActionBarImpl extends ActionBar {
 
         // Older apps get the home button interaction enabled by default.
         // Newer apps need to enable it explicitly.
-        setHomeButtonEnabled(mContext.getApplicationInfo().targetSdkVersion < 14);
+        boolean homeButtonEnabled = mContext.getApplicationInfo().targetSdkVersion < Build.VERSION_CODES.ICE_CREAM_SANDWICH;
+
+        // If the homeAsUp display option is set, always enable the home button.
+        homeButtonEnabled |= (mActionView.getDisplayOptions() & ActionBar.DISPLAY_HOME_AS_UP) != 0;
+
+        setHomeButtonEnabled(homeButtonEnabled);
 
         setHasEmbeddedTabs(getResources_getBoolean(mContext,
                 R.bool.abs__action_bar_embed_tabs));
@@ -321,7 +331,7 @@ public class ActionBarImpl extends ActionBar {
             break;
         default:
             throw new IllegalStateException(
-                    "setSelectedNavigationIndex not valid for current navigation mode");
+                    "setSelectedNavigationItem not valid for current navigation mode");
         }
     }
 
@@ -506,8 +516,8 @@ public class ActionBarImpl extends ActionBar {
         }
 
         FragmentTransaction trans = null;
-        if (mActivity instanceof SherlockFragmentActivity) {
-            trans = ((SherlockFragmentActivity)mActivity).getSupportFragmentManager().beginTransaction()
+        if (mActivity instanceof FragmentActivity) {
+            trans = ((FragmentActivity)mActivity).getSupportFragmentManager().beginTransaction()
                     .disallowAddToBackStack();
         }
 
@@ -547,6 +557,7 @@ public class ActionBarImpl extends ActionBar {
         show(true);
     }
 
+	@TargetApi(11)
     void show(boolean markHiddenBeforeMode) {
         if (mCurrentShowAnim != null) {
             mCurrentShowAnim.end();
@@ -583,6 +594,7 @@ public class ActionBarImpl extends ActionBar {
     }
 
     @Override
+	@TargetApi(11)
     public void hide() {
         if (mCurrentShowAnim != null) {
             mCurrentShowAnim.end();

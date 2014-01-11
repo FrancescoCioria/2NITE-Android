@@ -535,10 +535,9 @@ public class ServiceUpdate extends Service {
 	}
 
 	private boolean isOnline() {
-
 		ConnectivityManager cm = (ConnectivityManager) this
 				.getSystemService(Context.CONNECTIVITY_SERVICE);
-		NetworkInfo netInfo = cm.getActiveNetworkInfo();
+		NetworkInfo netInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 		if (netInfo != null && netInfo.isConnected()) {
 			return true;
 		}

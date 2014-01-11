@@ -15,6 +15,8 @@
  */
 package com.actionbarsherlock.internal.widget;
 
+import static com.actionbarsherlock.internal.ResourcesCompat.getResources_getBoolean;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
@@ -24,15 +26,13 @@ import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 
-import com.mosquitolabs.tonight.R;
 import com.actionbarsherlock.internal.nineoldandroids.animation.Animator;
 import com.actionbarsherlock.internal.nineoldandroids.animation.AnimatorSet;
 import com.actionbarsherlock.internal.nineoldandroids.animation.ObjectAnimator;
 import com.actionbarsherlock.internal.nineoldandroids.view.NineViewGroup;
 import com.actionbarsherlock.internal.view.menu.ActionMenuPresenter;
 import com.actionbarsherlock.internal.view.menu.ActionMenuView;
-
-import static com.actionbarsherlock.internal.ResourcesCompat.getResources_getBoolean;
+import com.mosquitolabs.tonight.R;
 
 public abstract class AbsActionBarView extends NineViewGroup {
     protected ActionMenuView mMenuView;
@@ -131,6 +131,7 @@ public abstract class AbsActionBarView extends NineViewGroup {
         return getVisibility();
     }
 
+	@TargetApi(11)
     public void animateToVisibility(int visibility) {
         if (mVisibilityAnim != null) {
             mVisibilityAnim.cancel();

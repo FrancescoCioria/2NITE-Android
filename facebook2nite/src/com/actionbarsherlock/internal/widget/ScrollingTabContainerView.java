@@ -15,6 +15,7 @@
  */
 package com.actionbarsherlock.internal.widget;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
@@ -32,11 +33,12 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import com.mosquitolabs.tonight.R;
+
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.internal.nineoldandroids.animation.Animator;
 import com.actionbarsherlock.internal.nineoldandroids.animation.ObjectAnimator;
 import com.actionbarsherlock.internal.nineoldandroids.widget.NineHorizontalScrollView;
+import com.mosquitolabs.tonight.R;
 
 /**
  * This widget implements the dynamic action bar tab behavior that can change
@@ -184,10 +186,11 @@ public class ScrollingTabContainerView extends NineHorizontalScrollView
         mContentHeight = contentHeight;
         requestLayout();
     }
-
+	@TargetApi(11)
     private IcsLinearLayout createTabLayout() {
-        final IcsLinearLayout tabLayout = (IcsLinearLayout) LayoutInflater.from(getContext())
+        final TabsLinearLayout tabLayout = (TabsLinearLayout) LayoutInflater.from(getContext())
                 .inflate(R.layout.abs__action_bar_tab_bar_view, null);
+        tabLayout.setMeasureWithLargestChildEnabled(true);
         tabLayout.setLayoutParams(new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT));
         return tabLayout;
@@ -213,7 +216,7 @@ public class ScrollingTabContainerView extends NineHorizontalScrollView
         setContentHeight(a.getLayoutDimension(R.styleable.SherlockActionBar_height, 0));
         a.recycle();
     }
-
+	@TargetApi(11)
     public void animateToVisibility(int visibility) {
         if (mVisibilityAnim != null) {
             mVisibilityAnim.cancel();

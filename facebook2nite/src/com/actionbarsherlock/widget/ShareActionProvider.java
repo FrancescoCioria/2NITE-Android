@@ -24,13 +24,13 @@ import android.graphics.drawable.Drawable;
 import android.util.TypedValue;
 import android.view.View;
 
-import com.mosquitolabs.tonight.R;
 import com.actionbarsherlock.view.ActionProvider;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
 import com.actionbarsherlock.view.MenuItem.OnMenuItemClickListener;
 import com.actionbarsherlock.view.SubMenu;
 import com.actionbarsherlock.widget.ActivityChooserModel.OnChooseActivityListener;
+import com.mosquitolabs.tonight.R;
 
 /**
  * This is a provider for a share action. It is responsible for creating views

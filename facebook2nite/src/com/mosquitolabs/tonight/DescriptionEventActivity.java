@@ -1,5 +1,6 @@
 package com.mosquitolabs.tonight;
 
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -25,7 +26,6 @@ import android.widget.Toast;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.facebook.HttpMethod;
 import com.facebook.Request;
@@ -38,8 +38,6 @@ public class DescriptionEventActivity extends SherlockActivity {
 
 	private SharedPreferences mPrefs;
 
-	private MenuItem sort;
-	private MenuItem distance;
 	private MenuItem rsvp;
 	private MenuItem share;
 	private MenuItem seeOnFacebook;
@@ -64,9 +62,10 @@ public class DescriptionEventActivity extends SherlockActivity {
 		ActionBar actionbar = getSupportActionBar();
 		actionbar.setHomeButtonEnabled(true);
 		actionbar.setDisplayHomeAsUpEnabled(true);
-		Drawable background = getResources().getDrawable(R.drawable.darkstripes_action);
+		Drawable background = getResources().getDrawable(
+				R.drawable.darkstripes_action);
 		actionbar.setBackgroundDrawable(background);
-		
+
 		ImageView eventPicture = (ImageView) findViewById(R.id.imageViewEventCover);
 		TextView textDesc = (TextView) findViewById(R.id.textViewDescription);
 		TextView textDescYEY = (TextView) findViewById(R.id.textViewDescYEY);
@@ -79,7 +78,6 @@ public class DescriptionEventActivity extends SherlockActivity {
 		textAttending = (TextView) findViewById(R.id.textViewAttendingCount);
 		Button buttonPlace = (Button) findViewById(R.id.buttonPlace);
 		Button buttonNavigate = (Button) findViewById(R.id.buttonNavigate);
-
 
 		textLoc.setOnClickListener(new OnClickListener() {
 
@@ -108,7 +106,7 @@ public class DescriptionEventActivity extends SherlockActivity {
 		// if (!isBirthdayWeek) {
 		// adViewLoad();
 		// }
-		
+
 		buttonNavigate.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -127,8 +125,7 @@ public class DescriptionEventActivity extends SherlockActivity {
 				}
 				final String address = a;
 
-				builder = new AlertDialog.Builder(
-						DescriptionEventActivity.this);
+				builder = new AlertDialog.Builder(DescriptionEventActivity.this);
 				builder.setTitle(event.loc);
 				builder.setMessage(address);
 				builder.setNegativeButton("Cancel",
@@ -188,9 +185,8 @@ public class DescriptionEventActivity extends SherlockActivity {
 			}
 		});
 
-		
 		buttonNavigate.setVisibility(View.GONE);
-		//buttonPlace.setClickable(false);
+		// buttonPlace.setClickable(false);
 
 		EventData my = eventCollection.getAroundMeEventByID(currentPageID);
 		textName.setText(my.name);
@@ -216,8 +212,6 @@ public class DescriptionEventActivity extends SherlockActivity {
 		String timeStart = my.timeStart;
 
 		boolean eventHasAnEnd = my.hasAnEnd;
-
-		
 
 		textDescYEY.setTextColor(Color.DKGRAY);
 
@@ -248,37 +242,28 @@ public class DescriptionEventActivity extends SherlockActivity {
 		}
 		textLoc.setText("");
 		textLoc.setTextColor(Color.rgb(11, 100, 217));
-		
-		if(my.venue!=null && my.venue.length()>0){
+
+		if (my.venue != null && my.venue.length() > 0) {
 			buttonNavigate.setVisibility(View.VISIBLE);
 		}
-		
+
 		buttonPlace.setEnabled(false);
 		buttonPlace.setTextColor(getResources().getColor(R.color.android_gray));
-		
 
 	}
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// TODO Auto-generated method stub
-		MenuInflater inflater = getSupportMenuInflater();
+		getSupportMenuInflater().inflate(R.menu.menu_description, menu);
 
-		inflater.inflate(R.menu.menu_search, menu);
-		sort = menu.findItem(R.id.menu_sort);
-		distance = menu.findItem(R.id.menu_distance);
 		share = menu.findItem(R.id.menu_share);
 		rsvp = menu.findItem(R.id.menu_rsvp);
 		seeOnFacebook = menu.findItem(R.id.menu_facebook);
-		MenuItem sortsearch = menu.findItem(R.id.menusearch_sort);
 
-		sortsearch.setVisible(false);
-		sort.setVisible(false);
-		distance.setVisible(false);
 		share.setVisible(true);
 		rsvp.setVisible(true);
 		seeOnFacebook.setVisible(true);
-		
+
 		if (status.equals("Not Invited") || status.equals("not_replied")) {
 			rsvp.setTitle("RSVP: " + "Not Answered");
 		} else {
@@ -292,7 +277,7 @@ public class DescriptionEventActivity extends SherlockActivity {
 				rsvp.setTitle("RSVP: " + "Declined");
 			}
 		}
-		
+
 		return super.onCreateOptionsMenu(menu);
 	}
 
@@ -466,26 +451,23 @@ public class DescriptionEventActivity extends SherlockActivity {
 						currentPageID + "/" + element, bundle, HttpMethod.POST,
 						callback);
 				request.executeAndWait();
-				
+
 				boolean add = true;
-				for (EventData temp : eventCollection
-						.getCompleteEventList()) {
-					if (event.event_ID
-							.equals(temp.event_ID)) {
-							add = false;
+				for (EventData temp : eventCollection.getCompleteEventList()) {
+					if (event.event_ID.equals(temp.event_ID)) {
+						add = false;
 						break;
 					}
 				}
 				if (add) {
-					event.parentPage_ID="1";
-					event.parentPageName="My Events..";
-					eventCollection
-							.addToCompleteEventList(event);
-				}else{
-					eventCollection.getCompleteEventByID(event.event_ID).status_attending=event.status_attending;
-					eventCollection.getCompleteEventByID(event.event_ID).attending_count=event.attending_count;
+					event.parentPage_ID = "1";
+					event.parentPageName = "My Events..";
+					eventCollection.addToCompleteEventList(event);
+				} else {
+					eventCollection.getCompleteEventByID(event.event_ID).status_attending = event.status_attending;
+					eventCollection.getCompleteEventByID(event.event_ID).attending_count = event.attending_count;
 				}
-				
+
 				return null;
 			}
 		};
