@@ -61,7 +61,7 @@ public class DiscoverActivity extends SherlockActivity {
 
 	final String APP_ID = "219909391458551";
 	private EventCollection eventCollection = EventCollection.getInstance();
-	private JSONObject json = new JSONObject();
+//	private JSONObject json = new JSONObject();
 	private JSONArray jarrayPlaces;
 	private JSONArray jarrayLikes;
 	private JSONArray jarrayEventAround;
@@ -1139,24 +1139,24 @@ public class DiscoverActivity extends SherlockActivity {
 
 										String b = "";
 										try {
-											if (!json.isNull("venue")) {
-												JSONObject jsonO = json
+											if (!jsonAround.isNull("venue")) {
+												JSONObject json = jsonAround
 														.getJSONObject("venue");
-												if (!jsonO.isNull("street")
-														|| !jsonO
+												if (!json.isNull("street")
+														|| !json
 																.isNull("city")) {
-													b += jsonO
+													b += json
 															.getString("street");
 													if (b.length() > 0)
 														b += ", ";
-													if (jsonO.has("city")) {
-														b += jsonO
+													if (json.has("city")) {
+														b += json
 																.getString("city");
 														if (b.length() > 0) {
 															b += ", ";
 														}
 													}
-													if (jsonO.has("country")) {
+													if (json.has("country")) {
 														b += json
 																.getString("country");
 													}
@@ -1253,24 +1253,24 @@ public class DiscoverActivity extends SherlockActivity {
 
 										String b = "";
 										try {
-											if (!json.isNull("venue")) {
-												JSONObject jsonO = json
+											if (!jsonAround.isNull("venue")) {
+												JSONObject json = jsonAround
 														.getJSONObject("venue");
-												if (!jsonO.isNull("street")
-														|| !jsonO
+												if (!json.isNull("street")
+														|| !json
 																.isNull("city")) {
-													b += jsonO
+													b += json
 															.getString("street");
 													if (b.length() > 0)
 														b += ", ";
-													if (jsonO.has("city")) {
-														b += jsonO
+													if (json.has("city")) {
+														b += json
 																.getString("city");
 														if (b.length() > 0) {
 															b += ", ";
 														}
 													}
-													if (jsonO.has("country")) {
+													if (json.has("country")) {
 														b += json
 																.getString("country");
 													}

@@ -104,8 +104,8 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 
 							} else {
 								pageCollection
-								.removePageFromFavourites(pageCollection
-										.getPageSearchList().get(i));
+										.removePageFromFavourites(pageCollection
+												.getPageSearchList().get(i));
 								preferences.setModifiedPages(true);
 								preferences.setModifiedSinglePage(true);
 								toast(pageCollection.getPageSearchList().get(i).name
@@ -143,8 +143,9 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 										+ " has been added to your pages.");
 
 							} else {
-								pageCollection.removePageFromFavourites(pageCollection
-										.getPageAroundMe().get(i));
+								pageCollection
+										.removePageFromFavourites(pageCollection
+												.getPageAroundMe().get(i));
 								preferences.setModifiedPages(true);
 								preferences.setModifiedSinglePage(true);
 								toast(pageCollection.getPageAroundMe().get(i).name
@@ -356,11 +357,11 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 				localViewHolder.image = (ImageView) paramView
 						.findViewById(R.id.imageViewPage);
 				paramView.setTag(localViewHolder);
-			}else{
-			localViewHolder = (ViewHolderStar) paramView.getTag();
+			} else {
+				localViewHolder = (ViewHolderStar) paramView.getTag();
 			}
 			paramView.findViewById(R.id.progressBarImagePageList)
-			.setVisibility(View.GONE);
+					.setVisibility(View.GONE);
 			localViewHolder.text.setText(page.name);
 
 			int counter = userLikesInt;
@@ -452,12 +453,12 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 						.findViewById(R.id.imageViewPage);
 
 				paramView.setTag(localViewHolder);
-			}else{
+			} else {
 
-			localViewHolder = (ViewHolderStarUser) paramView.getTag();
+				localViewHolder = (ViewHolderStarUser) paramView.getTag();
 			}
 			paramView.findViewById(R.id.progressBarImagePageList)
-			.setVisibility(View.GONE);
+					.setVisibility(View.GONE);
 			localViewHolder.text.setText(page.name);
 
 			int counter = placesInt;

@@ -97,9 +97,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	private PageCollection pageCollection = PageCollection.getInstance();
 	private Preferences preferences = Preferences.getInstance();
 
-	private JSONArray jDataArray;
-	private JSONObject json;
-	private JSONObject jsonObject;
+	// private JSONArray jDataArray;
+	// private JSONObject json;
+	// private JSONObject jsonObject;
 	private JSONArray jarrayLikes;
 	private JSONArray jarrayAround;
 
@@ -126,7 +126,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	private String name_page;
 	private String currentPageID = null;
 	private String status;
-	final String APP_ID = "219909391458551";
+	private final static String APP_ID = "219909391458551";
 
 	private SharedPreferences mPrefs;
 
@@ -220,7 +220,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	private AdView adView;
 
 	private String myEventsSettings = "";
-	public String filter = "all";
+	private String filter = "all";
 	private Tracker MyTracker;
 	private com.actionbarsherlock.app.ActionBar actionbar;
 	private AdRequest adRequest = new AdRequest();
@@ -903,7 +903,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 												if (add && tabSelected == 1) {
 													PageData page = new PageData();
-													jsonObject = json
+													JSONObject jsonObject = json
 															.getJSONObject("location");
 													page._ID = json
 															.getString("page_id");
@@ -1118,7 +1118,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 					Request.Callback callback = new Request.Callback() {
 						public void onCompleted(Response response) {
 							try {
-								json = response.getGraphObject()
+								JSONObject json = response.getGraphObject()
 										.getInnerJSONObject();
 								jarrayAround = json.getJSONArray("data");
 								int i = 0;
@@ -1126,7 +1126,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 									json = jarrayAround.getJSONObject(i);
 
 									PageData page = new PageData();
-									jsonObject = json.getJSONObject("location");
+									JSONObject jsonObject = json
+											.getJSONObject("location");
 									page._ID = json.getString("page_id");
 									page.name = json.getString("name");
 									page.number_of_likes = json
@@ -3621,7 +3622,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 					public void run() {
 
 						listViewMain.setVisibility(View.VISIBLE);
-						// eventArrayAdapter.notifyDataSetChanged();
 						refreshPageAdapter();
 						progressDialog.dismiss();
 					}
@@ -4233,8 +4233,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 					// MY EVENTS //
 
 					try {
-						json = response.getGraphObject().getInnerJSONObject();
-						jDataArray = json.getJSONArray("data");
+						JSONObject json = response.getGraphObject()
+								.getInnerJSONObject();
+						JSONArray jDataArray = json.getJSONArray("data");
 						int counter = 0;
 						for (int i = 0; i < jDataArray.length(); i++) {
 							json = jDataArray.getJSONObject(i);
@@ -4448,9 +4449,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 					// PAGE EVENTS
 
 					try {
-						jsonObject = response.getGraphObject()
+						JSONObject jsonObject = response.getGraphObject()
 								.getInnerJSONObject();
-						jDataArray = jsonObject.getJSONArray("data");
+						JSONArray jDataArray = jsonObject.getJSONArray("data");
 						int m = 0;
 						JSONArray jArray = new JSONArray();
 						int h = jDataArray.length();
@@ -4554,21 +4555,21 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 								String b = "";
 								try {
-									if (!json.isNull("venue")) {
-										JSONObject jsonO = json
+									if (!jsonObject.isNull("venue")) {
+										JSONObject json = jsonObject
 												.getJSONObject("venue");
-										if (!jsonO.isNull("street")
-												|| !jsonO.isNull("city")) {
-											b += jsonO.getString("street");
+										if (!json.isNull("street")
+												|| !json.isNull("city")) {
+											b += json.getString("street");
 											if (b.length() > 0)
 												b += ", ";
-											if (jsonO.has("city")) {
-												b += jsonO.getString("city");
+											if (json.has("city")) {
+												b += json.getString("city");
 												if (b.length() > 0) {
 													b += ", ";
 												}
 											}
-											if (jsonO.has("country")) {
+											if (json.has("country")) {
 												b += json.getString("country");
 											}
 										}
@@ -5059,20 +5060,20 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 						isInProgress = false;
 						String b = "";
 						try {
-							if (!json.isNull("venue")) {
-								JSONObject jsonO = json.getJSONObject("venue");
-								if (!jsonO.isNull("street")
-										|| !jsonO.isNull("city")) {
-									b += jsonO.getString("street");
+							if (!myJson.isNull("venue")) {
+								JSONObject json = myJson.getJSONObject("venue");
+								if (!json.isNull("street")
+										|| !json.isNull("city")) {
+									b += json.getString("street");
 									if (b.length() > 0)
 										b += ", ";
-									if (jsonO.has("city")) {
-										b += jsonO.getString("city");
+									if (json.has("city")) {
+										b += json.getString("city");
 										if (b.length() > 0) {
 											b += ", ";
 										}
 									}
-									if (jsonO.has("country")) {
+									if (json.has("country")) {
 										b += json.getString("country");
 									}
 								}
@@ -5156,9 +5157,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 						public void onCompleted(Response response) {
 
 							try {
-								jsonObject = response.getGraphObject()
-										.getInnerJSONObject();
-								jDataArray = jsonObject.getJSONArray("data");
+								JSONObject jsonObject = response
+										.getGraphObject().getInnerJSONObject();
+								JSONArray jDataArray = jsonObject
+										.getJSONArray("data");
 								int m = 0;
 								JSONArray jArray = new JSONArray();
 								int h = jDataArray.length();
@@ -5273,25 +5275,23 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 											String b = "";
 											try {
-												if (!json.isNull("venue")) {
-													JSONObject jsonO = json
+												if (!myJson.isNull("venue")) {
+													JSONObject json = myJson
 															.getJSONObject("venue");
-													if (!jsonO.isNull("street")
-															|| !jsonO
-																	.isNull("city")) {
-														b += jsonO
+													if (!json.isNull("street")
+															|| !json.isNull("city")) {
+														b += json
 																.getString("street");
 														if (b.length() > 0)
 															b += ", ";
-														if (jsonO.has("city")) {
-															b += jsonO
+														if (json.has("city")) {
+															b += json
 																	.getString("city");
 															if (b.length() > 0) {
 																b += ", ";
 															}
 														}
-														if (jsonO
-																.has("country")) {
+														if (json.has("country")) {
 															b += json
 																	.getString("country");
 														}
@@ -5303,8 +5303,8 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 											event.venue = b;
 
 											URL img_value = null;
-											if (!json.isNull("pic_cover")) {
-												JSONObject j = json
+											if (!myJson.isNull("pic_cover")) {
+												JSONObject j = myJson
 														.getJSONObject("pic_cover");
 												img_value = new URL(
 														j.getString("source"));
@@ -5312,7 +5312,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 											} else {
 												img_value = new URL(
-														json.getString("pic_big"));
+														myJson.getString("pic_big"));
 											}
 											event.imageUri = img_value;
 											eventCollection
@@ -5711,6 +5711,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 				pageCollection.getPageAroundMe().clear();
 				pageCollection.getPageSearchListRelevant().clear();
 				pageCollection.getPageSearchList().clear();
+				try {
+					userLikesPagerAdapter.refreshPlacesAdapter();
+					userLikesPagerAdapter.refreshUserLikesAdapter();
+				} catch (Exception e) {
+				}
 				refreshPageAdapter();
 
 			}
@@ -6292,7 +6297,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		}
 	}
 
-	private void refreshPageAdapter() {
+	public void refreshPageAdapter() {
 		if (pageArrayAdapter != null) {
 			FacebookeventsActivity.this.runOnUiThread(new Runnable() {
 				public void run() {
@@ -6834,6 +6839,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		if (true && Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 			header.setAlpha(1 - (offset / (float) header.getMeasuredHeight()));
 		}
+	}
+
+	public String getFilter() {
+		return filter;
 	}
 
 }

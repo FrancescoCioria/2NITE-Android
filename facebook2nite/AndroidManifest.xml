@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:ads="http://schemas.android.com/apk/lib/com.google.ads"
     package="com.mosquitolabs.tonight"
-    android:versionCode="34"
+    android:versionCode="35"
     android:versionName="@string/version_manifest" >
 
     <uses-sdk

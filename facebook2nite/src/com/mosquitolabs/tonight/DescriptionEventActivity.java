@@ -42,9 +42,11 @@ public class DescriptionEventActivity extends SherlockActivity {
 	private MenuItem share;
 	private MenuItem seeOnFacebook;
 
-	private String currentPageID;
-	private String status;
+//	private String currentPageID;
+//	private String status;
 	private String attendingCount;
+	
+	private EventData event = new EventData();
 
 	private TextView textAttending;
 
@@ -56,8 +58,9 @@ public class DescriptionEventActivity extends SherlockActivity {
 
 		Intent intent = getIntent();
 		Bundle bundle = intent.getExtras();
-		currentPageID = bundle.getString("currentPageID");
-		status = eventCollection.getAroundMeEventByID(currentPageID).status_attending;
+		String currentPageID = bundle.getString("currentPageID");
+		event = eventCollection.getAroundMeEventByID(currentPageID);
+//		status = event.status_attending;
 
 		ActionBar actionbar = getSupportActionBar();
 		actionbar.setHomeButtonEnabled(true);
@@ -83,22 +86,22 @@ public class DescriptionEventActivity extends SherlockActivity {
 
 			@Override
 			public void onClick(View v) {
-				PageData paramPageData = pageCollection.getPageByID(eventCollection
-						.getAroundMeEventByID(currentPageID).parentPage_ID);
-				try {
-					if (paramPageData.address.length() > 0) {
-						Intent i = new Intent(Intent.ACTION_VIEW, Uri
-								.parse("google.navigation:q="
-										+ paramPageData.address));
-						startActivity(i);
-					} else {
-						toast("Sorry, no address available for "
-								+ paramPageData.name);
-					}
-				} catch (Exception e) {
-					toast("Can't open navigator app, be sure to have installed it on your phone.");
-
-				}
+//				PageData paramPageData = pageCollection.getPageByID(eventCollection
+//						.getAroundMeEventByID(currentPageID).parentPage_ID);
+//				try {
+//					if (paramPageData.address.length() > 0) {
+//						Intent i = new Intent(Intent.ACTION_VIEW, Uri
+//								.parse("google.navigation:q="
+//										+ paramPageData.address));
+//						startActivity(i);
+//					} else {
+//						toast("Sorry, no address available for "
+//								+ paramPageData.name);
+//					}
+//				} catch (Exception e) {
+//					toast("Can't open navigator app, be sure to have installed it on your phone.");
+//
+//				}
 			}
 		});
 		// adView = (AdView) v.findViewById(R.id.adView35);
@@ -113,16 +116,12 @@ public class DescriptionEventActivity extends SherlockActivity {
 			public void onClick(View v) {
 				AlertDialog.Builder builder;
 				final AlertDialog alertDialog;
-				final PageData paramPageData = pageCollection.getPageByID(eventCollection
-						.getCompleteEventByID(currentPageID).parentPage_ID);
+				
 				String a = "";
-				EventData event = eventCollection
-						.getCompleteEventByID(currentPageID);
+				
 				if (event.venue != null && event.venue.length() > 0) {
 					a = event.venue;
-				} else {
-					a = paramPageData.address;
-				}
+				} 
 				final String address = a;
 
 				builder = new AlertDialog.Builder(DescriptionEventActivity.this);
@@ -168,10 +167,7 @@ public class DescriptionEventActivity extends SherlockActivity {
 												Uri.parse("google.navigation:q="
 														+ address));
 										startActivity(i);
-									} else {
-										toast("Sorry, no address available for "
-												+ paramPageData.name);
-									}
+									} 
 								} catch (Exception e) {
 									toast("Can't open navigator app, be sure to have installed it on your phone.");
 
@@ -188,34 +184,33 @@ public class DescriptionEventActivity extends SherlockActivity {
 		buttonNavigate.setVisibility(View.GONE);
 		// buttonPlace.setClickable(false);
 
-		EventData my = eventCollection.getAroundMeEventByID(currentPageID);
-		textName.setText(my.name);
+		textName.setText(event.name);
 
-		if (my.desc.length() > 0) {
-			textDesc.setText(my.desc);
+		if (event.desc.length() > 0) {
+			textDesc.setText(event.desc);
 		} else {
 			textDesc.setText("No description available for this event.");
 
 		}
 
-		if (readImageFromDisk(my.event_ID) != null) {
-			eventPicture.setImageBitmap(readImageFromDisk(my.event_ID));
+		if (readImageFromDisk(event.event_ID) != null) {
+			eventPicture.setImageBitmap(readImageFromDisk(event.event_ID));
 
 		}
 
-		String dayEnd = my.dayEnd;
-		String dateEnd = my.dateEnd;
-		String timeEnd = my.timeEnd;
+		String dayEnd = event.dayEnd;
+		String dateEnd = event.dateEnd;
+		String timeEnd = event.timeEnd;
 
-		String dateStart = my.dateStart;
-		String dayStart = my.dayStart;
-		String timeStart = my.timeStart;
+		String dateStart = event.dateStart;
+		String dayStart = event.dayStart;
+		String timeStart = event.timeStart;
 
-		boolean eventHasAnEnd = my.hasAnEnd;
+		boolean eventHasAnEnd = event.hasAnEnd;
 
 		textDescYEY.setTextColor(Color.DKGRAY);
 
-		attendingCount = Integer.toString(my.attending_count);
+		attendingCount = Integer.toString(event.attending_count);
 
 		textAttending.setText(attendingCount + " people going!");
 
@@ -233,17 +228,17 @@ public class DescriptionEventActivity extends SherlockActivity {
 		} else {
 			textEnd.setText("End date not set");
 		}
-		textNamePage.setText(my.loc);
-		if (my.loc.equals("null")) {
+		textNamePage.setText(event.loc);
+		if (event.loc.equals("null")) {
 			buttonPlace.setText("N/A");
 
 		} else {
-			buttonPlace.setText("( i )" + my.loc);
+			buttonPlace.setText("( i )" + event.loc);
 		}
 		textLoc.setText("");
 		textLoc.setTextColor(Color.rgb(11, 100, 217));
 
-		if (my.venue != null && my.venue.length() > 0) {
+		if (event.venue != null && event.venue.length() > 0) {
 			buttonNavigate.setVisibility(View.VISIBLE);
 		}
 
@@ -263,6 +258,8 @@ public class DescriptionEventActivity extends SherlockActivity {
 		share.setVisible(true);
 		rsvp.setVisible(true);
 		seeOnFacebook.setVisible(true);
+		
+		String status = event.status_attending;
 
 		if (status.equals("Not Invited") || status.equals("not_replied")) {
 			rsvp.setTitle("RSVP: " + "Not Answered");
@@ -295,18 +292,17 @@ public class DescriptionEventActivity extends SherlockActivity {
 			return false;
 
 		case R.id.menu_share:
-			if (currentPageID != null) {
+			if (event.event_ID != null) {
 				Intent shareIntent = new Intent(Intent.ACTION_SEND);
 				shareIntent
 						.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
 				shareIntent.setType("text/plain");
-				String shareBody = "www.facebook.com/" + currentPageID
+				String shareBody = "www.facebook.com/" + event.event_ID
 						+ "\n\nSent using 2nite.";
 				shareIntent
 						.putExtra(
 								android.content.Intent.EXTRA_SUBJECT,
-								eventCollection
-										.getAroundMeEventByID(currentPageID).name);
+								event.name);
 				shareIntent.putExtra(android.content.Intent.EXTRA_TEXT,
 						shareBody);
 				startActivity(Intent
@@ -314,8 +310,7 @@ public class DescriptionEventActivity extends SherlockActivity {
 								shareIntent,
 								"Share "
 										+ "\""
-										+ eventCollection
-												.getAroundMeEventByID(currentPageID).name
+										+ event.name
 										+ "\"" + " using"));
 			}
 			return false;
@@ -338,7 +333,7 @@ public class DescriptionEventActivity extends SherlockActivity {
 
 	private void updateRSVP() {
 		if (isOnline()) {
-			status = eventCollection.getAroundMeEventByID(currentPageID).status_attending;
+			String status = event.status_attending;
 			if (!status.equals("Not Invited") && !status.equals("not_replied")) {
 				final CharSequence[] items = { "Going", "Maybe", "Declined" };
 				final CharSequence[] element = { "attending", "maybe",
@@ -371,8 +366,7 @@ public class DescriptionEventActivity extends SherlockActivity {
 		builder.setSingleChoiceItems(items, checked,
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int item) {
-						EventData event = eventCollection
-								.getAroundMeEventByID(currentPageID);
+						
 						if (items.length == 4 && item == 1
 								&& !event.status_attending.equals("attending")) {
 							event.attending_count++;
@@ -421,8 +415,7 @@ public class DescriptionEventActivity extends SherlockActivity {
 			@Override
 			public String doInBackground(Void... params) {
 				Bundle bundle = new Bundle();
-				final EventData event = eventCollection
-						.getAroundMeEventByID(currentPageID);
+				
 				Request.Callback callback = new Request.Callback() {
 					public void onCompleted(Response response) {
 
@@ -448,7 +441,7 @@ public class DescriptionEventActivity extends SherlockActivity {
 					}
 				};
 				Request request = new Request(Session.getActiveSession(),
-						currentPageID + "/" + element, bundle, HttpMethod.POST,
+						event.event_ID + "/" + element, bundle, HttpMethod.POST,
 						callback);
 				request.executeAndWait();
 
@@ -477,7 +470,7 @@ public class DescriptionEventActivity extends SherlockActivity {
 	private void seeEventOnFacebook() {
 		try {
 			if (isOnline()) {
-				String uri = "fb://event/" + currentPageID;
+				String uri = "fb://event/" + event.event_ID;
 				Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
 				startActivity(intent);
 				toast("Opening facebook app, please wait..");

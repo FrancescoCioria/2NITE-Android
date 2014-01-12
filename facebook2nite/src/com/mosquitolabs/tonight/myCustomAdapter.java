@@ -324,9 +324,9 @@ public class myCustomAdapter extends BaseAdapter implements
 			localViewHolder.triangle_attending.setVisibility(View.GONE);
 		}
 
-		if ((!parentActivity.filter.equals("declined") && status
+		if ((!parentActivity.getFilter().equals("declined") && status
 				.equals("declined"))
-				|| (parentActivity.filter.equals("declined") && !status
+				|| (parentActivity.getFilter().equals("declined") && !status
 						.equals("declined"))) {
 			parentActivity.filter();
 		}
