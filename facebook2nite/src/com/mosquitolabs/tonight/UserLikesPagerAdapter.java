@@ -38,9 +38,6 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 	private ListView listUserLike;
 	private ListView listPlaces;
 
-	private int userLikesInt = 0;
-	private int placesInt = 0;
-
 	private final FacebookeventsActivity context;
 	private View v;
 
@@ -203,7 +200,6 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 						Log.e("image_userlike", e.toString());
 					}
 				}
-				userLikesInt++;
 				return i;
 			}
 
@@ -223,7 +219,7 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 						}
 					}
 					if (i < pageCollection.getPageSearchList().size()) {
-						getUserLikesImages(userLikesInt);
+						getUserLikesImages(i + 1);
 					}
 				}
 			}
@@ -238,7 +234,7 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 			public Integer doInBackground(Void... params) {
 
 				try {
-					Log.i("around_picture", Integer.toString(placesInt));
+					Log.i("around_picture", Integer.toString(i));
 					int z = 0;
 					String index_ID = pageCollection.getPageAroundMe().get(i)._ID;
 					boolean b = true;
@@ -266,10 +262,9 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 					}
 
 				} catch (Exception e) {
-					Log.e("image_userlike", e.toString());
+					Log.e("around_picture", e.toString());
 				}
 
-				placesInt++;
 				return i;
 			}
 
@@ -290,8 +285,8 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 						}
 					}
 				}
-				if (i < pageCollection.getPageAroundMe().size()) {
-					getPlacesImages(placesInt);
+				if (i + 1 < pageCollection.getPageAroundMe().size()) {
+					getPlacesImages(i + 1);
 				}
 			}
 
@@ -364,17 +359,24 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 					.setVisibility(View.GONE);
 			localViewHolder.text.setText(page.name);
 
-			int counter = userLikesInt;
+			// default gray image
+			localViewHolder.image.setImageBitmap(BitmapFactory.decodeResource(
+					context.getResources(), R.drawable.icon_gray));
 
-			if (paramInt <= counter
-					&& context.readImageFromDisk(page._ID) != null) {
-				localViewHolder.image.setImageBitmap(context
-						.readImageFromDisk(page._ID));
-			} else {
-				localViewHolder.image.setImageBitmap(BitmapFactory
-						.decodeResource(context.getResources(),
-								R.drawable.icon_other_events));
-			}
+			localViewHolder.image.setImageBitmap(context
+					.readImageFromDisk(page._ID));
+
+			// int counter = userLikesInt;
+			//
+			// if (paramInt <= counter
+			// && context.readImageFromDisk(page._ID) != null) {
+			// localViewHolder.image.setImageBitmap(context
+			// .readImageFromDisk(page._ID));
+			// } else {
+			// localViewHolder.image.setImageBitmap(BitmapFactory
+			// .decodeResource(context.getResources(),
+			// R.drawable.icon_other_events));
+			// }
 
 			localViewHolder.star
 					.setBackgroundResource(android.R.drawable.btn_star_big_off);
@@ -461,17 +463,22 @@ public class UserLikesPagerAdapter extends PagerAdapter {
 					.setVisibility(View.GONE);
 			localViewHolder.text.setText(page.name);
 
-			int counter = placesInt;
+			// defaul gray image
+			localViewHolder.image.setImageBitmap(BitmapFactory.decodeResource(
+					context.getResources(), R.drawable.icon_gray));
 
-			if (paramInt <= counter
-					&& context.readImageFromDisk(page._ID) != null) {
-				localViewHolder.image.setImageBitmap(context
-						.readImageFromDisk(page._ID));
-			} else {
-				localViewHolder.image.setImageBitmap(BitmapFactory
-						.decodeResource(context.getResources(),
-								R.drawable.icon_other_events));
-			}
+			localViewHolder.image.setImageBitmap(context
+					.readImageFromDisk(page._ID));
+
+			// if (paramInt <= counter
+			// && context.readImageFromDisk(page._ID) != null) {
+			// localViewHolder.image.setImageBitmap(context
+			// .readImageFromDisk(page._ID));
+			// } else {
+			// localViewHolder.image.setImageBitmap(BitmapFactory
+			// .decodeResource(context.getResources(),
+			// R.drawable.icon_other_events));
+			// }
 
 			localViewHolder.star
 					.setBackgroundResource(android.R.drawable.btn_star_big_off);

@@ -1022,6 +1022,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 				userLikesPagerAdapter.initializeUserLikes();
 				startService();
+				Log.d("what", "the fuck");
 
 				// int i = 0;
 				if (jarrayLikes.length() > 0) {
@@ -1203,11 +1204,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 				userLikesPagerAdapter.initializePlaces();
 
-				startService();
+				// startService();
+				// Log.d("what", "mmmmthe fuck");
 
-				int i = 0;
 				if (jarrayAround.length() > 0) {
-					userLikesPagerAdapter.getPlacesImages(i);
+					userLikesPagerAdapter.getPlacesImages(0);
 
 				}
 			}
@@ -1650,12 +1651,14 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 				Request request = new Request(Session.getActiveSession(),
 						"fql", bundle, HttpMethod.GET, callback);
 				request.executeAndWait();
+				
+//				update RSVP statuses
+				getRSVPStatus();
 
 				if (newdownloads) {
 
-					if (!update) {
-						getRSVPStatus();
-					}
+					// if (!update) {
+					// }
 
 					newDownloads = true;
 					eventCollection.restoreEventList();
@@ -2992,35 +2995,39 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	}
 
 	private void addToCalendar(EventData event) {
-		// try {
-		// long def = 0;
-		//
-		// if (!event.unix) {
-		// Calendar cal = Calendar.getInstance();
-		// Calendar cal2 = Calendar.getInstance(TimeZone
-		// .getTimeZone("America/Los_Angeles"));
-		// long mi = cal.get(Calendar.ZONE_OFFSET);
-		// long mu = cal2.get(Calendar.ZONE_OFFSET);
-		// def = mi - mu;
-		// if (def < 0)
-		// def = def * (-1);
-		// }
-		//
-		// long beginTime = Long.parseLong(event.startMillis + "000") - def;
-		// long endTime = Long.parseLong(event.endMillis + "000") - def;
-		// Intent intent = new Intent(Intent.ACTION_EDIT);
-		// intent.setType("vnd.android.cursor.item/event");
-		// intent.putExtra("beginTime", beginTime);
-		// intent.putExtra("endTime", endTime);
-		// intent.putExtra("title", event.name);
-		// intent.putExtra("eventLocation", event.loc);
-		// intent.putExtra("description", event.desc);
-		// startActivity(intent);
-		// } catch (Exception e) {
-		// toast("Can't open Google Calendar, be sure you have installed it on your phone.",
-		// true);
-		// }
-		addEventToCalendarInBackground(event);
+		if (Build.VERSION.SDK_INT < 14) {
+			try {
+				long def = 0;
+
+				if (!event.unix) {
+					Calendar cal = Calendar.getInstance();
+					Calendar cal2 = Calendar.getInstance(TimeZone
+							.getTimeZone("America/Los_Angeles"));
+					long mi = cal.get(Calendar.ZONE_OFFSET);
+					long mu = cal2.get(Calendar.ZONE_OFFSET);
+					def = mi - mu;
+					if (def < 0)
+						def = def * (-1);
+				}
+
+				long beginTime = Long.parseLong(event.startMillis + "000")
+						- def;
+				long endTime = Long.parseLong(event.endMillis + "000") - def;
+				Intent intent = new Intent(Intent.ACTION_EDIT);
+				intent.setType("vnd.android.cursor.item/event");
+				intent.putExtra("beginTime", beginTime);
+				intent.putExtra("endTime", endTime);
+				intent.putExtra("title", event.name);
+				intent.putExtra("eventLocation", event.loc);
+				intent.putExtra("description", event.desc);
+				startActivity(intent);
+			} catch (Exception e) {
+				toast("Can't open Google Calendar, be sure you have installed it on your phone.",
+						true);
+			}
+		} else {
+			addEventToCalendarInBackground(event);
+		}
 	}
 
 	@Override
@@ -3275,7 +3282,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 									&& element.equals("attending")
 									&& !event.autoAddedToCalendar) {
 
-								addToCalendar(event);
+								addEventToCalendarInBackground(event);
 								event.autoAddedToCalendar = true;
 
 							}
@@ -5624,6 +5631,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			public void onClick(View v) {
 				isReading = false;
 				layout.dismiss();
+
+				if (pageCollection.getPageList().isEmpty()) {
+					startService();
+				}
+
 				if (pageCollection.getModifiedPageList().size() > 0) {
 					pageCollection.restoreSelectedPageList();
 					pageCollection.saveToDisk(FacebookeventsActivity.this);
@@ -5647,6 +5659,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 					userLikesPagerAdapter.refreshUserLikesAdapter();
 				} catch (Exception e) {
 				}
+
 				refreshPageAdapter();
 
 			}
@@ -6261,7 +6274,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 				latitude = location.getLatitude();
 				longitude = location.getLongitude();
 			}
-			getPlacesAroundMe();
+			if (pageCollection.getPageAroundMe().isEmpty()) {
+				getPlacesAroundMe();
+			}
 
 			isFirstTimeAround = false;
 		}
@@ -6753,7 +6768,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		Bundle bundle = new Bundle();
 		bundle.putString("q", rsvpRequest);
 
-		Callback callback = new Callback() {
+		Callback callback = new Callback() { 
 			@Override
 			public void onCompleted(Response response) {
 				try {
@@ -6780,7 +6795,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 											"attending")
 									&& !event.autoAddedToCalendar) {
 
-								addToCalendar(event);
+								addEventToCalendarInBackground(event);
 								event.autoAddedToCalendar = true;
 
 							}

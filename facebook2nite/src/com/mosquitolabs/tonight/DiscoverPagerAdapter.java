@@ -42,9 +42,6 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 
 	private ListView listPlaces;
 
-	private int userLikesInt = 0;
-	private int placesInt = 0;
-
 	private final DiscoverActivity context;
 	private View v;
 
@@ -269,7 +266,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			public Integer doInBackground(Void... params) {
 
 				try {
-					Log.i("around_picture", Integer.toString(placesInt));
+					Log.i("around_picture", Integer.toString(i));
 					int z = 0;
 					String index_ID = pageCollection.getPageAroundMe().get(i)._ID;
 					boolean b = true;
@@ -300,7 +297,6 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 					Log.e("around_picture", e.toString());
 				}
 
-				placesInt++;
 				return i;
 			}
 
@@ -321,9 +317,9 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 					}
 				}
 
-				if (i < pageCollection.getPageAroundMe().size()
+				if (i + 1 < pageCollection.getPageAroundMe().size()
 						&& context.isDiscover()) {
-					getPlacesImages(placesInt);
+					getPlacesImages(i + 1);
 				}
 			}
 
@@ -391,10 +387,9 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 										.getPageSearchList().get(i)._ID));
 					}
 				}
-				userLikesInt++;
-				if (userLikesInt < pageCollection.getPageSearchList().size()
+				if (i + 1 < pageCollection.getPageSearchList().size()
 						&& context.isDiscover()) {
-					getUserLikesImages(userLikesInt);
+					getUserLikesImages(i + 1);
 				}
 			}
 
@@ -672,17 +667,21 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 
 			localViewHolder.text.setText(page.name);
 
-			int counter = userLikesInt;
+			localViewHolder.image.setImageBitmap(BitmapFactory.decodeResource(
+					context.getResources(), R.drawable.icon_gray));
 
-			if (paramInt <= counter
-					&& context.readImageFromDisk(page._ID) != null) {
-				localViewHolder.image.setImageBitmap(context
-						.readImageFromDisk(page._ID));
-			} else {
-				localViewHolder.image.setImageBitmap(BitmapFactory
-						.decodeResource(context.getResources(),
-								R.drawable.icon_other_events));
-			}
+			localViewHolder.image.setImageBitmap(context
+					.readImageFromDisk(page._ID));
+
+			// if (paramInt <= counter
+			// && context.readImageFromDisk(page._ID) != null) {
+			// localViewHolder.image.setImageBitmap(context
+			// .readImageFromDisk(page._ID));
+			// } else {
+			// localViewHolder.image.setImageBitmap(BitmapFactory
+			// .decodeResource(context.getResources(),
+			// R.drawable.icon_other_events));
+			// }
 
 			localViewHolder.star
 					.setBackgroundResource(android.R.drawable.btn_star_big_off);
@@ -768,17 +767,21 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 			paramView.findViewById(R.id.progressBarImagePageList)
 					.setVisibility(View.GONE);
 
-			int counter = placesInt;
+			localViewHolder.image.setImageBitmap(BitmapFactory.decodeResource(
+					context.getResources(), R.drawable.icon_gray));
 
-			if (paramInt <= counter
-					&& context.readImageFromDisk(page._ID) != null) {
-				localViewHolder.image.setImageBitmap(context
-						.readImageFromDisk(page._ID));
-			} else {
-				localViewHolder.image.setImageBitmap(BitmapFactory
-						.decodeResource(context.getResources(),
-								R.drawable.icon_other_events));
-			}
+			localViewHolder.image.setImageBitmap(context
+					.readImageFromDisk(page._ID));
+
+			// if (paramInt <= counter
+			// && context.readImageFromDisk(page._ID) != null) {
+			// localViewHolder.image.setImageBitmap(context
+			// .readImageFromDisk(page._ID));
+			// } else {
+			// localViewHolder.image.setImageBitmap(BitmapFactory
+			// .decodeResource(context.getResources(),
+			// R.drawable.icon_other_events));
+			// }
 
 			localViewHolder.star
 					.setBackgroundResource(android.R.drawable.btn_star_big_off);
