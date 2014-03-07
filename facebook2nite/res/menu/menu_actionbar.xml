@@ -51,6 +51,11 @@
         android:icon="@drawable/ic_menu_refresh"
         android:showAsAction="never"
         android:title="Refresh"/>
+    
+    <item
+        android:id="@+id/menu_autoCalendar"
+        android:showAsAction="never"
+        android:title="Auto add to Calendar?"/>
     <item
         android:id="@+id/menu_calendar"
         android:showAsAction="never"

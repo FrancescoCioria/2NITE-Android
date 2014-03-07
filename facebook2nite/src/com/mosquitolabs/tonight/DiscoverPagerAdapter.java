@@ -896,7 +896,7 @@ public class DiscoverPagerAdapter extends PagerAdapter implements TitleProvider 
 	}
 
 	public void refreshEventsAround() {
-
+		eventArrayAdapter.initSections();
 		eventArrayAdapter.notifyDataSetChanged();
 
 	}

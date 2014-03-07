@@ -18,6 +18,8 @@ import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -42,6 +44,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
+import android.provider.CalendarContract.Events;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.text.SpannableString;
@@ -118,6 +121,9 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	private final static int NO_DECLINED = 2;
 	private final static int ALL = 3;
 
+	private final static int ON = 0;
+	private final static int OFF = 1;
+
 	private myCustomAdapter eventArrayAdapter;
 	private myCustomAdapterPage pageArrayAdapter;
 
@@ -155,6 +161,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 	private com.actionbarsherlock.view.MenuItem share;
 	private com.actionbarsherlock.view.MenuItem refresh;
+	private com.actionbarsherlock.view.MenuItem autoCalendar;
 	private com.actionbarsherlock.view.MenuItem seeOnFacebook;
 	private com.actionbarsherlock.view.MenuItem search;
 	private com.actionbarsherlock.view.MenuItem viewall;
@@ -252,6 +259,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	private TextView textCurrentPage;
 
 	private ActionBar.OnNavigationListener navigationListener;
+	private ArrayList<String> indexesOfRedownloadingImages = new ArrayList<String>();
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -2598,20 +2606,21 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	}
 
 	private synchronized void adViewLoad() {
-		AsyncTask<Void, Void, Bitmap> task = new AsyncTask<Void, Void, Bitmap>() {
-
-			@Override
-			public Bitmap doInBackground(Void... params) {
-				FacebookeventsActivity.this.runOnUiThread(new Runnable() {
-					public void run() {
-						adView.loadAd(adRequest);
-						isAdViewVisible = true;
-					}
-				});
-				return null;
-			}
-		};
-		task.execute();
+		// AsyncTask<Void, Void, Bitmap> task = new AsyncTask<Void, Void,
+		// Bitmap>() {
+		//
+		// @Override
+		// public Bitmap doInBackground(Void... params) {
+		// FacebookeventsActivity.this.runOnUiThread(new Runnable() {
+		// public void run() {
+		// adView.loadAd(adRequest);
+		// isAdViewVisible = true;
+		// }
+		// });
+		// return null;
+		// }
+		// };
+		// task.execute();
 
 	}
 
@@ -2674,6 +2683,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		search = menu.findItem(R.id.menu_search);
 		share = menu.findItem(R.id.menu_share);
 		refresh = menu.findItem(R.id.menu_refresh);
+		autoCalendar = menu.findItem(R.id.menu_autoCalendar);
 		seeOnFacebook = menu.findItem(R.id.menu_facebook);
 		rsvp = menu.findItem(R.id.menu_rsvp);
 		viewall = menu.findItem(R.id.menu_viewall);
@@ -2699,12 +2709,14 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		setSortEvents(false);
 		setSortPages(false);
 		setRefresh(false);
+		setAutoCalendar(false);
 		setFacebook(false);
 		setReset(false);
 		setInfo2NITE(false);
 		setInfo(false);
 		setCalendar(false);
 		setlistStyle(false);
+
 		// }
 		isActionbarAvailable = true;
 
@@ -2921,7 +2933,10 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			spinnerPage();
 			return false;
 		case R.id.menu_calendar:
-			addToCalendar();
+			addToCalendar(eventCollection.getCompleteEventByID(currentPageID));
+			return false;
+		case R.id.menu_autoCalendar:
+			AutoAddToCalendar();
 			return false;
 		case R.id.menu_listStyle:
 			changeListStyle();
@@ -2976,37 +2991,36 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 	}
 
-	private void addToCalendar() {
-		try {
-			EventData event = eventCollection
-					.getCompleteEventByID(currentPageID);
-			long def = 0;
-
-			if (!event.unix) {
-				Calendar cal = Calendar.getInstance();
-				Calendar cal2 = Calendar.getInstance(TimeZone
-						.getTimeZone("America/Los_Angeles"));
-				long mi = cal.get(Calendar.ZONE_OFFSET);
-				long mu = cal2.get(Calendar.ZONE_OFFSET);
-				def = mi - mu;
-				if (def < 0)
-					def = def * (-1);
-			}
-
-			long beginTime = Long.parseLong(event.startMillis + "000") - def;
-			long endTime = Long.parseLong(event.endMillis + "000") - def;
-			Intent intent = new Intent(Intent.ACTION_EDIT);
-			intent.setType("vnd.android.cursor.item/event");
-			intent.putExtra("beginTime", beginTime);
-			intent.putExtra("endTime", endTime);
-			intent.putExtra("title", event.name);
-			intent.putExtra("eventLocation", event.loc);
-			intent.putExtra("description", event.desc);
-			startActivity(intent);
-		} catch (Exception e) {
-			toast("Can't open Google Calendar, be sure you have installed it on your phone.",
-					true);
-		}
+	private void addToCalendar(EventData event) {
+		// try {
+		// long def = 0;
+		//
+		// if (!event.unix) {
+		// Calendar cal = Calendar.getInstance();
+		// Calendar cal2 = Calendar.getInstance(TimeZone
+		// .getTimeZone("America/Los_Angeles"));
+		// long mi = cal.get(Calendar.ZONE_OFFSET);
+		// long mu = cal2.get(Calendar.ZONE_OFFSET);
+		// def = mi - mu;
+		// if (def < 0)
+		// def = def * (-1);
+		// }
+		//
+		// long beginTime = Long.parseLong(event.startMillis + "000") - def;
+		// long endTime = Long.parseLong(event.endMillis + "000") - def;
+		// Intent intent = new Intent(Intent.ACTION_EDIT);
+		// intent.setType("vnd.android.cursor.item/event");
+		// intent.putExtra("beginTime", beginTime);
+		// intent.putExtra("endTime", endTime);
+		// intent.putExtra("title", event.name);
+		// intent.putExtra("eventLocation", event.loc);
+		// intent.putExtra("description", event.desc);
+		// startActivity(intent);
+		// } catch (Exception e) {
+		// toast("Can't open Google Calendar, be sure you have installed it on your phone.",
+		// true);
+		// }
+		addEventToCalendarInBackground(event);
 	}
 
 	@Override
@@ -3247,14 +3261,28 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 					public void onCompleted(Response response) {
 
 						try {
+							EventData event = eventCollection
+									.getCompleteEventByID(ID);
 							if (element.equals("maybe")) {
-								eventCollection.getCompleteEventByID(ID).status_attending = "unsure";
+								event.status_attending = "unsure";
 							} else {
-								eventCollection.getCompleteEventByID(ID).status_attending = element;
+								event.status_attending = element;
 							}
+
+							toast("RSVP status updated", false);
+
+							if (mPrefs.getInt("autoAddToCalendar", OFF) == ON
+									&& element.equals("attending")
+									&& !event.autoAddedToCalendar) {
+
+								addToCalendar(event);
+								event.autoAddedToCalendar = true;
+
+							}
+
 							eventCollection
 									.saveToDisk(FacebookeventsActivity.this);
-							toast("RSVP status updated", false);
+
 							filter();
 						} catch (Exception e) {
 							Log.e("rsvp", e.toString());
@@ -5454,103 +5482,6 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		task.execute();
 	}
 
-	// private synchronized void updateRSVPstatus() {
-	//
-	// Bundle bundleA = new Bundle();
-	// Bundle bundleB = new Bundle();
-	// Bundle bundleC = new Bundle();
-	//
-	// String a =
-	// "SELECT eid FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid = me()"
-	// + " and rsvp_status=\"attending\" )";
-	// String b =
-	// "SELECT eid FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid = me()"
-	// + " and rsvp_status=\"unsure\" )";
-	// String c =
-	// "SELECT eid FROM event WHERE eid IN (SELECT eid FROM event_member WHERE uid = me()"
-	// + " and rsvp_status=\"declined\" )";
-	//
-	// bundleA.putString("q", a);
-	// bundleB.putString("q", b);
-	// bundleC.putString("q", c);
-	//
-	// Request requestA = new Request(Session.getActiveSession(), "fql",
-	// bundleA, HttpMethod.GET, new Request.Callback() {
-	// public void onCompleted(Response response) {
-	// try {
-	// JSONObject jsonA = response.getGraphObject()
-	// .getInnerJSONObject();
-	// JSONArray jDataArrayA = jsonA.getJSONArray("data");
-	// for (int i = 0; i < jDataArrayA.length(); i++) {
-	// jsonA = jDataArrayA.getJSONObject(i);
-	// for (EventData event : eventCollection
-	// .getCompleteEventList()) {
-	// if (event.event_ID.equals(jsonA
-	// .getString("eid"))) {
-	// event.status_attending = "attending";
-	// }
-	// }
-	// }
-	// } catch (Exception e) {
-	// Log.e("batchA", e.toString());
-	// }
-	// }
-	// });
-	//
-	// Request requestB = new Request(Session.getActiveSession(), "fql",
-	// bundleB, HttpMethod.GET, new Request.Callback() {
-	// public void onCompleted(Response response) {
-	// try {
-	// JSONObject jsonB = response.getGraphObject()
-	// .getInnerJSONObject();
-	// JSONArray jDataArrayB = jsonB.getJSONArray("data");
-	//
-	// for (int i = 0; i < jDataArrayB.length(); i++) {
-	// jsonB = jDataArrayB.getJSONObject(i);
-	// for (EventData event : eventCollection
-	// .getCompleteEventList()) {
-	// if (event.event_ID.equals(jsonB
-	// .getString("eid"))) {
-	// event.status_attending = "unsure";
-	// }
-	// }
-	// }
-	// } catch (Exception e) {
-	// Log.e("batchB", e.toString());
-	// }
-	// }
-	// });
-	//
-	// Request requestC = new Request(Session.getActiveSession(), "fql",
-	// bundleC, HttpMethod.GET, new Request.Callback() {
-	// public void onCompleted(Response response) {
-	// try {
-	// JSONObject jsonC = response.getGraphObject()
-	// .getInnerJSONObject();
-	// JSONArray jDataArrayC = jsonC.getJSONArray("data");
-	//
-	// for (int i = 0; i < jDataArrayC.length(); i++) {
-	// jsonC = jDataArrayC.getJSONObject(i);
-	// for (EventData event : eventCollection
-	// .getCompleteEventList()) {
-	// if (event.event_ID.equals(jsonC
-	// .getString("eid"))) {
-	// event.status_attending = "declined";
-	// }
-	// }
-	// }
-	// } catch (Exception e) {
-	// Log.e("batchC", e.toString());
-	// }
-	//
-	// }
-	// });
-	//
-	// RequestBatch batch = new RequestBatch(requestA, requestB, requestC);
-	// batch.executeAndWait();
-	//
-	// }
-
 	private void redownloadAll() {
 
 		int index = 1;
@@ -5816,6 +5747,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			setShare(false);
 			setInfo(false);
 			setRefresh(true);
+			setAutoCalendar(true);
 			setViewAll(false);
 			setRSVP(false);
 			setLike(false);
@@ -5851,6 +5783,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			setShare(false);
 			setInfo(false);
 			setRefresh(true);
+			setAutoCalendar(true);
 			setRSVP(false);
 			setLike(false);
 			setFacebook(false);
@@ -5881,6 +5814,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			setPlaces(false);
 			setlistStyle(false);
 			setSpinner(false);
+			setAutoCalendar(false);
 			setSearch(false);
 			setReset(false);
 			setSortEvents(false);
@@ -5965,6 +5899,14 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		refresh.setVisible(b);
 	}
 
+	public void setAutoCalendar(boolean b) {
+		if (Build.VERSION.SDK_INT < 14) {
+			autoCalendar.setVisible(false);
+		} else {
+			autoCalendar.setVisible(b);
+		}
+	}
+
 	public void setViewAll(boolean b) {
 		viewall.setVisible(false);
 	}
@@ -5993,7 +5935,11 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 	}
 
 	public void setCalendar(boolean b) {
-		calendar.setVisible(b);
+		if (Build.VERSION.SDK_INT < 14) {
+			calendar.setVisible(false);
+		} else {
+			calendar.setVisible(b);
+		}
 	}
 
 	public void setlistStyle(boolean b) {
@@ -6238,6 +6184,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 					} else {
 						isFromFilter = false;
 					}
+					eventArrayAdapter.initSections();
 					eventArrayAdapter.notifyDataSetChanged();
 					Log.d("MosquitoLabs", "refreshEventsAdapter");
 				}
@@ -6589,15 +6536,20 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 							} else {
 								bmp = readImageFromDisk(pageID);
 								Log.d("ShowImage no picture", event.name);
-								downloadImage(event.imageUri, event.event_ID);
+								redownloadImage(event.imageUri, event.event_ID);
 								Log.d("ShowImage redownloading", event.name);
 							}
 						}
 
-					} else if (!isDownloadingImages() && !event.imageDownloaded) {
-						downloadImage(event.imageUri, event.event_ID);
+					} else if (scrollState != OnScrollListener.SCROLL_STATE_FLING
+							&& !isDownloadingImages() && !event.imageDownloaded) {
+
+						redownloadImage(event.imageUri, event.event_ID);
+
 						Log.d("ShowImage", "redownloading images");
 					}
+				} else {
+					Log.d("MosquitoLabs", "index bigger then size");
 				}
 
 				Bitmap[] toReturn = { bmp, imagePage };
@@ -6659,13 +6611,19 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 			@Override
 			protected void onPostExecute(Bitmap result) {
 				if (result != null) {
-					int i = 0;
+
 					for (EventData event : eventCollection
 							.getCompleteEventList()) {
 						if (event.event_ID.equals(ID)) {
-							eventCollection.getCompleteEventList().get(i).imageDownloaded = true;
-							showImageEventList(i);
+							event.imageDownloaded = true;
 							break;
+						}
+					}
+
+					int i = 0;
+					for (EventData eventShown : eventCollection.getEventList()) {
+						if (eventShown.event_ID.equals(ID)) {
+							showImageEventList(i);
 						}
 						i++;
 					}
@@ -6679,12 +6637,66 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 		task.execute();
 	}
 
+	private void redownloadImage(final URL img_value, final String ID) {
+		if (!indexesOfRedownloadingImages.contains(ID)) {
+			indexesOfRedownloadingImages.add(ID);
+			AsyncTask<Void, Integer, Bitmap> task = new AsyncTask<Void, Integer, Bitmap>() {
+
+				@Override
+				public Bitmap doInBackground(Void... params) {
+					Bitmap image = null;
+					try {
+						image = readImageFromDisk(ID);
+					} catch (Exception ex) {
+						try {
+							image = BitmapFactory.decodeStream(img_value
+									.openConnection().getInputStream());
+							saveImageToDisk(ID, image);
+						} catch (Exception e) {
+							Log.e("download image", e.toString());
+						}
+					}
+
+					return image;
+				}
+
+				@Override
+				protected void onPostExecute(Bitmap result) {
+					if (result != null) {
+						eventCollection.getCompleteEventByID(ID).imageDownloaded = true;
+						Log.d("MosquitoLabs", "downloaded!");
+						// for (EventData event : eventCollection
+						// .getCompleteEventList()) {
+						// if (event.event_ID.equals(ID)) {
+						// event.imageDownloaded = true;
+						// break;
+						// }
+						// }
+
+						int i = 0;
+						for (EventData eventShown : eventCollection
+								.getEventList()) {
+							if (eventShown.event_ID.equals(ID)) {
+								showImageEventList(i);
+							}
+							i++;
+						}
+					}
+					indexesOfRedownloadingImages.remove(ID);
+				}
+
+			};
+
+			task.execute();
+		}
+	}
+
 	public boolean isDownloadingImages() {
 		if (counterEnter == counterExit) {
 			return false;
-		} else {
-			return true;
 		}
+		return true;
+
 	}
 
 	public int getMyeventsSettings() {
@@ -6753,12 +6765,25 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 						String ID = jObject.getString("name");
 
 						JSONArray jj = jObject.getJSONArray("fql_result_set");
+
+						EventData event = eventCollection
+								.getCompleteEventByID(ID);
 						if (jj.length() == 0) {
-							eventCollection.getCompleteEventByID(ID).status_attending = "Not Invited";
+							event.status_attending = "Not Invited";
 						} else {
 							jObject = jj.getJSONObject(0);
-							eventCollection.getCompleteEventByID(ID).status_attending = jObject
+							event.status_attending = jObject
 									.getString("rsvp_status");
+
+							if (mPrefs.getInt("autoAddToCalendar", OFF) == ON
+									&& jObject.getString("rsvp_status").equals(
+											"attending")
+									&& !event.autoAddedToCalendar) {
+
+								addToCalendar(event);
+								event.autoAddedToCalendar = true;
+
+							}
 						}
 
 					}
@@ -6794,7 +6819,7 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 				if (add && event.imageUri != null) {
 					Log.d("completeImageDownload", event.name + " "
 							+ event.event_ID);
-					downloadImage(event.imageUri, event.event_ID);
+					redownloadImage(event.imageUri, event.event_ID);
 				}
 			}
 
@@ -6843,6 +6868,79 @@ public class FacebookeventsActivity extends SherlockFragmentActivity implements
 
 	public String getFilter() {
 		return filter;
+	}
+
+	private void AutoAddToCalendar() {
+		final CharSequence[] items = { "On", "Off", };
+		AlertDialog.Builder builder = new AlertDialog.Builder(
+				FacebookeventsActivity.this);
+
+		builder.setTitle("Auto add events to Calendar when set to \"Going\"?");
+		int checked = mPrefs.getInt("autoAddToCalendar", OFF);
+		builder.setSingleChoiceItems(items, checked,
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int item) {
+						SharedPreferences.Editor editor = mPrefs.edit();
+						editor.putInt("autoAddToCalendar", item);
+						editor.commit();
+						dialog.dismiss();
+
+					}
+				});
+		builder.create().show();
+	}
+
+	@TargetApi(14)
+	private void addEventToCalendarInBackground(EventData event) {
+
+		try {
+			if (Build.VERSION.SDK_INT >= 14) {
+
+				long calID = 1;
+				long def = 0;
+
+				if (!event.unix) {
+					Calendar cal = Calendar.getInstance();
+					Calendar cal2 = Calendar.getInstance(TimeZone
+							.getTimeZone("America/Los_Angeles"));
+					long mi = cal.get(Calendar.ZONE_OFFSET);
+					long mu = cal2.get(Calendar.ZONE_OFFSET);
+					def = mi - mu;
+					if (def < 0)
+						def = def * (-1);
+				}
+
+				long startMillis = Long.parseLong(event.startMillis + "000")
+						- def;
+				long endMillis = Long.parseLong(event.endMillis + "000") - def;
+				// endMillis = startMillis+3600000*1;
+
+				ContentResolver cr = getContentResolver();
+				ContentValues values = new ContentValues();
+				values.put(Events.DTSTART, startMillis);
+				values.put(Events.DTEND, endMillis);
+				values.put(Events.TITLE, event.name);
+				values.put(Events.CALENDAR_ID, calID);
+				values.put(Events.EVENT_LOCATION, event.loc);
+				values.put(Events.EVENT_TIMEZONE, TimeZone.getDefault().getID());
+				values.put(Events.DESCRIPTION, event.desc);
+				values.put(Events.ALL_DAY, false);
+				// values.put(Events.SELF_ATTENDEE_STATUS,
+				// Events.STATUS_CONFIRMED);
+
+				Uri uri = cr.insert(Events.CONTENT_URI, values);
+
+				toast("Event correctly added to Calendar", false);
+
+				// get the event ID that is the last element in the Uri
+				// long eventID = Long.parseLong(uri.getLastPathSegment());
+
+			}
+		} catch (Exception e) {
+			toast("Can't open Google Calendar, be sure you have installed it on your phone.",
+					true);
+		}
+
 	}
 
 }

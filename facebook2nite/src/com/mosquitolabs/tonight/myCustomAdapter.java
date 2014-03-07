@@ -59,41 +59,48 @@ public class myCustomAdapter extends BaseAdapter implements
 
 	}
 
+	public void initSections() {
+		mSectionIndices = getSectionIndices();
+		mSectionLetters = getSectionLetters();
+	}
+
 	private int[] getSectionIndices() {
+		if (!eventCollection.getEventList().isEmpty()) {
+			ArrayList<Integer> sectionIndices = new ArrayList<Integer>();
 
-		ArrayList<Integer> sectionIndices = new ArrayList<Integer>();
+			Calendar lastCal = Calendar.getInstance();
+			Calendar currentCal = Calendar.getInstance();
 
-		Calendar lastCal = Calendar.getInstance();
-		Calendar currentCal = Calendar.getInstance();
+			lastCal.setTimeInMillis(Long.parseLong(eventCollection
+					.getEventList().get(0).startMillis) * 1000);
 
-		lastCal.setTimeInMillis(Long.parseLong(eventCollection.getEventList()
-				.get(0).startMillis) * 1000);
+			sectionIndices.add(0);
 
-		sectionIndices.add(0);
-
-		for (int i = 1; i < eventCollection.getEventList().size(); i++) {
-			final EventData currentEvent = eventCollection.getEventList()
-					.get(i);
-			currentCal
-					.setTimeInMillis(Long.parseLong(currentEvent.startMillis) * 1000);
-
-			if ((currentCal.get(Calendar.DAY_OF_YEAR) > lastCal
-					.get(Calendar.DAY_OF_YEAR) || currentCal.get(Calendar.YEAR) > lastCal
-					.get(Calendar.YEAR))
-					&& !currentEvent.isInProgress) {
-				lastCal.setTimeInMillis(Long
+			for (int i = 1; i < eventCollection.getEventList().size(); i++) {
+				final EventData currentEvent = eventCollection.getEventList()
+						.get(i);
+				currentCal.setTimeInMillis(Long
 						.parseLong(currentEvent.startMillis) * 1000);
-				sectionIndices.add(i);
+
+				if ((currentCal.get(Calendar.DAY_OF_YEAR) > lastCal
+						.get(Calendar.DAY_OF_YEAR) || currentCal
+						.get(Calendar.YEAR) > lastCal.get(Calendar.YEAR))
+						&& !currentEvent.isInProgress) {
+					lastCal.setTimeInMillis(Long
+							.parseLong(currentEvent.startMillis) * 1000);
+					sectionIndices.add(i);
+				}
 			}
 
-		}
+			int[] sections = new int[sectionIndices.size()];
+			for (int i = 0; i < sectionIndices.size(); i++) {
+				sections[i] = sectionIndices.get(i);
+			}
 
-		int[] sections = new int[sectionIndices.size()];
-		for (int i = 0; i < sectionIndices.size(); i++) {
-			sections[i] = sectionIndices.get(i);
+			return sections;
 		}
+		return new int[0];
 
-		return sections;
 	}
 
 	private String[] getSectionLetters() {
@@ -192,8 +199,7 @@ public class myCustomAdapter extends BaseAdapter implements
 			triangleRed = BitmapFactory.decodeResource(context.getResources(),
 					R.drawable.triangle_red);
 
-			mSectionIndices = getSectionIndices();
-			mSectionLetters = getSectionLetters();
+			initSections();
 
 			paramView.setTag(localViewHolder);
 		} else {
@@ -366,7 +372,7 @@ public class myCustomAdapter extends BaseAdapter implements
 			holder = (HeaderViewHolder) convertView.getTag();
 		}
 
-		// set header text as first char in name
+		// set header text as date
 
 		final EventData event = eventCollection.getEventList().get(position);
 		if (event.isInProgress) {

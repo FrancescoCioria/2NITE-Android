@@ -124,8 +124,8 @@ public class ServiceUpdate extends Service {
 		eventCollection.readFromDisk(ServiceUpdate.this);
 		pageCollection.readFromDisk(ServiceUpdate.this);
 		update();
-		completeImageDownload();
-		getRsvp();
+//		completeImageDownload();
+//		getRsvp();
 		editor.putBoolean("service_status", false);
 		editor.commit();
 	}
@@ -509,7 +509,8 @@ public class ServiceUpdate extends Service {
 		Request request = new Request(getSession(), "fql", bundle,
 				HttpMethod.GET, callback);
 		request.executeAndWait();
-
+		
+		completeImageDownload();
 		getRsvp();
 
 		if (newDownloads) {
@@ -1136,6 +1137,7 @@ public class ServiceUpdate extends Service {
 					Bitmap image = BitmapFactory.decodeStream(event.imageUri
 							.openConnection().getInputStream());
 					saveImageToDisk(event.event_ID, image);
+					event.imageDownloaded=true;
 					b = true;
 				} catch (Exception e) {
 

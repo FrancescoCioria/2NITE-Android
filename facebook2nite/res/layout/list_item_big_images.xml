@@ -112,6 +112,7 @@
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
                         android:maxLines="3"
+                        android:minLines="3"
                         android:text="Vivir y estudiar en Valencia no es suficiente, hay que aprovechar al máximo esta oportunidad y conocer a fondo la ciudad: Nosotros te lo ponemos fácil! Vamos de paseo por el centro histórico para descubrir su origen y su historia durante 2 horas."
                         android:textColor="@color/dark_gray"
                         android:textSize="12sp"

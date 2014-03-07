@@ -25,6 +25,7 @@ public class EventData implements Serializable {
 	public int attending_count;
 	public URL imageUri = null;
 
+	public boolean autoAddedToCalendar = false;
 	public boolean isInProgress = false;
 	public boolean hasAnEnd = true;
 	public boolean hasCover = false;
